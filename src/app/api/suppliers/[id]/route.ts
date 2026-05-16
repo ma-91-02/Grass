@@ -15,7 +15,6 @@ const supplierSchema = z.object({
   name: z.string().min(1).optional(),
   phone: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
-  governorate: z.string().optional().nullable(),
   isActive: z.boolean().optional(),
   notes: z.string().optional().nullable(),
   openingBalanceIqd: z.number().optional(),
@@ -42,7 +41,6 @@ export async function GET(
     code: supplier.code,
     phone: supplier.phone,
     address: supplier.address,
-    governorate: supplier.governorate,
     notes: supplier.notes,
     isActive: supplier.isActive,
     accounts: supplier.accounts.map((a) => ({
@@ -125,7 +123,6 @@ export async function PATCH(
       code: supplier.code,
       phone: supplier.phone,
       address: supplier.address,
-      governorate: supplier.governorate,
       notes: supplier.notes,
       isActive: supplier.isActive,
       accounts: supplier.accounts.map((a) => ({
@@ -160,9 +157,6 @@ export async function DELETE(
 
     const supplier = await prisma.supplier.findUnique({ where: { id } });
     if (!supplier) return notFoundError();
-
-    // Check if supplier is used in any purchases (future)
-    // For now, no relations exist besides accounts
 
     await prisma.supplierAccount.deleteMany({ where: { supplierId: id } });
     await prisma.supplier.delete({ where: { id } });

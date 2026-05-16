@@ -14,7 +14,6 @@ const supplierSchema = z.object({
   name: z.string().min(1, "الاسم مطلوب"),
   phone: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
-  governorate: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   openingBalanceIqd: z.number().optional().default(0),
   openingBalanceUsd: z.number().optional().default(0),
@@ -36,7 +35,6 @@ export async function GET() {
       code: s.code,
       phone: s.phone,
       address: s.address,
-      governorate: s.governorate,
       notes: s.notes,
       isActive: s.isActive,
       accounts: s.accounts.map((a) => ({
@@ -76,7 +74,6 @@ export async function POST(request: NextRequest) {
         code,
         phone: parsed.phone || null,
         address: parsed.address || null,
-        governorate: parsed.governorate || null,
         notes: parsed.notes || null,
         createdById: currentUser.userId,
         accounts: {
@@ -104,7 +101,6 @@ export async function POST(request: NextRequest) {
         code: supplier.code,
         phone: supplier.phone,
         address: supplier.address,
-        governorate: supplier.governorate,
         notes: supplier.notes,
         isActive: supplier.isActive,
         accounts: supplier.accounts.map((a) => ({

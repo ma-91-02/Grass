@@ -23,7 +23,6 @@ export const supplierFormSchema = z.object({
   name: z.string().min(1, "الاسم مطلوب"),
   phone: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
-  governorate: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   openingBalanceIqd: z.coerce.number().default(0),
   openingBalanceUsd: z.coerce.number().default(0),

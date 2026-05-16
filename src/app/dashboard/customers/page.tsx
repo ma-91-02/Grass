@@ -46,7 +46,6 @@ interface Supplier {
   code: string;
   phone: string | null;
   address: string | null;
-  governorate: string | null;
   notes: string | null;
   isActive: boolean;
   accounts: { id: string; currency: string; balance: number }[];
@@ -369,7 +368,7 @@ export default function CustomersPage() {
       s.name.includes(search) ||
       s.code.includes(search) ||
       s.phone?.includes(search) ||
-      s.governorate?.includes(search),
+      s.address?.includes(search),
   );
 
   const filteredCategories = categories.filter(
@@ -514,17 +513,19 @@ export default function CustomersPage() {
                     <Edit className="h-4 w-4" />
                   </button>
                 )}
-                <button
-                  onClick={() => setToggleCustomer(item)}
-                  className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-amber-600"
-                  title={item.isActive ? "تعطيل" : "تفعيل"}
-                >
-                  {item.isActive ? (
-                    <Ban className="h-4 w-4" />
-                  ) : (
-                    <CheckCircle className="h-4 w-4" />
-                  )}
-                </button>
+                {userPermissions.includes("customers.edit") && (
+                  <button
+                    onClick={() => setToggleCustomer(item)}
+                    className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-amber-600"
+                    title={item.isActive ? "تعطيل" : "تفعيل"}
+                  >
+                    {item.isActive ? (
+                      <Ban className="h-4 w-4" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4" />
+                    )}
+                  </button>
+                )}
                 {userPermissions.includes("customers.delete") && (
                   <button
                     onClick={() => setDeleteCustomer(item)}
@@ -639,11 +640,6 @@ export default function CustomersPage() {
                 render: (s: Supplier) => <span dir="ltr">{s.phone || "-"}</span>,
               },
               {
-                key: "governorate",
-                header: "المحافظة",
-                render: (s: Supplier) => <span>{s.governorate || "-"}</span>,
-              },
-              {
                 key: "isActive",
                 header: "الحالة",
                 render: (s: Supplier) => (
@@ -673,17 +669,19 @@ export default function CustomersPage() {
                     <Edit className="h-4 w-4" />
                   </button>
                 )}
-                <button
-                  onClick={() => setToggleSupplier(item)}
-                  className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-amber-600"
-                  title={item.isActive ? "تعطيل" : "تفعيل"}
-                >
-                  {item.isActive ? (
-                    <Ban className="h-4 w-4" />
-                  ) : (
-                    <CheckCircle className="h-4 w-4" />
-                  )}
-                </button>
+                {userPermissions.includes("suppliers.edit") && (
+                  <button
+                    onClick={() => setToggleSupplier(item)}
+                    className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-amber-600"
+                    title={item.isActive ? "تعطيل" : "تفعيل"}
+                  >
+                    {item.isActive ? (
+                      <Ban className="h-4 w-4" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4" />
+                    )}
+                  </button>
+                )}
                 {userPermissions.includes("suppliers.delete") && (
                   <button
                     onClick={() => setDeleteSupplier(item)}
@@ -725,7 +723,6 @@ export default function CustomersPage() {
                       name: editSupplier.name,
                       phone: editSupplier.phone || "",
                       address: editSupplier.address || "",
-                      governorate: editSupplier.governorate || "",
                       notes: editSupplier.notes || "",
                       openingBalanceIqd: editSupplier.accounts.find(a => a.currency === "IQD")?.balance || 0,
                       openingBalanceUsd: editSupplier.accounts.find(a => a.currency === "USD")?.balance || 0,
@@ -820,17 +817,19 @@ export default function CustomersPage() {
                     <Edit className="h-4 w-4" />
                   </button>
                 )}
-                <button
-                  onClick={() => setToggleCategory(item)}
-                  className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-amber-600"
-                  title={item.isActive ? "تعطيل" : "تفعيل"}
-                >
-                  {item.isActive ? (
-                    <Ban className="h-4 w-4" />
-                  ) : (
-                    <CheckCircle className="h-4 w-4" />
-                  )}
-                </button>
+                {userPermissions.includes("customerCategories.edit") && (
+                  <button
+                    onClick={() => setToggleCategory(item)}
+                    className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-amber-600"
+                    title={item.isActive ? "تعطيل" : "تفعيل"}
+                  >
+                    {item.isActive ? (
+                      <Ban className="h-4 w-4" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4" />
+                    )}
+                  </button>
+                )}
                 {userPermissions.includes("customerCategories.delete") && (
                   <button
                     onClick={() => setDeleteCategory(item)}

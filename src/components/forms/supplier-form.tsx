@@ -4,8 +4,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supplierFormSchema, type SupplierFormData } from "@/lib/schemas";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { GOVERNORATES } from "@/lib/governorates";
 import { parseNumericInput } from "@/lib/utils";
 
 interface SupplierFormProps {
@@ -29,7 +27,6 @@ export function SupplierForm({
       name: "",
       phone: "",
       address: "",
-      governorate: "",
       notes: "",
       openingBalanceIqd: 0,
       openingBalanceUsd: 0,
@@ -54,18 +51,6 @@ export function SupplierForm({
             error={errors.name?.message}
             {...register("name")}
             required
-          />
-          <Select
-            label="المحافظة"
-            options={[
-              { value: "", label: "اختر محافظة" },
-              ...GOVERNORATES.map((g) => ({
-                value: g,
-                label: g,
-              })),
-            ]}
-            error={errors.governorate?.message}
-            {...register("governorate")}
           />
           <Input
             label="رقم الهاتف"
