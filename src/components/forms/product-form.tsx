@@ -403,30 +403,37 @@ export function ProductForm({
           </h3>
           <div className="space-y-3">
             {CUSTOMER_TYPES.map((type, idx) => (
-              <div key={type} className="grid grid-cols-3 gap-3 items-end">
+              <div
+                key={type}
+                className="flex flex-col sm:flex-row sm:items-end gap-3 rounded-lg border border-border/50 bg-muted/20 p-3"
+              >
                 <input
                   type="hidden"
                   {...register(`prices.${idx}.customerType`)}
                   value={type}
                 />
-                <div className="text-sm font-medium text-dark pt-2">
+                <div className="sm:w-24 shrink-0 text-sm font-medium text-dark">
                   {CUSTOMER_TYPE_LABELS[type as CustomerType]}
                 </div>
-                <Input
-                  label="السعر"
-                  inputMode="decimal"
-                  {...register(`prices.${idx}.price`)}
-                  error={errors.prices?.[idx]?.price?.message}
-                  onInput={onArabicInput}
-                />
-                <Select
-                  label="العملة"
-                  options={[
-                    { value: "USD", label: "USD" },
-                    { value: "IQD", label: "IQD" },
-                  ]}
-                  {...register(`prices.${idx}.currency`)}
-                />
+                <div className="flex-1">
+                  <Input
+                    label="السعر"
+                    inputMode="decimal"
+                    {...register(`prices.${idx}.price`)}
+                    error={errors.prices?.[idx]?.price?.message}
+                    onInput={onArabicInput}
+                  />
+                </div>
+                <div className="sm:w-28">
+                  <Select
+                    label="العملة"
+                    options={[
+                      { value: "USD", label: "USD" },
+                      { value: "IQD", label: "IQD" },
+                    ]}
+                    {...register(`prices.${idx}.currency`)}
+                  />
+                </div>
               </div>
             ))}
           </div>

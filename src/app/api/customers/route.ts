@@ -30,40 +30,45 @@ const customerSchema = z.object({
 });
 
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) return unauthorizedError();
+  try {
+    const user = await getCurrentUser();
+    if (!user) return unauthorizedError();
 
-  const customers = await prisma.customer.findMany({
-    include: {
-      customerCategory: true,
-      accounts: true,
-    },
-    orderBy: { createdAt: "desc" },
-  });
+    const customers = await prisma.customer.findMany({
+      include: {
+        customerCategory: true,
+        accounts: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-  const data = customers.map((c) => ({
-    id: c.id,
-    name: c.name,
-    code: c.code,
-    phone: c.phone,
-    whatsapp: c.whatsapp,
-    address: c.address,
-    governorate: c.governorate,
-    customerType: c.customerType,
-    customerCategoryId: c.customerCategoryId,
-    customerCategoryName: c.customerCategory?.name || null,
-    isActive: c.isActive,
-    notes: c.notes,
-    accounts: c.accounts.map((a) => ({
-      id: a.id,
-      customerId: a.customerId,
-      currency: a.currency,
-      balance: Number(a.balance),
-    })),
-    createdAt: c.createdAt,
-  }));
+    const data = customers.map((c) => ({
+      id: c.id,
+      name: c.name,
+      code: c.code,
+      phone: c.phone,
+      whatsapp: c.whatsapp,
+      address: c.address,
+      governorate: c.governorate,
+      customerType: c.customerType,
+      customerCategoryId: c.customerCategoryId,
+      customerCategoryName: c.customerCategory?.name || null,
+      isActive: c.isActive,
+      notes: c.notes,
+      accounts: c.accounts.map((a) => ({
+        id: a.id,
+        customerId: a.customerId,
+        currency: a.currency,
+        balance: Number(a.balance),
+      })),
+      createdAt: c.createdAt,
+    }));
 
-  return successResponse(data);
+    return successResponse(data);
+  } catch (error) {
+    console.error("GET customers error:", error);
+    return errorResponse("فشل تحميل العملاء", 500);
+  }
 }
 
 export async function POST(request: NextRequest) {

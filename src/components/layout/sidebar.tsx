@@ -52,7 +52,7 @@ const menuItems = [
     icon: Truck,
   },
   {
-    title: "العملاء",
+    title: "العملاء والموردون",
     href: "/dashboard/customers",
     icon: Users,
   },

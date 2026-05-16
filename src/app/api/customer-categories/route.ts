@@ -17,24 +17,29 @@ const categorySchema = z.object({
 });
 
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) return unauthorizedError();
+  try {
+    const user = await getCurrentUser();
+    if (!user) return unauthorizedError();
 
-  const categories = await prisma.customerCategory.findMany({
-    include: { _count: { select: { customers: true } } },
-    orderBy: { name: "asc" },
-  });
+    const categories = await prisma.customerCategory.findMany({
+      include: { _count: { select: { customers: true } } },
+      orderBy: { name: "asc" },
+    });
 
-  const data = categories.map((c) => ({
-    id: c.id,
-    name: c.name,
-    description: c.description,
-    isActive: c.isActive,
-    customerCount: c._count.customers,
-    createdAt: c.createdAt,
-  }));
+    const data = categories.map((c) => ({
+      id: c.id,
+      name: c.name,
+      description: c.description,
+      isActive: c.isActive,
+      customerCount: c._count.customers,
+      createdAt: c.createdAt,
+    }));
 
-  return successResponse(data);
+    return successResponse(data);
+  } catch (error) {
+    console.error("GET customer-categories error:", error);
+    return errorResponse("فشل تحميل الأقسام", 500);
+  }
 }
 
 export async function POST(request: NextRequest) {

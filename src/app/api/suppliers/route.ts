@@ -21,33 +21,38 @@ const supplierSchema = z.object({
 });
 
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) return unauthorizedError();
+  try {
+    const user = await getCurrentUser();
+    if (!user) return unauthorizedError();
 
-  const suppliers = await prisma.supplier.findMany({
-    include: { accounts: true },
-    orderBy: { createdAt: "desc" },
-  });
+    const suppliers = await prisma.supplier.findMany({
+      include: { accounts: true },
+      orderBy: { createdAt: "desc" },
+    });
 
-  const data = suppliers.map((s) => ({
-    id: s.id,
-    name: s.name,
-    code: s.code,
-    phone: s.phone,
-    address: s.address,
-    governorate: s.governorate,
-    notes: s.notes,
-    isActive: s.isActive,
-    accounts: s.accounts.map((a) => ({
-      id: a.id,
-      supplierId: a.supplierId,
-      currency: a.currency,
-      balance: Number(a.balance),
-    })),
-    createdAt: s.createdAt,
-  }));
+    const data = suppliers.map((s) => ({
+      id: s.id,
+      name: s.name,
+      code: s.code,
+      phone: s.phone,
+      address: s.address,
+      governorate: s.governorate,
+      notes: s.notes,
+      isActive: s.isActive,
+      accounts: s.accounts.map((a) => ({
+        id: a.id,
+        supplierId: a.supplierId,
+        currency: a.currency,
+        balance: Number(a.balance),
+      })),
+      createdAt: s.createdAt,
+    }));
 
-  return successResponse(data);
+    return successResponse(data);
+  } catch (error) {
+    console.error("GET suppliers error:", error);
+    return errorResponse("فشل تحميل الموردين", 500);
+  }
 }
 
 export async function POST(request: NextRequest) {

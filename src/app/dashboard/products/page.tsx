@@ -295,17 +295,19 @@ export default function ProductsPage() {
                 <Edit className="h-4 w-4" />
               </button>
             )}
-            <button
-              onClick={() => setToggleItem(item)}
-              className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-amber-600"
-              title={item.isActive ? "تعطيل" : "تفعيل"}
-            >
-              {item.isActive ? (
-                <Ban className="h-4 w-4" />
-              ) : (
-                <CheckCircle className="h-4 w-4" />
-              )}
-            </button>
+            {canEdit && (
+              <button
+                onClick={() => setToggleItem(item)}
+                className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-amber-600"
+                title={item.isActive ? "تعطيل" : "تفعيل"}
+              >
+                {item.isActive ? (
+                  <Ban className="h-4 w-4" />
+                ) : (
+                  <CheckCircle className="h-4 w-4" />
+                )}
+              </button>
+            )}
             {canDelete && (
               <button
                 onClick={() => setHardDeleteItem(item)}
@@ -326,6 +328,7 @@ export default function ProductsPage() {
           setEditItem(null);
         }}
         title={editItem ? "تعديل مادة" : "إضافة مادة جديدة"}
+        className="max-w-2xl"
         footer={
           <>
             <Button
