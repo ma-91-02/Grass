@@ -6,12 +6,14 @@ import {
   errorResponse,
   unauthorizedError,
   forbiddenError,
+  conflictError,
 } from "@/lib/api-response";
 import { z } from "zod";
 import { PERMISSIONS } from "@/lib/permissions";
 
 const productSchema = z.object({
   name: z.string().min(1, "الاسم مطلوب"),
+  code: z.string().min(1, "كود المادة مطلوب"),
   barcode: z.string().optional().nullable(),
   categoryId: z.string().min(1, "المجموعة مطلوبة"),
   packaging: z.enum(["قطعة", "كارتون"] as const),
@@ -113,14 +115,27 @@ export async function POST(request: NextRequest) {
       return forbiddenError("لا تملك صلاحية تعديل الأسعار أو سعر الشراء");
     }
 
-    const count = await prisma.product.count();
-    const code = `PRD-${String(count + 1).padStart(5, "0")}`;
+    const existingCode = await prisma.product.findUnique({
+      where: { code: parsed.code },
+    });
+    if (existingCode) {
+      return conflictError("كود المادة مستخدم مسبقاً.");
+    }
+
+    if (parsed.barcode) {
+      const existingBarcode = await prisma.product.findUnique({
+        where: { barcode: parsed.barcode },
+      });
+      if (existingBarcode) {
+        return conflictError("الباركود مستخدم مسبقاً.");
+      }
+    }
 
     const product = await prisma.product.create({
       data: {
         name: parsed.name,
-        code,
-        barcode: parsed.barcode,
+        code: parsed.code,
+        barcode: parsed.barcode || null,
         categoryId: parsed.categoryId,
         packaging: parsed.packaging,
         piecesPerCarton:
@@ -143,9 +158,13 @@ export async function POST(request: NextRequest) {
       include: { prices: true, category: true },
     });
 
-    await logAudit(currentUser.userId, "CREATE", "Product", product.id, {
-      name: product.name,
-    });
+    try {
+      await logAudit(currentUser.userId, "CREATE", "Product", product.id, {
+        name: product.name,
+      });
+    } catch {
+      console.error("Audit log failed for product create");
+    }
 
     const postResult: Record<string, unknown> = {
       id: product.id,

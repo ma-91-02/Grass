@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser, logAudit } from "@/lib/auth";
 import {
   successResponse,
+  errorResponse,
   unauthorizedError,
   notFoundError,
   conflictError,
@@ -15,27 +16,36 @@ export async function DELETE(
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
 
-  const { id } = await params;
+  try {
+    const { id } = await params;
 
-  const category = await prisma.productCategory.findUnique({
-    where: { id },
-  });
+    const category = await prisma.productCategory.findUnique({
+      where: { id },
+    });
 
-  if (!category) return notFoundError();
+    if (!category) return notFoundError();
 
-  const productsCount = await prisma.product.count({
-    where: { categoryId: id },
-  });
+    const productsCount = await prisma.product.count({
+      where: { categoryId: id },
+    });
 
-  if (productsCount > 0) {
-    return conflictError("لا يمكن حذف هذه المجموعة لأنها مستخدمة في مواد.");
+    if (productsCount > 0) {
+      return conflictError("لا يمكن حذف هذه المجموعة لأنها مستخدمة في مواد.");
+    }
+
+    await prisma.productCategory.delete({ where: { id } });
+
+    try {
+      await logAudit(user.userId, "DELETE", "ProductCategory", id, {
+        name: category.name,
+      });
+    } catch {
+      console.error("Audit log failed for category delete");
+    }
+
+    return successResponse({ id });
+  } catch (error) {
+    console.error("Delete category error:", error);
+    return errorResponse("فشل حذف المجموعة", 500);
   }
-
-  await prisma.productCategory.delete({ where: { id } });
-
-  await logAudit(user.userId, "DELETE", "ProductCategory", id, {
-    name: category.name,
-  });
-
-  return successResponse({ id });
 }

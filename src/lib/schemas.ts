@@ -18,6 +18,7 @@ export const customerFormSchema = z.object({
 
 export const productFormSchema = z.object({
   name: z.string().min(1, "الاسم مطلوب"),
+  code: z.string().min(1, "كود المادة مطلوب"),
   barcode: z.string().optional().nullable(),
   categoryId: z.string().min(1, "المجموعة مطلوبة"),
   packaging: z.enum(["قطعة", "كارتون"] as const),

@@ -68,5 +68,21 @@ export function convertArabicNumbers(value: string): string {
 }
 
 export function parseNumericInput(value: string): string {
-  return convertArabicNumbers(value).replace(",", ".");
+  if (!value) return value;
+  // Step 1: Convert Arabic/Persian digits to English
+  let result = convertArabicNumbers(value);
+  // Step 2: Replace Arabic decimal point (٫ U+066B) with .
+  result = result.replace(/٫/g, ".");
+  // Step 3: Replace English comma with . (decimal separator)
+  const commaCount = (result.match(/,/g) || []).length;
+  if (commaCount === 1) {
+    // Single comma = likely decimal separator
+    result = result.replace(",", ".");
+  } else if (commaCount > 1) {
+    // Multiple commas = likely thousands separators, remove them
+    result = result.replace(/,/g, "");
+  }
+  // Step 4: Remove any non-numeric characters except digits, dot, and minus
+  result = result.replace(/[^\d.\-]/g, "");
+  return result;
 }

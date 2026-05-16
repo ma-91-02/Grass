@@ -44,9 +44,13 @@ export async function POST(request: NextRequest) {
       data: parsed,
     });
 
-    await logAudit(user.userId, "CREATE", "ProductCategory", category.id, {
-      name: category.name,
-    });
+    try {
+      await logAudit(user.userId, "CREATE", "ProductCategory", category.id, {
+        name: category.name,
+      });
+    } catch {
+      console.error("Audit log failed for category create");
+    }
 
     return successResponse(category, 201);
   } catch (error) {

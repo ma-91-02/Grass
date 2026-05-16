@@ -93,7 +93,8 @@ export default function ProductsPage() {
     (p) =>
       p.name.includes(search) ||
       p.code.includes(search) ||
-      p.barcode?.includes(search),
+      p.barcode?.includes(search) ||
+      p.categoryName?.includes(search),
   );
 
   const createMutation = useMutation({
@@ -292,6 +293,7 @@ export default function ProductsPage() {
             editItem
               ? {
                   name: editItem.name,
+                  code: editItem.code,
                   barcode: editItem.barcode || "",
                   categoryId: editItem.categoryId || "",
                   packaging:

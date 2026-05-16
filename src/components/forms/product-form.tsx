@@ -87,6 +87,7 @@ export function ProductForm({
     ) as unknown as import("react-hook-form").Resolver<ProductFormData>,
     defaultValues: {
       name: "",
+      code: "",
       barcode: "",
       categoryId: "",
       packaging: "قطعة",
@@ -99,11 +100,36 @@ export function ProductForm({
   });
 
   const selectedPackaging = useWatch({ control, name: "packaging" });
+  const watchedPrices = useWatch({ control, name: "prices" });
+  const watchedPiecesPerCarton = useWatch({ control, name: "piecesPerCarton" });
+  const watchedPurchasePrice = useWatch({ control, name: "purchasePrice" });
+
+  const cartonPrices = useMemo(() => {
+    if (selectedPackaging !== "كارتون" || !watchedPiecesPerCarton) return null;
+    const qty = Number(watchedPiecesPerCarton);
+    if (qty <= 0) return null;
+    const result: Record<string, number> = {};
+    if (canViewPurchasePrice && watchedPurchasePrice) {
+      result["سعر شراء"] = Number(watchedPurchasePrice) * qty;
+    }
+    watchedPrices?.forEach((p, i) => {
+      const label = CUSTOMER_TYPE_LABELS[CUSTOMER_TYPES[i] as CustomerType];
+      result[label] = Number(p.price) * qty;
+    });
+    return result;
+  }, [
+    selectedPackaging,
+    watchedPiecesPerCarton,
+    watchedPurchasePrice,
+    watchedPrices,
+    canViewPurchasePrice,
+  ]);
 
   const handleFormSubmit = useCallback(
     async (data: ProductFormData) => {
       const converted: ProductFormData = {
         ...data,
+        code: parseNumericInput(data.code),
         purchasePrice: Number(
           parseNumericInput(String(data.purchasePrice ?? 0)),
         ),
@@ -177,6 +203,11 @@ export function ProductForm({
     target.value = parseNumericInput(target.value);
   }
 
+  function onArabicInputCode(e: React.FormEvent<HTMLInputElement>) {
+    const target = e.target as HTMLInputElement;
+    target.value = parseNumericInput(target.value);
+  }
+
   if (!canSubmit) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center text-red-600">
@@ -194,6 +225,13 @@ export function ProductForm({
           label="اسم المادة"
           error={errors.name?.message}
           {...register("name")}
+          required
+        />
+        <Input
+          label="كود المادة"
+          error={errors.code?.message}
+          {...register("code")}
+          onInput={onArabicInputCode}
           required
         />
         <Input
@@ -294,22 +332,20 @@ export function ProductForm({
 
         <Input
           label="عدد القطع في الكارتون"
-          type="number"
-          step="1"
+          inputMode="numeric"
           disabled={selectedPackaging !== "كارتون"}
           error={errors.piecesPerCarton?.message}
-          {...register("piecesPerCarton", { valueAsNumber: true })}
+          {...register("piecesPerCarton")}
           onInput={onArabicInput}
         />
 
         {canViewPurchasePrice && (
           <>
             <Input
-              label="سعر الشراء"
-              type="number"
-              step="0.01"
+              label="سعر الشراء (للقطعة)"
+              inputMode="decimal"
               error={errors.purchasePrice?.message}
-              {...register("purchasePrice", { valueAsNumber: true })}
+              {...register("purchasePrice")}
               onInput={onArabicInput}
             />
             <Select
@@ -328,7 +364,7 @@ export function ProductForm({
       {canEditPrices && (
         <div className="rounded-lg border border-border p-4">
           <h3 className="mb-3 text-sm font-semibold text-dark">
-            أسعار البيع حسب نوع العميل
+            أسعار البيع حسب نوع العميل (سعر القطعة)
           </h3>
           <div className="space-y-3">
             {CUSTOMER_TYPES.map((type, idx) => (
@@ -342,12 +378,9 @@ export function ProductForm({
                   {CUSTOMER_TYPE_LABELS[type as CustomerType]}
                 </div>
                 <Input
-                  label="السعر"
-                  type="number"
-                  step="0.01"
-                  {...register(`prices.${idx}.price`, {
-                    valueAsNumber: true,
-                  })}
+                  label="سعر القطعة"
+                  inputMode="decimal"
+                  {...register(`prices.${idx}.price`)}
                   error={errors.prices?.[idx]?.price?.message}
                   onInput={onArabicInput}
                 />
@@ -362,6 +395,24 @@ export function ProductForm({
               </div>
             ))}
           </div>
+
+          {cartonPrices && (
+            <div className="mt-4 rounded-lg bg-blue-50 border border-blue-200 p-3">
+              <p className="text-sm font-semibold text-blue-800 mb-2">
+                أسعار الكارتون المحسوبة (سعر القطعة × {watchedPiecesPerCarton})
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+                {Object.entries(cartonPrices).map(([label, total]) => (
+                  <div key={label} className="flex justify-between">
+                    <span className="text-blue-700">{label}:</span>
+                    <span className="font-mono font-semibold text-blue-900" dir="ltr">
+                      {total.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

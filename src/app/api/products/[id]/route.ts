@@ -7,12 +7,14 @@ import {
   unauthorizedError,
   notFoundError,
   forbiddenError,
+  conflictError,
 } from "@/lib/api-response";
 import { z } from "zod";
 import { PERMISSIONS } from "@/lib/permissions";
 
 const productSchema = z.object({
   name: z.string().min(1).optional(),
+  code: z.string().min(1).optional(),
   barcode: z.string().optional().nullable(),
   categoryId: z.string().min(1).optional(),
   packaging: z.enum(["قطعة", "كارتون"] as const).optional(),
@@ -120,6 +122,24 @@ export async function PATCH(
       return forbiddenError("لا تملك صلاحية تعديل الأسعار أو سعر الشراء");
     }
 
+    if (parsed.code && parsed.code !== existing.code) {
+      const duplicateCode = await prisma.product.findUnique({
+        where: { code: parsed.code },
+      });
+      if (duplicateCode) {
+        return conflictError("كود المادة مستخدم مسبقاً.");
+      }
+    }
+
+    if (parsed.barcode !== undefined && parsed.barcode !== existing.barcode && parsed.barcode) {
+      const duplicateBarcode = await prisma.product.findUnique({
+        where: { barcode: parsed.barcode },
+      });
+      if (duplicateBarcode) {
+        return conflictError("الباركود مستخدم مسبقاً.");
+      }
+    }
+
     const { prices, purchasePrice, purchaseCurrency, ...productData } = parsed;
 
     const updateData: Record<string, unknown> = { ...productData };
@@ -162,9 +182,13 @@ export async function PATCH(
       include: { prices: true, category: true },
     });
 
-    await logAudit(currentUser.userId, "UPDATE", "Product", id, {
-      name: product.name,
-    });
+    try {
+      await logAudit(currentUser.userId, "UPDATE", "Product", id, {
+        name: product.name,
+      });
+    } catch {
+      console.error("Audit log failed for product update");
+    }
 
     const patchResult: Record<string, unknown> = {
       id: product.id,
