@@ -10,6 +10,7 @@ interface DialogProps {
   title: string;
   children: ReactNode;
   className?: string;
+  footer?: ReactNode;
 }
 
 export function Dialog({
@@ -18,6 +19,7 @@ export function Dialog({
   title,
   children,
   className,
+  footer,
 }: DialogProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -52,11 +54,11 @@ export function Dialog({
     >
       <div
         className={cn(
-          "w-full max-w-lg rounded-xl border border-border bg-white shadow-xl",
+          "flex flex-col w-full max-w-lg max-h-[90vh] rounded-xl border border-border bg-white shadow-xl",
           className,
         )}
       >
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4 shrink-0">
           <h2 className="text-lg font-semibold text-dark">{title}</h2>
           <button
             onClick={onClose}
@@ -65,7 +67,16 @@ export function Dialog({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="px-6 py-4">{children}</div>
+
+        <div className="overflow-y-auto px-6 py-4 flex-1">
+          {children}
+        </div>
+
+        {footer && (
+          <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-4 shrink-0">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

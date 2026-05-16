@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable } from "@/components/shared/data-table";
 import { Dialog } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { ProductForm } from "@/components/forms/product-form";
 import { useToast } from "@/components/ui/toast";
@@ -13,6 +14,12 @@ import { formatCurrency } from "@/lib/utils";
 import { type CustomerType } from "@/types";
 import type { TokenPayload } from "@/lib/auth";
 import { PERMISSIONS } from "@/lib/permissions";
+import {
+  Edit,
+  Ban,
+  CheckCircle,
+  Trash2,
+} from "lucide-react";
 
 interface ProductPrice {
   id: string;
@@ -48,7 +55,7 @@ export default function ProductsPage() {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Product | null>(null);
-  const [deleteItem, setDeleteItem] = useState<Product | null>(null);
+  const [hardDeleteItem, setHardDeleteItem] = useState<Product | null>(null);
   const [toggleItem, setToggleItem] = useState<Product | null>(null);
   const [user, setUser] = useState<TokenPayload | null>(null);
 
@@ -65,6 +72,7 @@ export default function ProductsPage() {
   );
   const canCreate = userPermissions.includes(PERMISSIONS.PRODUCTS_CREATE);
   const canEdit = userPermissions.includes(PERMISSIONS.PRODUCTS_EDIT);
+  const canDelete = userPermissions.includes(PERMISSIONS.PRODUCTS_DELETE);
 
   const {
     data: products = [],
@@ -155,12 +163,10 @@ export default function ProductsPage() {
     onError: (err: Error) => toast(err.message, "error"),
   });
 
-  const deleteMutation = useMutation({
+  const hardDeleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/products/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: false }),
+        method: "DELETE",
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل حذف المادة");
@@ -168,8 +174,8 @@ export default function ProductsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["products"] });
-      toast("تم حذف المادة بنجاح", "success");
-      setDeleteItem(null);
+      toast("تم حذف المادة نهائياً", "success");
+      setHardDeleteItem(null);
     },
     onError: (err: Error) => toast(err.message, "error"),
   });
@@ -190,6 +196,9 @@ export default function ProductsPage() {
     },
     [editItem, updateMutation, createMutation],
   );
+
+  const isLoading =
+    createMutation.isPending || updateMutation.isPending;
 
   const columns = [
     {
@@ -250,7 +259,7 @@ export default function ProductsPage() {
       header: "الحالة",
       render: (p: Product) => (
         <Badge variant={p.isActive ? "success" : "danger"}>
-          {p.isActive ? "نشط" : "محذوف"}
+          {p.isActive ? "نشط" : "معطل"}
         </Badge>
       ),
     },
@@ -275,9 +284,39 @@ export default function ProductsPage() {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="بحث بالاسم أو الكود أو الباركود..."
-        onEdit={canEdit ? openEdit : undefined}
-        onDelete={(item: Product) => setDeleteItem(item)}
-        onToggleStatus={(item: Product) => setToggleItem(item)}
+        actions={(item: Product) => (
+          <div className="flex items-center justify-center gap-1">
+            {canEdit && (
+              <button
+                onClick={() => openEdit(item)}
+                className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-blue-600"
+                title="تعديل"
+              >
+                <Edit className="h-4 w-4" />
+              </button>
+            )}
+            <button
+              onClick={() => setToggleItem(item)}
+              className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-amber-600"
+              title={item.isActive ? "تعطيل" : "تفعيل"}
+            >
+              {item.isActive ? (
+                <Ban className="h-4 w-4" />
+              ) : (
+                <CheckCircle className="h-4 w-4" />
+              )}
+            </button>
+            {canDelete && (
+              <button
+                onClick={() => setHardDeleteItem(item)}
+                className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-red-600"
+                title="حذف نهائي"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        )}
       />
 
       <Dialog
@@ -287,6 +326,24 @@ export default function ProductsPage() {
           setEditItem(null);
         }}
         title={editItem ? "تعديل مادة" : "إضافة مادة جديدة"}
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setDialogOpen(false);
+                setEditItem(null);
+              }}
+              disabled={isLoading}
+            >
+              إلغاء
+            </Button>
+            <Button type="submit" form="product-form" disabled={isLoading}>
+              {isLoading ? "جاري الحفظ..." : "حفظ"}
+            </Button>
+          </>
+        }
       >
         <ProductForm
           defaultValues={
@@ -311,7 +368,7 @@ export default function ProductsPage() {
               : undefined
           }
           onSubmit={handleSubmit}
-          loading={createMutation.isPending || updateMutation.isPending}
+          loading={isLoading}
           categories={categories}
           onCategoriesChange={(updated) => {
             qc.setQueryData(["categories"], updated);
@@ -320,15 +377,6 @@ export default function ProductsPage() {
         />
       </Dialog>
 
-      <ConfirmDialog
-        open={!!deleteItem}
-        onClose={() => setDeleteItem(null)}
-        onConfirm={() => deleteItem && deleteMutation.mutate(deleteItem.id)}
-        title="حذف مادة"
-        message={`هل أنت متأكد من حذف المادة "${deleteItem?.name}"؟`}
-        confirmLabel="حذف"
-        loading={deleteMutation.isPending}
-      />
       <ConfirmDialog
         open={!!toggleItem}
         onClose={() => setToggleItem(null)}
@@ -343,6 +391,16 @@ export default function ProductsPage() {
         message={`هل أنت متأكد من ${toggleItem?.isActive ? "تعطيل" : "تفعيل"} المادة "${toggleItem?.name}"؟`}
         confirmLabel={toggleItem?.isActive ? "تعطيل" : "تفعيل"}
         loading={toggleMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={!!hardDeleteItem}
+        onClose={() => setHardDeleteItem(null)}
+        onConfirm={() => hardDeleteItem && hardDeleteMutation.mutate(hardDeleteItem.id)}
+        title="حذف مادة نهائياً"
+        message={`هل أنت متأكد من حذف المادة "${hardDeleteItem?.name}" نهائياً؟ لا يمكن التراجع عن هذا الإجراء.`}
+        confirmLabel="حذف نهائي"
+        loading={hardDeleteMutation.isPending}
       />
     </div>
   );

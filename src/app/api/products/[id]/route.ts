@@ -222,3 +222,48 @@ export async function PATCH(
     return errorResponse("فشل تحديث المادة", 500);
   }
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) return unauthorizedError();
+
+  if (!checkPermission(currentUser, PERMISSIONS.PRODUCTS_DELETE)) {
+    return forbiddenError("لا تملك صلاحية حذف المواد");
+  }
+
+  try {
+    const { id } = await params;
+
+    const product = await prisma.product.findUnique({ where: { id } });
+    if (!product) return notFoundError();
+
+    const invoiceItemsCount = await prisma.invoiceItem.count({
+      where: { productId: id },
+    });
+
+    if (invoiceItemsCount > 0) {
+      return conflictError(
+        "لا يمكن حذف هذه المادة نهائياً لأنها مستخدمة في عمليات أو فواتير. يمكنك تعطيلها فقط.",
+      );
+    }
+
+    await prisma.productPrice.deleteMany({ where: { productId: id } });
+    await prisma.product.delete({ where: { id } });
+
+    try {
+      await logAudit(currentUser.userId, "DELETE", "Product", id, {
+        name: product.name,
+      });
+    } catch {
+      console.error("Audit log failed for product delete");
+    }
+
+    return successResponse({ id });
+  } catch (error) {
+    console.error("Delete product error:", error);
+    return errorResponse("فشل حذف المادة", 500);
+  }
+}

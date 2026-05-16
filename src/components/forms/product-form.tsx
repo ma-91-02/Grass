@@ -35,7 +35,6 @@ interface ProductFormProps {
 export function ProductForm({
   defaultValues,
   onSubmit,
-  loading,
   categories,
   onCategoriesChange,
   userPermissions,
@@ -219,128 +218,163 @@ export function ProductForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Input
-          label="اسم المادة"
-          error={errors.name?.message}
-          {...register("name")}
-          required
-        />
-        <Input
-          label="كود المادة"
-          error={errors.code?.message}
-          {...register("code")}
-          onInput={onArabicInputCode}
-          required
-        />
-        <Input
-          label="الباركود"
-          error={errors.barcode?.message}
-          {...register("barcode")}
-          dir="ltr"
-        />
-
-        <div className="space-y-1">
-          <div className="flex items-end gap-2">
-            <div className="flex-1">
-              <Select
-                label="المجموعة"
-                options={categories.map((c) => ({
-                  value: c.id,
-                  label: c.name,
-                }))}
-                placeholder="اختر مجموعة"
-                error={errors.categoryId?.message}
-                {...register("categoryId")}
-              />
-            </div>
-            {!addingCategory ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mb-1"
-                onClick={() => setAddingCategory(true)}
-              >
-                <Plus className="h-4 w-4" />
-                إضافة
-              </Button>
-            ) : null}
-          </div>
-          {addingCategory && (
-            <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 p-2">
-              <Input
-                placeholder="اسم المجموعة الجديدة"
-                value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value)}
-                className="h-9 text-sm"
-                dir="rtl"
-              />
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleAddCategory}
-                disabled={addingCategoryLoading}
-              >
-                {addingCategoryLoading ? "..." : "حفظ"}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setAddingCategory(false);
-                  setNewCategoryName("");
-                }}
-              >
-                إلغاء
-              </Button>
-            </div>
-          )}
-          {categories.length > 0 && (
-            <div className="max-h-32 overflow-y-auto space-y-1 pt-1">
-              {categories.map((cat) => (
-                <div
-                  key={cat.id}
-                  className="flex items-center justify-between rounded-md bg-muted/30 px-2 py-1 text-sm"
+    <form id="product-form" onSubmit={handleSubmit(handleFormSubmit)}>
+      {/* القسم 1: البيانات الأساسية */}
+      <div className="mb-6">
+        <h3 className="mb-3 text-sm font-semibold text-dark border-b border-border pb-2">
+          البيانات الأساسية
+        </h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Input
+            label="اسم المادة"
+            error={errors.name?.message}
+            {...register("name")}
+            required
+          />
+          <Input
+            label="كود المادة"
+            error={errors.code?.message}
+            {...register("code")}
+            onInput={onArabicInputCode}
+            required
+          />
+          <Input
+            label="الباركود"
+            error={errors.barcode?.message}
+            {...register("barcode")}
+            dir="ltr"
+          />
+          <div className="space-y-1">
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <Select
+                  label="المجموعة"
+                  options={categories.map((c) => ({
+                    value: c.id,
+                    label: c.name,
+                  }))}
+                  placeholder="اختر مجموعة"
+                  error={errors.categoryId?.message}
+                  {...register("categoryId")}
+                />
+              </div>
+              {!addingCategory ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mb-1"
+                  onClick={() => setAddingCategory(true)}
                 >
-                  <span>{cat.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => setDeleteCategoryTarget(cat)}
-                    className="rounded p-0.5 text-gray-400 hover:text-red-600"
-                    title="حذف المجموعة"
+                  <Plus className="h-4 w-4" />
+                  إضافة
+                </Button>
+              ) : null}
+            </div>
+            {addingCategory && (
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 p-2">
+                <Input
+                  placeholder="اسم المجموعة الجديدة"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  className="h-9 text-sm"
+                  dir="rtl"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleAddCategory}
+                  disabled={addingCategoryLoading}
+                >
+                  {addingCategoryLoading ? "..." : "حفظ"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setAddingCategory(false);
+                    setNewCategoryName("");
+                  }}
+                >
+                  إلغاء
+                </Button>
+              </div>
+            )}
+            {categories.length > 0 && (
+              <div className="max-h-32 overflow-y-auto space-y-1 pt-1">
+                {categories.map((cat) => (
+                  <div
+                    key={cat.id}
+                    className="flex items-center justify-between rounded-md bg-muted/30 px-2 py-1 text-sm"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                    <span>{cat.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteCategoryTarget(cat)}
+                      className="rounded p-0.5 text-gray-400 hover:text-red-600"
+                      title="حذف المجموعة"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* القسم 2: التعبئة */}
+      <div className="mb-6">
+        <h3 className="mb-3 text-sm font-semibold text-dark border-b border-border pb-2">
+          التعبئة
+        </h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Select
+            label="نوع التعبئة"
+            options={[
+              { value: "قطعة", label: "قطعة" },
+              { value: "كارتون", label: "كارتون" },
+            ]}
+            error={errors.packaging?.message}
+            {...register("packaging")}
+          />
+          <Input
+            label="عدد القطع في الكارتون"
+            inputMode="numeric"
+            disabled={selectedPackaging !== "كارتون"}
+            error={errors.piecesPerCarton?.message}
+            {...register("piecesPerCarton")}
+            onInput={onArabicInput}
+          />
+        </div>
+        {cartonPrices && (
+          <div className="mt-3 rounded-lg bg-blue-50 border border-blue-200 p-3">
+            <p className="text-sm font-semibold text-blue-800 mb-2">
+              أسعار الكارتون المحسوبة (سعر القطعة × {watchedPiecesPerCarton})
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+              {Object.entries(cartonPrices).map(([label, total]) => (
+                <div key={label} className="flex justify-between">
+                  <span className="text-blue-700">{label}:</span>
+                  <span className="font-mono font-semibold text-blue-900" dir="ltr">
+                    {total.toFixed(2)}
+                  </span>
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
 
-        <Select
-          label="التعبئة"
-          options={[
-            { value: "قطعة", label: "قطعة" },
-            { value: "كارتون", label: "كارتون" },
-          ]}
-          error={errors.packaging?.message}
-          {...register("packaging")}
-        />
-
-        <Input
-          label="عدد القطع في الكارتون"
-          inputMode="numeric"
-          disabled={selectedPackaging !== "كارتون"}
-          error={errors.piecesPerCarton?.message}
-          {...register("piecesPerCarton")}
-          onInput={onArabicInput}
-        />
-
-        {canViewPurchasePrice && (
-          <>
+      {/* القسم 3: سعر الشراء */}
+      {canViewPurchasePrice && (
+        <div className="mb-6">
+          <h3 className="mb-3 text-sm font-semibold text-dark border-b border-border pb-2">
+            سعر الشراء
+          </h3>
+          <div className="grid gap-4 sm:grid-cols-2">
             <Input
               label="سعر الشراء (للقطعة)"
               inputMode="decimal"
@@ -357,14 +391,15 @@ export function ProductForm({
               error={errors.purchaseCurrency?.message}
               {...register("purchaseCurrency")}
             />
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
 
+      {/* القسم 4: أسعار البيع */}
       {canEditPrices && (
-        <div className="rounded-lg border border-border p-4">
-          <h3 className="mb-3 text-sm font-semibold text-dark">
-            أسعار البيع حسب نوع العميل (سعر القطعة)
+        <div className="mb-2">
+          <h3 className="mb-3 text-sm font-semibold text-dark border-b border-border pb-2">
+            أسعار البيع (سعر القطعة)
           </h3>
           <div className="space-y-3">
             {CUSTOMER_TYPES.map((type, idx) => (
@@ -378,7 +413,7 @@ export function ProductForm({
                   {CUSTOMER_TYPE_LABELS[type as CustomerType]}
                 </div>
                 <Input
-                  label="سعر القطعة"
+                  label="السعر"
                   inputMode="decimal"
                   {...register(`prices.${idx}.price`)}
                   error={errors.prices?.[idx]?.price?.message}
@@ -395,32 +430,8 @@ export function ProductForm({
               </div>
             ))}
           </div>
-
-          {cartonPrices && (
-            <div className="mt-4 rounded-lg bg-blue-50 border border-blue-200 p-3">
-              <p className="text-sm font-semibold text-blue-800 mb-2">
-                أسعار الكارتون المحسوبة (سعر القطعة × {watchedPiecesPerCarton})
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
-                {Object.entries(cartonPrices).map(([label, total]) => (
-                  <div key={label} className="flex justify-between">
-                    <span className="text-blue-700">{label}:</span>
-                    <span className="font-mono font-semibold text-blue-900" dir="ltr">
-                      {total.toFixed(2)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
-
-      <div className="flex justify-end gap-3 pt-2">
-        <Button type="submit" disabled={loading}>
-          {loading ? "جاري الحفظ..." : "حفظ"}
-        </Button>
-      </div>
 
       <ConfirmDialog
         open={!!deleteCategoryTarget}
