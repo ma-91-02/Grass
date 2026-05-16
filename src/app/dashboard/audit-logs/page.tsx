@@ -1,29 +1,29 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface AuditLog {
-  id: string
-  userId: string
-  userName: string
-  action: string
-  entity: string
-  entityId: string | null
-  details: unknown
-  createdAt: string
+  id: string;
+  userId: string;
+  userName: string;
+  action: string;
+  entity: string;
+  entityId: string | null;
+  details: unknown;
+  createdAt: string;
 }
 
 export default function AuditLogsPage() {
-  const [logs, setLogs] = useState<AuditLog[]>([])
-  const [loading, setLoading] = useState(true)
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/audit-logs")
       .then((res) => res.json())
       .then((data) => setLogs(data.data))
-      .finally(() => setLoading(false))
-  }, [])
+      .finally(() => setLoading(false));
+  }, []);
 
   const actionLabels: Record<string, string> = {
     CREATE: "إنشاء",
@@ -31,7 +31,7 @@ export default function AuditLogsPage() {
     DELETE: "حذف",
     LOGIN: "تسجيل دخول",
     LOGOUT: "تسجيل خروج",
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -54,16 +54,29 @@ export default function AuditLogsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-right p-4 text-sm font-medium text-gray-500">المستخدم</th>
-                  <th className="text-right p-4 text-sm font-medium text-gray-500">الإجراء</th>
-                  <th className="text-right p-4 text-sm font-medium text-gray-500">الكيان</th>
-                  <th className="text-right p-4 text-sm font-medium text-gray-500">التاريخ</th>
+                  <th className="text-right p-4 text-sm font-medium text-gray-500">
+                    المستخدم
+                  </th>
+                  <th className="text-right p-4 text-sm font-medium text-gray-500">
+                    الإجراء
+                  </th>
+                  <th className="text-right p-4 text-sm font-medium text-gray-500">
+                    الكيان
+                  </th>
+                  <th className="text-right p-4 text-sm font-medium text-gray-500">
+                    التاريخ
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {logs.map((log) => (
-                  <tr key={log.id} className="border-b border-border hover:bg-muted/50">
-                    <td className="p-4 text-dark font-medium">{log.userName}</td>
+                  <tr
+                    key={log.id}
+                    className="border-b border-border hover:bg-muted/50"
+                  >
+                    <td className="p-4 text-dark font-medium">
+                      {log.userName}
+                    </td>
                     <td className="p-4">
                       <span className="rounded bg-muted px-2 py-0.5 text-sm">
                         {actionLabels[log.action] || log.action}
@@ -87,5 +100,5 @@ export default function AuditLogsPage() {
         </Card>
       )}
     </div>
-  )
+  );
 }

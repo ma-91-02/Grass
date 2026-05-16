@@ -1,35 +1,43 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Search, ChevronLeft, ChevronRight, Trash2, Edit, Eye, Ban } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Trash2,
+  Edit,
+  Eye,
+  Ban,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
-interface Column<T> {
-  key: string
-  header: string
-  render: (item: T) => React.ReactNode
-  sortable?: boolean
+export interface Column<T> {
+  key: string;
+  header: string;
+  render: (item: T) => React.ReactNode;
+  sortable?: boolean;
 }
 
 interface DataTableProps<T> {
-  columns: Column<T>[]
-  data: T[]
-  loading?: boolean
-  error?: string | null
-  search?: string
-  onSearchChange?: (value: string) => void
-  searchPlaceholder?: string
-  onEdit?: (item: T) => void
-  onDelete?: (item: T) => void
-  onToggleStatus?: (item: T) => void
-  onView?: (item: T) => void
-  editLabel?: string
-  deleteLabel?: string
-  toggleLabel?: string
-  viewLabel?: string
-  actions?: (item: T) => React.ReactNode
+  columns: Column<T>[];
+  data: T[];
+  loading?: boolean;
+  error?: string | null;
+  search?: string;
+  onSearchChange?: (value: string) => void;
+  searchPlaceholder?: string;
+  onEdit?: (item: T) => void;
+  onDelete?: (item: T) => void;
+  onToggleStatus?: (item: T) => void;
+  onView?: (item: T) => void;
+  editLabel?: string;
+  deleteLabel?: string;
+  toggleLabel?: string;
+  viewLabel?: string;
+  actions?: (item: T) => React.ReactNode;
 }
 
 export function DataTable<T extends { id: string; isActive?: boolean }>({
@@ -50,38 +58,40 @@ export function DataTable<T extends { id: string; isActive?: boolean }>({
   viewLabel = "عرض",
   actions,
 }: DataTableProps<T>) {
-  const [sortKey, setSortKey] = useState<string | null>(null)
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
-  const [page, setPage] = useState(0)
-  const pageSize = 15
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [page, setPage] = useState(0);
+  const pageSize = 15;
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
-      setSortDir(sortDir === "asc" ? "desc" : "asc")
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
     } else {
-      setSortKey(key)
-      setSortDir("asc")
+      setSortKey(key);
+      setSortDir("asc");
     }
-  }
+  };
 
-  const sorted = [...data]
+  const sorted = [...data];
   if (sortKey) {
     sorted.sort((a, b) => {
-      const aVal = String((a as Record<string, unknown>)[sortKey] ?? "")
-      const bVal = String((b as Record<string, unknown>)[sortKey] ?? "")
-      return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal)
-    })
+      const aVal = String((a as Record<string, unknown>)[sortKey] ?? "");
+      const bVal = String((b as Record<string, unknown>)[sortKey] ?? "");
+      return sortDir === "asc"
+        ? aVal.localeCompare(bVal)
+        : bVal.localeCompare(aVal);
+    });
   }
 
-  const totalPages = Math.ceil(sorted.length / pageSize) || 1
-  const paged = sorted.slice(page * pageSize, (page + 1) * pageSize)
+  const totalPages = Math.ceil(sorted.length / pageSize) || 1;
+  const paged = sorted.slice(page * pageSize, (page + 1) * pageSize);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -89,7 +99,7 @@ export function DataTable<T extends { id: string; isActive?: boolean }>({
       <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center text-red-600">
         {error}
       </div>
-    )
+    );
   }
 
   return (
@@ -100,7 +110,10 @@ export function DataTable<T extends { id: string; isActive?: boolean }>({
           <Input
             placeholder={searchPlaceholder}
             value={search || ""}
-            onChange={(e) => { onSearchChange(e.target.value); setPage(0) }}
+            onChange={(e) => {
+              onSearchChange(e.target.value);
+              setPage(0);
+            }}
             className="pr-10"
           />
         </div>
@@ -116,19 +129,26 @@ export function DataTable<T extends { id: string; isActive?: boolean }>({
                     key={col.key}
                     className={cn(
                       "px-4 py-3 text-right text-sm font-medium text-gray-600",
-                      col.sortable && "cursor-pointer select-none hover:text-dark"
+                      col.sortable &&
+                        "cursor-pointer select-none hover:text-dark",
                     )}
                     onClick={() => col.sortable && handleSort(col.key)}
                   >
                     <span className="flex items-center gap-1">
                       {col.header}
                       {col.sortable && sortKey === col.key && (
-                        <span className="text-xs">{sortDir === "asc" ? "↑" : "↓"}</span>
+                        <span className="text-xs">
+                          {sortDir === "asc" ? "↑" : "↓"}
+                        </span>
                       )}
                     </span>
                   </th>
                 ))}
-                {(onEdit || onDelete || onToggleStatus || onView || actions) && (
+                {(onEdit ||
+                  onDelete ||
+                  onToggleStatus ||
+                  onView ||
+                  actions) && (
                   <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 w-32">
                     إجراءات
                   </th>
@@ -138,22 +158,39 @@ export function DataTable<T extends { id: string; isActive?: boolean }>({
             <tbody>
               {paged.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length + (onEdit || onDelete || onToggleStatus || onView || actions ? 1 : 0)} className="px-4 py-16 text-center text-gray-500">
+                  <td
+                    colSpan={
+                      columns.length +
+                      (onEdit || onDelete || onToggleStatus || onView || actions
+                        ? 1
+                        : 0)
+                    }
+                    className="px-4 py-16 text-center text-gray-500"
+                  >
                     لا توجد بيانات
                   </td>
                 </tr>
               ) : (
                 paged.map((item) => (
-                  <tr key={item.id} className="border-b border-border hover:bg-muted/30 transition-colors">
+                  <tr
+                    key={item.id}
+                    className="border-b border-border hover:bg-muted/30 transition-colors"
+                  >
                     {columns.map((col) => (
                       <td key={col.key} className="px-4 py-3 text-sm text-dark">
                         {col.render(item)}
                       </td>
                     ))}
-                    {(onEdit || onDelete || onToggleStatus || onView || actions) && (
+                    {(onEdit ||
+                      onDelete ||
+                      onToggleStatus ||
+                      onView ||
+                      actions) && (
                       <td className="px-4 py-3">
                         {actions ? (
-                          <div className="flex items-center justify-center gap-1">{actions(item)}</div>
+                          <div className="flex items-center justify-center gap-1">
+                            {actions(item)}
+                          </div>
                         ) : (
                           <div className="flex items-center justify-center gap-1">
                             {onView && (
@@ -178,7 +215,10 @@ export function DataTable<T extends { id: string; isActive?: boolean }>({
                               <button
                                 onClick={() => onToggleStatus(item)}
                                 className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-amber-600"
-                                title={toggleLabel || (item.isActive ? "تعطيل" : "تفعيل")}
+                                title={
+                                  toggleLabel ||
+                                  (item.isActive ? "تعطيل" : "تفعيل")
+                                }
                               >
                                 <Ban className="h-4 w-4" />
                               </button>
@@ -228,5 +268,5 @@ export function DataTable<T extends { id: string; isActive?: boolean }>({
         </div>
       )}
     </div>
-  )
+  );
 }

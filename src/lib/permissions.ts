@@ -29,4 +29,4 @@ export const PERMISSIONS = {
   SETTINGS_MANAGE: "settings.manage",
   ACCOUNTS_VIEW: "accounts.view",
   ACCOUNTS_MANAGE: "accounts.manage",
-} as const
+} as const;

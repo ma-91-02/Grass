@@ -7,6 +7,11 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Currency {
+  USD
+  IQD
+}
+
 enum CustomerTypeEnum {
   INDIVIDUAL
   MARKET
@@ -115,34 +120,32 @@ model ProductCategory {
 }
 
 model ProductPackaging {
-  id          String    @id @default(cuid())
-  name        String    @unique
-  piecesPerCarton Int   @default(0)
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  products    Product[]
+  id              String    @id @default(cuid())
+  name            String    @unique
+  piecesPerCarton Int       @default(0)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model Product {
-  id              String     @id @default(cuid())
-  name            String
-  code            String     @unique
-  barcode         String?    @unique
-  categoryId      String?
-  category        ProductCategory? @relation(fields: [categoryId], references: [id])
-  packagingId     String?
-  packaging       ProductPackaging? @relation(fields: [packagingId], references: [id])
-  piecesPerCarton Int        @default(0)
-  unit            String     @default("قطعة")
-  purchasePrice   Decimal    @default(0)
-  isActive        Boolean    @default(true)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  id               String     @id @default(cuid())
+  name             String
+  code             String     @unique
+  barcode          String?    @unique
+  categoryId       String?
+  category         ProductCategory? @relation(fields: [categoryId], references: [id])
+  packaging        String     @default("قطعة")
+  piecesPerCarton  Int        @default(0)
+  unit             String     @default("قطعة")
+  purchasePrice    Decimal    @default(0)
+  purchaseCurrency Currency   @default(IQD)
+  isActive         Boolean    @default(true)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
-  prices          ProductPrice[]
-  invoiceItems    InvoiceItem[]
+  prices           ProductPrice[]
+  invoiceItems     InvoiceItem[]
 }
 
 model ProductPrice {
@@ -151,6 +154,7 @@ model ProductPrice {
   product        Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
   customerType   CustomerTypeEnum
   price          Decimal
+  currency       Currency         @default(IQD)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 

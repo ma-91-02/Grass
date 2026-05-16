@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function ReportsPage() {
   return (
@@ -15,5 +15,5 @@ export default function ReportsPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,18 +1,22 @@
-import { NextRequest } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { getCurrentUser, hashPassword, logAudit } from "@/lib/auth"
-import { successResponse, errorResponse, unauthorizedError } from "@/lib/api-response"
+import { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getCurrentUser, hashPassword, logAudit } from "@/lib/auth";
+import {
+  successResponse,
+  errorResponse,
+  unauthorizedError,
+} from "@/lib/api-response";
 
 export async function GET() {
-  const user = await getCurrentUser()
-  if (!user) return unauthorizedError()
+  const user = await getCurrentUser();
+  if (!user) return unauthorizedError();
 
   const users = await prisma.user.findMany({
     include: {
       roles: { include: { role: true } },
     },
     orderBy: { createdAt: "desc" },
-  })
+  });
 
   const data = users.map((u) => ({
     id: u.id,
@@ -22,29 +26,29 @@ export async function GET() {
     phone: u.phone,
     roles: u.roles.map((r) => r.role.name),
     createdAt: u.createdAt.toISOString(),
-  }))
+  }));
 
-  return successResponse(data)
+  return successResponse(data);
 }
 
 export async function POST(request: NextRequest) {
-  const currentUser = await getCurrentUser()
-  if (!currentUser) return unauthorizedError()
+  const currentUser = await getCurrentUser();
+  if (!currentUser) return unauthorizedError();
 
   try {
-    const body = await request.json()
-    const { name, email, password, phone, roleIds } = body
+    const body = await request.json();
+    const { name, email, password, phone, roleIds } = body;
 
     if (!name || !email || !password) {
-      return errorResponse("الاسم والبريد الإلكتروني وكلمة المرور مطلوبون")
+      return errorResponse("الاسم والبريد الإلكتروني وكلمة المرور مطلوبون");
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } })
+    const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
-      return errorResponse("البريد الإلكتروني موجود مسبقاً", 409)
+      return errorResponse("البريد الإلكتروني موجود مسبقاً", 409);
     }
 
-    const passwordHash = await hashPassword(password)
+    const passwordHash = await hashPassword(password);
 
     const newUser = await prisma.user.create({
       data: {
@@ -58,21 +62,27 @@ export async function POST(request: NextRequest) {
           : undefined,
       },
       include: { roles: { include: { role: true } } },
-    })
+    });
 
-    await logAudit(currentUser.userId, "CREATE", "User", newUser.id, { name, email })
+    await logAudit(currentUser.userId, "CREATE", "User", newUser.id, {
+      name,
+      email,
+    });
 
-    return successResponse({
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
-      isActive: newUser.isActive,
-      phone: newUser.phone,
-      roles: newUser.roles.map((r) => r.role.name),
-      createdAt: newUser.createdAt.toISOString(),
-    }, 201)
+    return successResponse(
+      {
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        isActive: newUser.isActive,
+        phone: newUser.phone,
+        roles: newUser.roles.map((r) => r.role.name),
+        createdAt: newUser.createdAt.toISOString(),
+      },
+      201,
+    );
   } catch (error) {
-    console.error("Create user error:", error)
-    return errorResponse("فشل إنشاء المستخدم", 500)
+    console.error("Create user error:", error);
+    return errorResponse("فشل إنشاء المستخدم", 500);
   }
 }

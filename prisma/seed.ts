@@ -157,6 +157,19 @@ async function main() {
     },
   })
 
+  const قطعةPackaging = await prisma.productPackaging.upsert({
+    where: { name: "قطعة" },
+    update: { piecesPerCarton: 0 },
+    create: { name: "قطعة", piecesPerCarton: 0 },
+  })
+
+  const كارتونPackaging = await prisma.productPackaging.upsert({
+    where: { name: "كارتون" },
+    update: { piecesPerCarton: 12 },
+    create: { name: "كارتون", piecesPerCarton: 12 },
+  })
+
+  console.log(`Packaging created: ${قطعةPackaging.name}, ${كارتونPackaging.name}`)
   console.log("Admin user created: admin@grass.com / admin123")
   console.log("Seeding complete!")
 }

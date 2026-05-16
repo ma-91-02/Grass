@@ -1,32 +1,32 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Plus, Search } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Plus, Search } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface Category {
-  id: string
-  name: string
-  description: string | null
-  isActive: boolean
+  id: string;
+  name: string;
+  description: string | null;
+  isActive: boolean;
 }
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState("")
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetch("/api/categories")
       .then((res) => res.json())
       .then((data) => setCategories(data.data))
-      .finally(() => setLoading(false))
-  }, [])
+      .finally(() => setLoading(false));
+  }, []);
 
-  const filtered = categories.filter((c) => c.name.includes(search))
+  const filtered = categories.filter((c) => c.name.includes(search));
 
   return (
     <div className="space-y-6">
@@ -67,16 +67,27 @@ export default function CategoriesPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-right p-4 text-sm font-medium text-gray-500">الاسم</th>
-                  <th className="text-right p-4 text-sm font-medium text-gray-500">الوصف</th>
-                  <th className="text-right p-4 text-sm font-medium text-gray-500">الحالة</th>
+                  <th className="text-right p-4 text-sm font-medium text-gray-500">
+                    الاسم
+                  </th>
+                  <th className="text-right p-4 text-sm font-medium text-gray-500">
+                    الوصف
+                  </th>
+                  <th className="text-right p-4 text-sm font-medium text-gray-500">
+                    الحالة
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((cat) => (
-                  <tr key={cat.id} className="border-b border-border hover:bg-muted/50">
+                  <tr
+                    key={cat.id}
+                    className="border-b border-border hover:bg-muted/50"
+                  >
                     <td className="p-4 text-dark font-medium">{cat.name}</td>
-                    <td className="p-4 text-gray-600">{cat.description || "-"}</td>
+                    <td className="p-4 text-gray-600">
+                      {cat.description || "-"}
+                    </td>
                     <td className="p-4">
                       <Badge variant={cat.isActive ? "success" : "danger"}>
                         {cat.isActive ? "نشط" : "غير نشط"}
@@ -90,5 +101,5 @@ export default function CategoriesPage() {
         </Card>
       )}
     </div>
-  )
+  );
 }

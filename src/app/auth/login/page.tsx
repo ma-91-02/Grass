@@ -1,9 +1,9 @@
-import type { Metadata } from "next"
-import { LoginForm } from "./login-form"
+import type { Metadata } from "next";
+import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
   title: "تسجيل الدخول - GRASS ERP",
-}
+};
 
 export default function LoginPage() {
   return (
@@ -16,5 +16,5 @@ export default function LoginPage() {
         <LoginForm />
       </div>
     </div>
-  )
+  );
 }

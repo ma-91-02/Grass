@@ -1,20 +1,20 @@
-import { NextRequest } from "next/server"
-import { authenticateUser } from "@/lib/auth"
-import { successResponse, errorResponse } from "@/lib/api-response"
+import { NextRequest } from "next/server";
+import { authenticateUser } from "@/lib/auth";
+import { successResponse, errorResponse } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { email, password } = body
+    const body = await request.json();
+    const { email, password } = body;
 
     if (!email || !password) {
-      return errorResponse("البريد الإلكتروني وكلمة المرور مطلوبان")
+      return errorResponse("البريد الإلكتروني وكلمة المرور مطلوبان");
     }
 
-    const result = await authenticateUser(email, password)
+    const result = await authenticateUser(email, password);
 
     if (!result) {
-      return errorResponse("بيانات الدخول غير صحيحة", 401)
+      return errorResponse("بيانات الدخول غير صحيحة", 401);
     }
 
     return successResponse({
@@ -25,9 +25,9 @@ export async function POST(request: NextRequest) {
         roles: result.payload.roles,
       },
       token: result.token,
-    })
+    });
   } catch (error) {
-    console.error("Login error:", error)
-    return errorResponse("خطأ في تسجيل الدخول", 500)
+    console.error("Login error:", error);
+    return errorResponse("خطأ في تسجيل الدخول", 500);
   }
 }

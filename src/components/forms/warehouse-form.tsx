@@ -1,40 +1,60 @@
-"use client"
+"use client";
 
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { warehouseFormSchema, type WarehouseFormData } from "@/lib/schemas"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { warehouseFormSchema, type WarehouseFormData } from "@/lib/schemas";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface WarehouseFormProps {
-  defaultValues?: Partial<WarehouseFormData> & { code?: string }
-  onSubmit: (data: WarehouseFormData) => Promise<void>
-  loading?: boolean
+  defaultValues?: Partial<WarehouseFormData> & { code?: string };
+  onSubmit: (data: WarehouseFormData) => Promise<void>;
+  loading?: boolean;
 }
 
-export function WarehouseForm({ defaultValues, onSubmit, loading }: WarehouseFormProps) {
-  const isEdit = !!defaultValues?.code
+export function WarehouseForm({
+  defaultValues,
+  onSubmit,
+  loading,
+}: WarehouseFormProps) {
+  const isEdit = !!defaultValues?.code;
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<WarehouseFormData>({
-    resolver: zodResolver(warehouseFormSchema) as any,
+    resolver: zodResolver(
+      warehouseFormSchema,
+    ) as unknown as import("react-hook-form").Resolver<WarehouseFormData>,
     defaultValues: {
       name: "",
       address: "",
       ...defaultValues,
     },
-  })
+  });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Input label="اسم المخزن" error={errors.name?.message} {...register("name")} required />
+        <Input
+          label="اسم المخزن"
+          error={errors.name?.message}
+          {...register("name")}
+          required
+        />
         {isEdit ? (
-          <Input label="كود المخزن" value={defaultValues?.code || ""} readOnly dir="ltr" />
+          <Input
+            label="كود المخزن"
+            value={defaultValues?.code || ""}
+            readOnly
+            dir="ltr"
+          />
         ) : null}
-        <Input label="العنوان" error={errors.address?.message} {...register("address")} />
+        <Input
+          label="العنوان"
+          error={errors.address?.message}
+          {...register("address")}
+        />
       </div>
       <div className="flex justify-end gap-3 pt-2">
         <Button type="submit" disabled={loading}>
@@ -42,5 +62,5 @@ export function WarehouseForm({ defaultValues, onSubmit, loading }: WarehouseFor
         </Button>
       </div>
     </form>
-  )
+  );
 }

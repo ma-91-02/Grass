@@ -1,14 +1,19 @@
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 interface PageHeaderProps {
-  title: string
-  description?: string
-  actionLabel?: string
-  onAction?: () => void
+  title: string;
+  description?: string;
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
-export function PageHeader({ title, description, actionLabel, onAction }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  description,
+  actionLabel,
+  onAction,
+}: PageHeaderProps) {
   return (
     <div className="flex items-center justify-between">
       <div>
@@ -22,5 +27,5 @@ export function PageHeader({ title, description, actionLabel, onAction }: PageHe
         </Button>
       )}
     </div>
-  )
+  );
 }

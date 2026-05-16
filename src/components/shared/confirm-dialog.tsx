@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import { Dialog } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+import { Dialog } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface ConfirmDialogProps {
-  open: boolean
-  onClose: () => void
-  onConfirm: () => void
-  title: string
-  message: string
-  confirmLabel?: string
-  loading?: boolean
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  loading?: boolean;
 }
 
 export function ConfirmDialog({
@@ -34,5 +34,5 @@ export function ConfirmDialog({
         </Button>
       </div>
     </Dialog>
-  )
+  );
 }
