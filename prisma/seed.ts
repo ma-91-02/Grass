@@ -1,0 +1,171 @@
+import "dotenv/config"
+import { PrismaClient } from "../src/generated/prisma/client"
+import { PrismaPg } from "@prisma/adapter-pg"
+import bcrypt from "bcryptjs"
+
+const adapter = new PrismaPg({ connectionString: process.env["DATABASE_URL"] })
+const prisma = new PrismaClient({ adapter })
+
+const PERMISSIONS = [
+  { key: "users.view", name: "عرض المستخدمين", module: "users" },
+  { key: "users.create", name: "إنشاء مستخدم", module: "users" },
+  { key: "users.edit", name: "تعديل مستخدم", module: "users" },
+  { key: "users.delete", name: "حذف مستخدم", module: "users" },
+  { key: "roles.view", name: "عرض الأدوار", module: "roles" },
+  { key: "roles.manage", name: "إدارة الأدوار", module: "roles" },
+  { key: "customers.view", name: "عرض العملاء", module: "customers" },
+  { key: "customers.create", name: "إنشاء عميل", module: "customers" },
+  { key: "customers.edit", name: "تعديل عميل", module: "customers" },
+  { key: "customers.delete", name: "حذف عميل", module: "customers" },
+  { key: "products.view", name: "عرض المواد", module: "products" },
+  { key: "products.create", name: "إنشاء مادة", module: "products" },
+  { key: "products.edit", name: "تعديل مادة", module: "products" },
+  { key: "products.delete", name: "حذف مادة", module: "products" },
+  { key: "products.viewPurchasePrice", name: "عرض سعر الشراء", module: "products" },
+  { key: "products.editPrice", name: "تعديل الأسعار", module: "products" },
+  { key: "warehouses.view", name: "عرض المخازن", module: "warehouses" },
+  { key: "warehouses.manage", name: "إدارة المخازن", module: "warehouses" },
+  { key: "exchangeRates.view", name: "عرض سعر الصرف", module: "exchangeRates" },
+  { key: "exchangeRates.manage", name: "إدارة سعر الصرف", module: "exchangeRates" },
+  { key: "invoices.view", name: "عرض الفواتير", module: "invoices" },
+  { key: "invoices.create", name: "إنشاء فاتورة", module: "invoices" },
+  { key: "invoices.edit", name: "تعديل فاتورة", module: "invoices" },
+  { key: "invoices.delete", name: "حذف فاتورة", module: "invoices" },
+  { key: "auditLogs.view", name: "عرض سجل النشاطات", module: "audit" },
+  { key: "reports.view", name: "عرض التقارير", module: "reports" },
+  { key: "settings.view", name: "عرض الإعدادات", module: "settings" },
+  { key: "settings.manage", name: "إدارة الإعدادات", module: "settings" },
+  { key: "accounts.view", name: "عرض الحسابات", module: "accounts" },
+  { key: "accounts.manage", name: "إدارة الحسابات", module: "accounts" },
+]
+
+const ROLES = [
+  {
+    name: "مدير النظام",
+    description: "صلاحية كاملة على جميع أقسام النظام",
+    permissions: PERMISSIONS.map((p) => p.key),
+  },
+  {
+    name: "محاسب",
+    description: "عرض وإدارة الحسابات والفواتير والعملاء والمواد",
+    permissions: [
+      "customers.view", "customers.create", "customers.edit",
+      "products.view", "products.viewPurchasePrice",
+      "warehouses.view",
+      "exchangeRates.view", "exchangeRates.manage",
+      "invoices.view", "invoices.create", "invoices.edit",
+      "accounts.view", "accounts.manage",
+      "reports.view",
+    ],
+  },
+  {
+    name: "موظف مبيعات",
+    description: "إنشاء الفواتير وعرض العملاء (ممنوع رؤية سعر الشراء) (ممنوع تعديل الأسعار)",
+    permissions: [
+      "customers.view", "customers.create",
+      "products.view",
+      "invoices.view", "invoices.create",
+    ],
+  },
+  {
+    name: "موظف مخزن",
+    description: "إدارة المخازن والمواد",
+    permissions: [
+      "products.view", "products.create", "products.edit",
+      "warehouses.view", "warehouses.manage",
+    ],
+  },
+  {
+    name: "مراقب",
+    description: "عرض التقارير فقط",
+    permissions: [
+      "reports.view",
+      "customers.view",
+      "products.view",
+      "invoices.view",
+      "auditLogs.view",
+    ],
+  },
+]
+
+async function main() {
+  console.log("Seeding database...")
+
+  const permissionRecords: Record<string, string> = {}
+  for (const perm of PERMISSIONS) {
+    const created = await prisma.permission.upsert({
+      where: { key: perm.key },
+      update: { name: perm.name, module: perm.module },
+      create: { key: perm.key, name: perm.name, module: perm.module },
+    })
+    permissionRecords[perm.key] = created.id
+  }
+  console.log(`Created ${PERMISSIONS.length} permissions`)
+
+  for (const roleData of ROLES) {
+    const role = await prisma.role.upsert({
+      where: { name: roleData.name },
+      update: { description: roleData.description, isSystem: true },
+      create: {
+        name: roleData.name,
+        description: roleData.description,
+        isSystem: true,
+      },
+    })
+
+    for (const permKey of roleData.permissions) {
+      const permId = permissionRecords[permKey]
+      if (permId) {
+        await prisma.rolePermission.upsert({
+          where: { roleId_permissionId: { roleId: role.id, permissionId: permId } },
+          update: {},
+          create: { roleId: role.id, permissionId: permId },
+        })
+      }
+    }
+    console.log(`Role "${roleData.name}" created/updated`)
+  }
+
+  const adminPasswordHash = await bcrypt.hash("admin123", 12)
+  const admin = await prisma.user.upsert({
+    where: { email: "admin@grass.com" },
+    update: { name: "مدير النظام", passwordHash: adminPasswordHash, isActive: true },
+    create: {
+      name: "مدير النظام",
+      email: "admin@grass.com",
+      passwordHash: adminPasswordHash,
+      isActive: true,
+    },
+  })
+
+  const adminRole = await prisma.role.findUnique({ where: { name: "مدير النظام" } })
+  if (adminRole) {
+    await prisma.userRole.upsert({
+      where: { userId_roleId: { userId: admin.id, roleId: adminRole.id } },
+      update: {},
+      create: { userId: admin.id, roleId: adminRole.id },
+    })
+  }
+
+  await prisma.warehouse.upsert({
+    where: { code: "WH-MAIN" },
+    update: { name: "المخزن الرئيسي", address: "بغداد" },
+    create: {
+      name: "المخزن الرئيسي",
+      code: "WH-MAIN",
+      address: "بغداد",
+    },
+  })
+
+  console.log("Admin user created: admin@grass.com / admin123")
+  console.log("Seeding complete!")
+}
+
+main()
+  .catch((e) => {
+    console.error(e)
+    process.exit(1)
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
+  })
