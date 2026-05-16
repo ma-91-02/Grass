@@ -2,45 +2,34 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { customerFormSchema, type CustomerFormData } from "@/lib/schemas";
+import { supplierFormSchema, type SupplierFormData } from "@/lib/schemas";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { CUSTOMER_TYPE_LABELS, CUSTOMER_TYPES } from "@/types";
 import { GOVERNORATES } from "@/lib/governorates";
 import { parseNumericInput } from "@/lib/utils";
 
-interface Category {
-  id: string;
-  name: string;
+interface SupplierFormProps {
+  defaultValues?: Partial<SupplierFormData>;
+  onSubmit: (data: SupplierFormData) => Promise<void>;
 }
 
-interface CustomerFormProps {
-  defaultValues?: Partial<CustomerFormData>;
-  onSubmit: (data: CustomerFormData) => Promise<void>;
-  categories: Category[];
-}
-
-export function CustomerForm({
+export function SupplierForm({
   defaultValues,
   onSubmit,
-  categories,
-}: CustomerFormProps) {
+}: SupplierFormProps) {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<CustomerFormData>({
+  } = useForm<SupplierFormData>({
     resolver: zodResolver(
-      customerFormSchema,
-    ) as unknown as import("react-hook-form").Resolver<CustomerFormData>,
+      supplierFormSchema,
+    ) as unknown as import("react-hook-form").Resolver<SupplierFormData>,
     defaultValues: {
       name: "",
       phone: "",
-      whatsapp: "",
       address: "",
       governorate: "",
-      customerType: "INDIVIDUAL",
-      customerCategoryId: "",
       notes: "",
       openingBalanceIqd: 0,
       openingBalanceUsd: 0,
@@ -54,7 +43,7 @@ export function CustomerForm({
   }
 
   return (
-    <form id="customer-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form id="supplier-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <h3 className="mb-3 text-sm font-semibold text-dark border-b border-border pb-2">
           البيانات الأساسية
@@ -65,27 +54,6 @@ export function CustomerForm({
             error={errors.name?.message}
             {...register("name")}
             required
-          />
-          <Select
-            label="نوع العميل"
-            options={CUSTOMER_TYPES.map((t) => ({
-              value: t,
-              label: CUSTOMER_TYPE_LABELS[t],
-            }))}
-            error={errors.customerType?.message}
-            {...register("customerType")}
-          />
-          <Select
-            label="قسم العميل"
-            options={[
-              { value: "", label: "بدون قسم" },
-              ...categories.map((c) => ({
-                value: c.id,
-                label: c.name,
-              })),
-            ]}
-            error={errors.customerCategoryId?.message}
-            {...register("customerCategoryId")}
           />
           <Select
             label="المحافظة"
@@ -103,12 +71,6 @@ export function CustomerForm({
             label="رقم الهاتف"
             error={errors.phone?.message}
             {...register("phone")}
-            dir="ltr"
-          />
-          <Input
-            label="واتساب"
-            error={errors.whatsapp?.message}
-            {...register("whatsapp")}
             dir="ltr"
           />
           <Input

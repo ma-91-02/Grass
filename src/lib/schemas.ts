@@ -5,6 +5,7 @@ export const customerFormSchema = z.object({
   phone: z.string().optional().nullable(),
   whatsapp: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
+  governorate: z.string().optional().nullable(),
   customerType: z.enum([
     "INDIVIDUAL",
     "MARKET",
@@ -12,8 +13,25 @@ export const customerFormSchema = z.object({
     "AGENT",
     "ONLINE",
   ]),
-  creditLimit: z.coerce.number().min(0).default(0),
+  customerCategoryId: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
+  openingBalanceIqd: z.coerce.number().default(0),
+  openingBalanceUsd: z.coerce.number().default(0),
+});
+
+export const supplierFormSchema = z.object({
+  name: z.string().min(1, "الاسم مطلوب"),
+  phone: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  governorate: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  openingBalanceIqd: z.coerce.number().default(0),
+  openingBalanceUsd: z.coerce.number().default(0),
+});
+
+export const customerCategoryFormSchema = z.object({
+  name: z.string().min(1, "الاسم مطلوب"),
+  description: z.string().optional().nullable(),
 });
 
 export const productFormSchema = z.object({
@@ -57,6 +75,8 @@ export const exchangeRateFormSchema = z.object({
 });
 
 export type CustomerFormData = z.infer<typeof customerFormSchema>;
+export type SupplierFormData = z.infer<typeof supplierFormSchema>;
+export type CustomerCategoryFormData = z.infer<typeof customerCategoryFormSchema>;
 export type ProductFormData = z.infer<typeof productFormSchema>;
 export type WarehouseFormData = z.infer<typeof warehouseFormSchema>;
 export type ExchangeRateFormData = z.infer<typeof exchangeRateFormSchema>;

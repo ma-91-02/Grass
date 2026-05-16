@@ -34,6 +34,7 @@ model User {
   roles         UserRole[]
   auditLogs     AuditLog[]
   createdCustomers Customer[] @relation("CustomerCreatedBy")
+  createdSuppliers Supplier[] @relation("SupplierCreatedBy")
 }
 
 model Role {
@@ -89,23 +90,78 @@ model AuditLog {
   createdAt  DateTime @default(now())
 }
 
-model Customer {
-  id              String           @id @default(cuid())
-  name            String
-  code            String           @unique
-  phone           String?
-  whatsapp        String?
-  address         String?
-  customerType    CustomerTypeEnum @default(INDIVIDUAL)
-  isActive        Boolean          @default(true)
-  creditLimit     Decimal          @default(0)
-  notes           String?
-  createdById     String?
-  createdBy       User?            @relation("CustomerCreatedBy", fields: [createdById], references: [id])
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+model CustomerCategory {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  description String?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
-  invoices        Invoice[]
+  customers   Customer[]
+}
+
+model Customer {
+  id                  String           @id @default(cuid())
+  name                String
+  code                String           @unique
+  phone               String?
+  whatsapp            String?
+  address             String?
+  governorate         String?
+  customerType        CustomerTypeEnum @default(INDIVIDUAL)
+  customerCategoryId  String?
+  customerCategory    CustomerCategory? @relation(fields: [customerCategoryId], references: [id])
+  isActive            Boolean          @default(true)
+  notes               String?
+  createdById         String?
+  createdBy           User?            @relation("CustomerCreatedBy", fields: [createdById], references: [id])
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  accounts            CustomerAccount[]
+  invoices            Invoice[]
+}
+
+model CustomerAccount {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  currency   Currency @default(IQD)
+  balance    Decimal  @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([customerId, currency])
+}
+
+model Supplier {
+  id            String   @id @default(cuid())
+  name          String
+  code          String   @unique
+  phone         String?
+  address       String?
+  governorate   String?
+  notes         String?
+  isActive      Boolean  @default(true)
+  createdById   String?
+  createdBy     User?    @relation("SupplierCreatedBy", fields: [createdById], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  accounts      SupplierAccount[]
+}
+
+model SupplierAccount {
+  id         String   @id @default(cuid())
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  currency   Currency @default(IQD)
+  balance    Decimal  @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([supplierId, currency])
 }
 
 model ProductCategory {

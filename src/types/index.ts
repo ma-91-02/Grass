@@ -38,10 +38,49 @@ export interface CustomerData {
   phone: string | null;
   whatsapp: string | null;
   address: string | null;
+  governorate: string | null;
   customerType: CustomerType;
+  customerCategoryId: string | null;
+  customerCategoryName: string | null;
   isActive: boolean;
-  creditLimit: number;
   notes: string | null;
+  accounts: CustomerAccountData[];
+  createdAt: string;
+}
+
+export interface CustomerAccountData {
+  id: string;
+  customerId: string;
+  currency: string;
+  balance: number;
+}
+
+export interface SupplierData {
+  id: string;
+  name: string;
+  code: string;
+  phone: string | null;
+  address: string | null;
+  governorate: string | null;
+  notes: string | null;
+  isActive: boolean;
+  accounts: SupplierAccountData[];
+  createdAt: string;
+}
+
+export interface SupplierAccountData {
+  id: string;
+  supplierId: string;
+  currency: string;
+  balance: number;
+}
+
+export interface CustomerCategoryData {
+  id: string;
+  name: string;
+  description: string | null;
+  isActive: boolean;
+  customerCount?: number;
   createdAt: string;
 }
 
