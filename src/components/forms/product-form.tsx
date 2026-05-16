@@ -358,7 +358,10 @@ export function ProductForm({
               {Object.entries(cartonPrices).map(([label, total]) => (
                 <div key={label} className="flex justify-between">
                   <span className="text-blue-700">{label}:</span>
-                  <span className="font-mono font-semibold text-blue-900" dir="ltr">
+                  <span
+                    className="font-mono font-semibold text-blue-900"
+                    dir="ltr"
+                  >
                     {total.toFixed(2)}
                   </span>
                 </div>

@@ -131,7 +131,11 @@ export async function PATCH(
       }
     }
 
-    if (parsed.barcode !== undefined && parsed.barcode !== existing.barcode && parsed.barcode) {
+    if (
+      parsed.barcode !== undefined &&
+      parsed.barcode !== existing.barcode &&
+      parsed.barcode
+    ) {
       const duplicateBarcode = await prisma.product.findUnique({
         where: { barcode: parsed.barcode },
       });

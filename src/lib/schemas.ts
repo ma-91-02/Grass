@@ -88,7 +88,9 @@ export const purchaseInvoiceFormSchema = z.object({
 
 export type CustomerFormData = z.infer<typeof customerFormSchema>;
 export type SupplierFormData = z.infer<typeof supplierFormSchema>;
-export type CustomerCategoryFormData = z.infer<typeof customerCategoryFormSchema>;
+export type CustomerCategoryFormData = z.infer<
+  typeof customerCategoryFormSchema
+>;
 export type ProductFormData = z.infer<typeof productFormSchema>;
 export type WarehouseFormData = z.infer<typeof warehouseFormSchema>;
 export type ExchangeRateFormData = z.infer<typeof exchangeRateFormSchema>;

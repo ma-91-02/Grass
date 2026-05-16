@@ -77,10 +77,7 @@ export async function POST(request: NextRequest) {
       console.error("Audit log failed for category create");
     }
 
-    return successResponse(
-      { ...category, customerCount: 0 },
-      201,
-    );
+    return successResponse({ ...category, customerCount: 0 }, 201);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return errorResponse(error.issues.map((e) => e.message).join("، "));

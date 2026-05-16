@@ -7,7 +7,7 @@ import { DataTable, type Column } from "@/components/shared/data-table";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Dialog } from "@/components/ui/dialog";
 import { PurchaseInvoiceForm } from "@/components/forms/purchase-invoice-form";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, safeJson } from "@/lib/utils";
 import { useToast } from "@/components/ui/toast";
 import type { PurchaseInvoiceData } from "@/types";
 import type { TokenPayload } from "@/lib/auth";
@@ -28,36 +28,40 @@ export default function PurchasesPage() {
 
   useEffect(() => {
     async function fetchUser() {
-      try {
-        const res = await fetch("/api/auth/me");
-        const json = await res.json();
-        if (json.success) setUser(json.data);
-      } catch {
-        console.error("Failed to fetch user");
-      }
+      const res = await fetch("/api/auth/me");
+      const json = await safeJson<TokenPayload>(res);
+      if (json.success && json.data) setUser(json.data);
     }
     fetchUser();
   }, []);
 
   useEffect(() => {
     async function load() {
-      setLoading(true);
       setError(null);
-      try {
-        const res = await fetch("/api/purchases");
-        const json = await res.json();
-        if (!json.success) throw new Error(json.error || "فشل تحميل الفواتير");
-        setInvoices(json.data || []);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "فشل تحميل فواتير المشتريات",
-        );
-      } finally {
-        setLoading(false);
+      const res = await fetch("/api/purchases");
+      const json = await safeJson<PurchaseInvoiceData[]>(res);
+      if (json.success && json.data) {
+        setInvoices(json.data);
+      } else {
+        setError(json.error || "فشل تحميل فواتير المشتريات");
       }
+      setLoading(false);
     }
     load();
   }, []);
+
+  async function reloadInvoices() {
+    setLoading(true);
+    setError(null);
+    const res = await fetch("/api/purchases");
+    const json = await safeJson<PurchaseInvoiceData[]>(res);
+    if (json.success && json.data) {
+      setInvoices(json.data);
+    } else {
+      setError(json.error || "فشل تحميل فواتير المشتريات");
+    }
+    setLoading(false);
+  }
 
   const permissions = user?.permissions || [];
   const canCreate = permissions.includes("purchases.create");
@@ -91,18 +95,14 @@ export default function PurchasesPage() {
     {
       key: "supplierName",
       header: "المورد",
-      render: (item) => (
-        <span>{item.supplierName || "—"}</span>
-      ),
+      render: (item) => <span>{item.supplierName || "—"}</span>,
       sortable: true,
     },
     {
       key: "purchaseDate",
       header: "التاريخ",
       render: (item) => (
-        <span className="text-gray-600">
-          {formatDate(item.purchaseDate)}
-        </span>
+        <span className="text-gray-600">{formatDate(item.purchaseDate)}</span>
       ),
       sortable: true,
     },
@@ -111,7 +111,8 @@ export default function PurchasesPage() {
       header: "الكلفة",
       render: (item) => (
         <span className="font-medium">
-          {formatCurrency(item.totalCost)} {item.currency === "USD" ? "$" : "د.ع"}
+          {formatCurrency(item.totalCost)}{" "}
+          {item.currency === "USD" ? "$" : "د.ع"}
         </span>
       ),
       sortable: true,
@@ -120,7 +121,9 @@ export default function PurchasesPage() {
       key: "paid",
       header: "المدفوع",
       render: (item) => (
-        <span className={item.remaining > 0 ? "text-red-600" : "text-green-600"}>
+        <span
+          className={item.remaining > 0 ? "text-red-600" : "text-green-600"}
+        >
           {formatCurrency(item.paid)}
         </span>
       ),
@@ -129,7 +132,11 @@ export default function PurchasesPage() {
       key: "remaining",
       header: "الباقي",
       render: (item) => (
-        <span className={item.remaining > 0 ? "text-red-600 font-medium" : "text-gray-500"}>
+        <span
+          className={
+            item.remaining > 0 ? "text-red-600 font-medium" : "text-gray-500"
+          }
+        >
           {item.remaining > 0 ? formatCurrency(item.remaining) : "—"}
         </span>
       ),
@@ -149,28 +156,24 @@ export default function PurchasesPage() {
   async function handleDeleteConfirm() {
     if (!selectedInvoice) return;
     setDeleteLoading(true);
-    try {
-      const res = await fetch(`/api/purchases/${selectedInvoice.id}`, {
-        method: "DELETE",
-      });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error || "فشل حذف الفاتورة");
+    const res = await fetch(`/api/purchases/${selectedInvoice.id}`, {
+      method: "DELETE",
+    });
+    const json = await safeJson(res);
+    if (json.success) {
       toast("تم حذف الفاتورة بنجاح", "success");
       setShowDeleteDialog(false);
       setSelectedInvoice(null);
-      window.location.reload();
-    } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : "فشل حذف الفاتورة";
-      toast(msg, "error");
-    } finally {
-      setDeleteLoading(false);
+      reloadInvoices();
+    } else {
+      toast(json.error || "فشل حذف الفاتورة", "error");
     }
+    setDeleteLoading(false);
   }
 
   function handleCreateSuccess() {
     setShowCreateDialog(false);
-    window.location.reload();
+    reloadInvoices();
   }
 
   return (
@@ -182,13 +185,18 @@ export default function PurchasesPage() {
         onAction={canCreate ? () => setShowCreateDialog(true) : undefined}
       />
 
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <Card>
         <CardContent className="p-6">
           <DataTable
             columns={columns}
             data={filtered}
             loading={loading}
-            error={error}
             search={search}
             onSearchChange={setSearch}
             searchPlaceholder="بحث برقم الفاتورة أو اسم المورد..."
@@ -205,7 +213,7 @@ export default function PurchasesPage() {
         open={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
         title="فاتورة مشتريات جديدة"
-        className="max-w-4xl"
+        className="max-w-5xl w-full"
       >
         <PurchaseInvoiceForm
           userPermissions={permissions}
@@ -228,7 +236,9 @@ export default function PurchasesPage() {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-500">المورد: </span>
-                <span className="font-medium">{selectedInvoice.supplierName || "—"}</span>
+                <span className="font-medium">
+                  {selectedInvoice.supplierName || "—"}
+                </span>
               </div>
               <div>
                 <span className="text-gray-500">رقم فاتورة المورد: </span>
@@ -245,7 +255,9 @@ export default function PurchasesPage() {
               <div>
                 <span className="text-gray-500">العملة: </span>
                 <span className="font-medium">
-                  {selectedInvoice.currency === "USD" ? "دولار أمريكي" : "دينار عراقي"}
+                  {selectedInvoice.currency === "USD"
+                    ? "دولار أمريكي"
+                    : "دينار عراقي"}
                 </span>
               </div>
               <div>
@@ -267,7 +279,7 @@ export default function PurchasesPage() {
             </div>
 
             {selectedInvoice.notes && (
-              <div className="text-sm">
+              <div className="rounded-lg bg-gray-50 p-3 text-sm">
                 <span className="text-gray-500">ملاحظات: </span>
                 <span>{selectedInvoice.notes}</span>
               </div>
@@ -275,49 +287,77 @@ export default function PurchasesPage() {
 
             <div>
               <h3 className="mb-2 text-sm font-semibold text-dark">المواد</h3>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    <th className="px-3 py-2 text-right font-medium text-gray-600">المادة</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600">الكود</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600">الكمية</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600">سعر الشراء</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600">الإجمالي</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedInvoice.items.map((item) => (
-                    <tr key={item.id} className="border-b border-border">
-                      <td className="px-3 py-2">{item.productName}</td>
-                      <td className="px-3 py-2 text-gray-500">{item.productCode}</td>
-                      <td className="px-3 py-2">{item.quantity}</td>
-                      <td className="px-3 py-2">{formatCurrency(item.purchasePrice)}</td>
-                      <td className="px-3 py-2 font-medium">{formatCurrency(item.totalPrice)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {selectedInvoice.expenses.length > 0 && (
-              <div>
-                <h3 className="mb-2 text-sm font-semibold text-dark">المصاريف</h3>
+              <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border bg-muted/50">
-                      <th className="px-3 py-2 text-right font-medium text-gray-600">الاسم</th>
-                      <th className="px-3 py-2 text-right font-medium text-gray-600">المبلغ</th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-600">
+                        الكود
+                      </th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-600">
+                        المادة
+                      </th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-600">
+                        الكمية
+                      </th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-600">
+                        سعر الشراء
+                      </th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-600">
+                        الإجمالي
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {selectedInvoice.expenses.map((exp) => (
-                      <tr key={exp.id} className="border-b border-border">
-                        <td className="px-3 py-2">{exp.name}</td>
-                        <td className="px-3 py-2">{formatCurrency(exp.amount)}</td>
+                    {selectedInvoice.items.map((item) => (
+                      <tr key={item.id} className="border-b border-border">
+                        <td className="px-3 py-2 font-mono text-gray-500">
+                          {item.productCode}
+                        </td>
+                        <td className="px-3 py-2">{item.productName}</td>
+                        <td className="px-3 py-2">{item.quantity}</td>
+                        <td className="px-3 py-2">
+                          {formatCurrency(item.purchasePrice)}
+                        </td>
+                        <td className="px-3 py-2 font-medium">
+                          {formatCurrency(item.totalPrice)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+
+            {selectedInvoice.expenses.length > 0 && (
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-dark">
+                  المصاريف
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/50">
+                        <th className="px-3 py-2 text-right font-medium text-gray-600">
+                          الاسم
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium text-gray-600">
+                          المبلغ
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedInvoice.expenses.map((exp) => (
+                        <tr key={exp.id} className="border-b border-border">
+                          <td className="px-3 py-2">{exp.name}</td>
+                          <td className="px-3 py-2">
+                            {formatCurrency(exp.amount)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 

@@ -67,6 +67,28 @@ export function convertArabicNumbers(value: string): string {
   return result;
 }
 
+export async function safeJson<T = unknown>(
+  response: Response,
+): Promise<{ success: boolean; data?: T; error?: string }> {
+  if (!response.ok) {
+    try {
+      const body = await response.json();
+      return {
+        success: false,
+        error: body.error || `فشل الطلب (${response.status})`,
+      };
+    } catch {
+      return { success: false, error: `فشل الطلب (${response.status})` };
+    }
+  }
+  try {
+    const body = await response.json();
+    return body;
+  } catch {
+    return { success: false, error: "استجابة غير متوقعة من الخادم" };
+  }
+}
+
 export function parseNumericInput(value: string): string {
   if (!value) return value;
   // Step 1: Convert Arabic/Persian digits to English

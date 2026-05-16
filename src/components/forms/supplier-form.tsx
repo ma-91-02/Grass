@@ -11,10 +11,7 @@ interface SupplierFormProps {
   onSubmit: (data: SupplierFormData) => Promise<void>;
 }
 
-export function SupplierForm({
-  defaultValues,
-  onSubmit,
-}: SupplierFormProps) {
+export function SupplierForm({ defaultValues, onSubmit }: SupplierFormProps) {
   const {
     register,
     handleSubmit,
@@ -40,7 +37,11 @@ export function SupplierForm({
   }
 
   return (
-    <form id="supplier-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form
+      id="supplier-form"
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-4"
+    >
       <div>
         <h3 className="mb-3 text-sm font-semibold text-dark border-b border-border pb-2">
           البيانات الأساسية

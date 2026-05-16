@@ -33,7 +33,11 @@ export function CustomerCategoryForm({
   });
 
   return (
-    <form id="category-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form
+      id="category-form"
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-4"
+    >
       <Input
         label="الاسم"
         error={errors.name?.message}

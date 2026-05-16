@@ -78,13 +78,9 @@ export async function PATCH(
     });
 
     try {
-      await logAudit(
-        currentUser.userId,
-        "UPDATE",
-        "CustomerCategory",
-        id,
-        { name: category.name },
-      );
+      await logAudit(currentUser.userId, "UPDATE", "CustomerCategory", id, {
+        name: category.name,
+      });
     } catch {
       console.error("Audit log failed for category update");
     }
@@ -127,13 +123,9 @@ export async function DELETE(
     await prisma.customerCategory.delete({ where: { id } });
 
     try {
-      await logAudit(
-        currentUser.userId,
-        "DELETE",
-        "CustomerCategory",
-        id,
-        { name: category.name },
-      );
+      await logAudit(currentUser.userId, "DELETE", "CustomerCategory", id, {
+        name: category.name,
+      });
     } catch {
       console.error("Audit log failed for category delete");
     }

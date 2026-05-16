@@ -14,12 +14,7 @@ import { formatCurrency } from "@/lib/utils";
 import { type CustomerType } from "@/types";
 import type { TokenPayload } from "@/lib/auth";
 import { PERMISSIONS } from "@/lib/permissions";
-import {
-  Edit,
-  Ban,
-  CheckCircle,
-  Trash2,
-} from "lucide-react";
+import { Edit, Ban, CheckCircle, Trash2 } from "lucide-react";
 
 interface ProductPrice {
   id: string;
@@ -197,8 +192,7 @@ export default function ProductsPage() {
     [editItem, updateMutation, createMutation],
   );
 
-  const isLoading =
-    createMutation.isPending || updateMutation.isPending;
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   const columns = [
     {
@@ -399,7 +393,9 @@ export default function ProductsPage() {
       <ConfirmDialog
         open={!!hardDeleteItem}
         onClose={() => setHardDeleteItem(null)}
-        onConfirm={() => hardDeleteItem && hardDeleteMutation.mutate(hardDeleteItem.id)}
+        onConfirm={() =>
+          hardDeleteItem && hardDeleteMutation.mutate(hardDeleteItem.id)
+        }
         title="حذف مادة نهائياً"
         message={`هل أنت متأكد من حذف المادة "${hardDeleteItem?.name}" نهائياً؟ لا يمكن التراجع عن هذا الإجراء.`}
         confirmLabel="حذف نهائي"

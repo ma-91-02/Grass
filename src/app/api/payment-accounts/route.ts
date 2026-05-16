@@ -19,23 +19,28 @@ const accountSchema = z.object({
 });
 
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) return unauthorizedError();
+  try {
+    const user = await getCurrentUser();
+    if (!user) return unauthorizedError();
 
-  const accounts = await prisma.paymentAccount.findMany({
-    orderBy: { name: "asc" },
-  });
+    const accounts = await prisma.paymentAccount.findMany({
+      orderBy: { name: "asc" },
+    });
 
-  const data = accounts.map((a) => ({
-    id: a.id,
-    name: a.name,
-    type: a.type,
-    currency: a.currency,
-    balance: Number(a.balance),
-    isActive: a.isActive,
-  }));
+    const data = accounts.map((a) => ({
+      id: a.id,
+      name: a.name,
+      type: a.type,
+      currency: a.currency,
+      balance: Number(a.balance),
+      isActive: a.isActive,
+    }));
 
-  return successResponse(data);
+    return successResponse(data);
+  } catch (error) {
+    console.error("GET payment accounts error:", error);
+    return errorResponse("فشل تحميل حسابات التسديد", 500);
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -61,14 +66,17 @@ export async function POST(request: NextRequest) {
       data: parsed,
     });
 
-    return successResponse({
-      id: account.id,
-      name: account.name,
-      type: account.type,
-      currency: account.currency,
-      balance: Number(account.balance),
-      isActive: account.isActive,
-    }, 201);
+    return successResponse(
+      {
+        id: account.id,
+        name: account.name,
+        type: account.type,
+        currency: account.currency,
+        balance: Number(account.balance),
+        isActive: account.isActive,
+      },
+      201,
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return errorResponse(error.issues.map((e) => e.message).join("، "));

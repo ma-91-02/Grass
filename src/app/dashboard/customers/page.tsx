@@ -13,13 +13,7 @@ import { CustomerCategoryForm } from "@/components/forms/customer-category-form"
 import { useToast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { CUSTOMER_TYPE_LABELS, type CustomerType } from "@/types";
-import {
-  Edit,
-  Ban,
-  CheckCircle,
-  Trash2,
-  Plus,
-} from "lucide-react";
+import { Edit, Ban, CheckCircle, Trash2, Plus } from "lucide-react";
 
 type Tab = "customers" | "suppliers" | "categories";
 
@@ -81,9 +75,15 @@ export default function CustomersPage() {
 
   // Category state
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
-  const [editCategory, setEditCategory] = useState<CustomerCategory | null>(null);
-  const [toggleCategory, setToggleCategory] = useState<CustomerCategory | null>(null);
-  const [deleteCategory, setDeleteCategory] = useState<CustomerCategory | null>(null);
+  const [editCategory, setEditCategory] = useState<CustomerCategory | null>(
+    null,
+  );
+  const [toggleCategory, setToggleCategory] = useState<CustomerCategory | null>(
+    null,
+  );
+  const [deleteCategory, setDeleteCategory] = useState<CustomerCategory | null>(
+    null,
+  );
 
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
 
@@ -95,38 +95,47 @@ export default function CustomersPage() {
   }, []);
 
   // Queries
-  const { data: customers = [], isLoading: customersLoading, error: customersError } =
-    useQuery({
-      queryKey: ["customers"],
-      queryFn: async () => {
-        const res = await fetch("/api/customers");
-        const json = await res.json();
-        if (!json.success) throw new Error(json.error || "فشل تحميل العملاء");
-        return json.data as Customer[];
-      },
-    });
+  const {
+    data: customers = [],
+    isLoading: customersLoading,
+    error: customersError,
+  } = useQuery({
+    queryKey: ["customers"],
+    queryFn: async () => {
+      const res = await fetch("/api/customers");
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "فشل تحميل العملاء");
+      return json.data as Customer[];
+    },
+  });
 
-  const { data: suppliers = [], isLoading: suppliersLoading, error: suppliersError } =
-    useQuery({
-      queryKey: ["suppliers"],
-      queryFn: async () => {
-        const res = await fetch("/api/suppliers");
-        const json = await res.json();
-        if (!json.success) throw new Error(json.error || "فشل تحميل الموردين");
-        return json.data as Supplier[];
-      },
-    });
+  const {
+    data: suppliers = [],
+    isLoading: suppliersLoading,
+    error: suppliersError,
+  } = useQuery({
+    queryKey: ["suppliers"],
+    queryFn: async () => {
+      const res = await fetch("/api/suppliers");
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "فشل تحميل الموردين");
+      return json.data as Supplier[];
+    },
+  });
 
-  const { data: categories = [], isLoading: categoriesLoading, error: categoriesError } =
-    useQuery({
-      queryKey: ["customer-categories"],
-      queryFn: async () => {
-        const res = await fetch("/api/customer-categories");
-        const json = await res.json();
-        if (!json.success) throw new Error(json.error || "فشل تحميل الأقسام");
-        return json.data as CustomerCategory[];
-      },
-    });
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useQuery({
+    queryKey: ["customer-categories"],
+    queryFn: async () => {
+      const res = await fetch("/api/customer-categories");
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "فشل تحميل الأقسام");
+      return json.data as CustomerCategory[];
+    },
+  });
 
   // Customer mutations
   const createCustomerMutation = useMutation({
@@ -339,7 +348,9 @@ export default function CustomersPage() {
 
   const deleteCategoryMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/customer-categories/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/customer-categories/${id}`, {
+        method: "DELETE",
+      });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل حذف القسم");
       return json.data;
@@ -371,10 +382,7 @@ export default function CustomersPage() {
       s.address?.includes(search),
   );
 
-  const filteredCategories = categories.filter(
-    (c) =>
-      c.name.includes(search),
-  );
+  const filteredCategories = categories.filter((c) => c.name.includes(search));
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "customers", label: "العملاء" },
@@ -451,26 +459,34 @@ export default function CustomersPage() {
                 key: "code",
                 header: "الكود",
                 render: (c: Customer) => (
-                  <span className="font-mono text-xs text-gray-500">{c.code}</span>
+                  <span className="font-mono text-xs text-gray-500">
+                    {c.code}
+                  </span>
                 ),
                 sortable: true,
               },
               {
                 key: "name",
                 header: "الاسم",
-                render: (c: Customer) => <span className="font-medium">{c.name}</span>,
+                render: (c: Customer) => (
+                  <span className="font-medium">{c.name}</span>
+                ),
                 sortable: true,
               },
               {
                 key: "phone",
                 header: "الهاتف",
-                render: (c: Customer) => <span dir="ltr">{c.phone || "-"}</span>,
+                render: (c: Customer) => (
+                  <span dir="ltr">{c.phone || "-"}</span>
+                ),
               },
               {
                 key: "customerType",
                 header: "النوع",
                 render: (c: Customer) => (
-                  <Badge variant="info">{CUSTOMER_TYPE_LABELS[c.customerType]}</Badge>
+                  <Badge variant="info">
+                    {CUSTOMER_TYPE_LABELS[c.customerType]}
+                  </Badge>
                 ),
               },
               {
@@ -481,7 +497,9 @@ export default function CustomersPage() {
               {
                 key: "customerCategoryName",
                 header: "القسم",
-                render: (c: Customer) => <span>{c.customerCategoryName || "-"}</span>,
+                render: (c: Customer) => (
+                  <span>{c.customerCategoryName || "-"}</span>
+                ),
               },
               {
                 key: "isActive",
@@ -495,7 +513,9 @@ export default function CustomersPage() {
             ]}
             data={filteredCustomers}
             loading={customersLoading}
-            error={customersError instanceof Error ? customersError.message : null}
+            error={
+              customersError instanceof Error ? customersError.message : null
+            }
             search={search}
             onSearchChange={setSearch}
             searchPlaceholder="بحث بالاسم أو الكود أو الهاتف..."
@@ -548,18 +568,28 @@ export default function CustomersPage() {
             title={editCustomer ? "تعديل عميل" : "إضافة عميل جديد"}
             footer={
               <>
-                <Button type="button" variant="outline" onClick={() => {
-                  setCustomerDialogOpen(false);
-                  setEditCustomer(null);
-                }}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setCustomerDialogOpen(false);
+                    setEditCustomer(null);
+                  }}
+                >
                   إلغاء
                 </Button>
                 <Button
                   type="submit"
                   form="customer-form"
-                  disabled={createCustomerMutation.isPending || updateCustomerMutation.isPending}
+                  disabled={
+                    createCustomerMutation.isPending ||
+                    updateCustomerMutation.isPending
+                  }
                 >
-                  {createCustomerMutation.isPending || updateCustomerMutation.isPending ? "جاري الحفظ..." : "حفظ"}
+                  {createCustomerMutation.isPending ||
+                  updateCustomerMutation.isPending
+                    ? "جاري الحفظ..."
+                    : "حفظ"}
                 </Button>
               </>
             }
@@ -576,8 +606,12 @@ export default function CustomersPage() {
                       customerType: editCustomer.customerType,
                       customerCategoryId: editCustomer.customerCategoryId || "",
                       notes: editCustomer.notes || "",
-                      openingBalanceIqd: editCustomer.accounts.find(a => a.currency === "IQD")?.balance || 0,
-                      openingBalanceUsd: editCustomer.accounts.find(a => a.currency === "USD")?.balance || 0,
+                      openingBalanceIqd:
+                        editCustomer.accounts.find((a) => a.currency === "IQD")
+                          ?.balance || 0,
+                      openingBalanceUsd:
+                        editCustomer.accounts.find((a) => a.currency === "USD")
+                          ?.balance || 0,
                     }
                   : undefined
               }
@@ -595,7 +629,9 @@ export default function CustomersPage() {
           <ConfirmDialog
             open={!!deleteCustomer}
             onClose={() => setDeleteCustomer(null)}
-            onConfirm={() => deleteCustomer && deleteCustomerMutation.mutate(deleteCustomer.id)}
+            onConfirm={() =>
+              deleteCustomer && deleteCustomerMutation.mutate(deleteCustomer.id)
+            }
             title="حذف عميل نهائياً"
             message={`هل أنت متأكد من حذف العميل "${deleteCustomer?.name}" نهائياً؟ لا يمكن التراجع عن هذا الإجراء.`}
             confirmLabel="حذف نهائي"
@@ -628,20 +664,26 @@ export default function CustomersPage() {
                 key: "code",
                 header: "الكود",
                 render: (s: Supplier) => (
-                  <span className="font-mono text-xs text-gray-500">{s.code}</span>
+                  <span className="font-mono text-xs text-gray-500">
+                    {s.code}
+                  </span>
                 ),
                 sortable: true,
               },
               {
                 key: "name",
                 header: "الاسم",
-                render: (s: Supplier) => <span className="font-medium">{s.name}</span>,
+                render: (s: Supplier) => (
+                  <span className="font-medium">{s.name}</span>
+                ),
                 sortable: true,
               },
               {
                 key: "phone",
                 header: "الهاتف",
-                render: (s: Supplier) => <span dir="ltr">{s.phone || "-"}</span>,
+                render: (s: Supplier) => (
+                  <span dir="ltr">{s.phone || "-"}</span>
+                ),
               },
               {
                 key: "isActive",
@@ -655,7 +697,9 @@ export default function CustomersPage() {
             ]}
             data={filteredSuppliers}
             loading={suppliersLoading}
-            error={suppliersError instanceof Error ? suppliersError.message : null}
+            error={
+              suppliersError instanceof Error ? suppliersError.message : null
+            }
             search={search}
             onSearchChange={setSearch}
             searchPlaceholder="بحث بالاسم أو الكود أو الهاتف..."
@@ -708,18 +752,28 @@ export default function CustomersPage() {
             title={editSupplier ? "تعديل مورد" : "إضافة مورد جديد"}
             footer={
               <>
-                <Button type="button" variant="outline" onClick={() => {
-                  setSupplierDialogOpen(false);
-                  setEditSupplier(null);
-                }}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setSupplierDialogOpen(false);
+                    setEditSupplier(null);
+                  }}
+                >
                   إلغاء
                 </Button>
                 <Button
                   type="submit"
                   form="supplier-form"
-                  disabled={createSupplierMutation.isPending || updateSupplierMutation.isPending}
+                  disabled={
+                    createSupplierMutation.isPending ||
+                    updateSupplierMutation.isPending
+                  }
                 >
-                  {createSupplierMutation.isPending || updateSupplierMutation.isPending ? "جاري الحفظ..." : "حفظ"}
+                  {createSupplierMutation.isPending ||
+                  updateSupplierMutation.isPending
+                    ? "جاري الحفظ..."
+                    : "حفظ"}
                 </Button>
               </>
             }
@@ -732,8 +786,12 @@ export default function CustomersPage() {
                       phone: editSupplier.phone || "",
                       address: editSupplier.address || "",
                       notes: editSupplier.notes || "",
-                      openingBalanceIqd: editSupplier.accounts.find(a => a.currency === "IQD")?.balance || 0,
-                      openingBalanceUsd: editSupplier.accounts.find(a => a.currency === "USD")?.balance || 0,
+                      openingBalanceIqd:
+                        editSupplier.accounts.find((a) => a.currency === "IQD")
+                          ?.balance || 0,
+                      openingBalanceUsd:
+                        editSupplier.accounts.find((a) => a.currency === "USD")
+                          ?.balance || 0,
                     }
                   : undefined
               }
@@ -750,7 +808,9 @@ export default function CustomersPage() {
           <ConfirmDialog
             open={!!deleteSupplier}
             onClose={() => setDeleteSupplier(null)}
-            onConfirm={() => deleteSupplier && deleteSupplierMutation.mutate(deleteSupplier.id)}
+            onConfirm={() =>
+              deleteSupplier && deleteSupplierMutation.mutate(deleteSupplier.id)
+            }
             title="حذف مورد نهائياً"
             message={`هل أنت متأكد من حذف المورد "${deleteSupplier?.name}" نهائياً؟ لا يمكن التراجع عن هذا الإجراء.`}
             confirmLabel="حذف نهائي"
@@ -782,13 +842,17 @@ export default function CustomersPage() {
               {
                 key: "name",
                 header: "الاسم",
-                render: (c: CustomerCategory) => <span className="font-medium">{c.name}</span>,
+                render: (c: CustomerCategory) => (
+                  <span className="font-medium">{c.name}</span>
+                ),
                 sortable: true,
               },
               {
                 key: "description",
                 header: "الوصف",
-                render: (c: CustomerCategory) => <span className="text-gray-500">{c.description || "-"}</span>,
+                render: (c: CustomerCategory) => (
+                  <span className="text-gray-500">{c.description || "-"}</span>
+                ),
               },
               {
                 key: "customerCount",
@@ -807,7 +871,9 @@ export default function CustomersPage() {
             ]}
             data={filteredCategories}
             loading={categoriesLoading}
-            error={categoriesError instanceof Error ? categoriesError.message : null}
+            error={
+              categoriesError instanceof Error ? categoriesError.message : null
+            }
             search={search}
             onSearchChange={setSearch}
             searchPlaceholder="بحث بالاسم..."
@@ -860,18 +926,28 @@ export default function CustomersPage() {
             title={editCategory ? "تعديل قسم" : "إضافة قسم جديد"}
             footer={
               <>
-                <Button type="button" variant="outline" onClick={() => {
-                  setCategoryDialogOpen(false);
-                  setEditCategory(null);
-                }}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setCategoryDialogOpen(false);
+                    setEditCategory(null);
+                  }}
+                >
                   إلغاء
                 </Button>
                 <Button
                   type="submit"
                   form="category-form"
-                  disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
+                  disabled={
+                    createCategoryMutation.isPending ||
+                    updateCategoryMutation.isPending
+                  }
                 >
-                  {createCategoryMutation.isPending || updateCategoryMutation.isPending ? "جاري الحفظ..." : "حفظ"}
+                  {createCategoryMutation.isPending ||
+                  updateCategoryMutation.isPending
+                    ? "جاري الحفظ..."
+                    : "حفظ"}
                 </Button>
               </>
             }
@@ -898,7 +974,9 @@ export default function CustomersPage() {
           <ConfirmDialog
             open={!!deleteCategory}
             onClose={() => setDeleteCategory(null)}
-            onConfirm={() => deleteCategory && deleteCategoryMutation.mutate(deleteCategory.id)}
+            onConfirm={() =>
+              deleteCategory && deleteCategoryMutation.mutate(deleteCategory.id)
+            }
             title="حذف قسم نهائياً"
             message={`هل أنت متأكد من حذف القسم "${deleteCategory?.name}" نهائياً؟ لا يمكن التراجع عن هذا الإجراء.`}
             confirmLabel="حذف نهائي"

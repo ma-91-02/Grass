@@ -42,64 +42,69 @@ const purchaseSchema = z.object({
 });
 
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) return unauthorizedError();
+  try {
+    const user = await getCurrentUser();
+    if (!user) return unauthorizedError();
 
-  const invoices = await prisma.purchaseInvoice.findMany({
-    include: {
-      supplier: { select: { name: true } },
-      warehouse: { select: { name: true } },
-      paymentAccount: { select: { name: true } },
-      items: true,
-      expenses: true,
-    },
-    orderBy: { createdAt: "desc" },
-  });
+    const invoices = await prisma.purchaseInvoice.findMany({
+      include: {
+        supplier: { select: { name: true } },
+        warehouse: { select: { name: true } },
+        paymentAccount: { select: { name: true } },
+        items: true,
+        expenses: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-  const data = invoices.map((inv) => ({
-    id: inv.id,
-    invoiceNumber: inv.invoiceNumber,
-    supplierInvoiceNumber: inv.supplierInvoiceNumber,
-    purchaseDate: inv.purchaseDate,
-    currency: inv.currency,
-    exchangeRateValue: Number(inv.exchangeRateValue),
-    supplierId: inv.supplierId,
-    supplierName: inv.supplier?.name || null,
-    warehouseId: inv.warehouseId,
-    warehouseName: inv.warehouse?.name || null,
-    notes: inv.notes,
-    subtotal: Number(inv.subtotal),
-    totalExpenses: Number(inv.totalExpenses),
-    totalCost: Number(inv.totalCost),
-    paymentMethod: inv.paymentMethod,
-    paid: Number(inv.paid),
-    remaining: Number(inv.remaining),
-    paymentAccountId: inv.paymentAccountId,
-    paymentAccountName: inv.paymentAccount?.name || null,
-    status: inv.status,
-    items: inv.items.map((item) => ({
-      id: item.id,
-      purchaseInvoiceId: item.purchaseInvoiceId,
-      productId: item.productId,
-      productName: item.productName,
-      productCode: item.productCode,
-      quantity: item.quantity,
-      purchasePrice: Number(item.purchasePrice),
-      productionDate: item.productionDate,
-      expiryDate: item.expiryDate,
-      totalPrice: Number(item.totalPrice),
-    })),
-    expenses: inv.expenses.map((exp) => ({
-      id: exp.id,
-      purchaseInvoiceId: exp.purchaseInvoiceId,
-      name: exp.name,
-      amount: Number(exp.amount),
-    })),
-    createdById: inv.createdById,
-    createdAt: inv.createdAt,
-  }));
+    const data = invoices.map((inv) => ({
+      id: inv.id,
+      invoiceNumber: inv.invoiceNumber,
+      supplierInvoiceNumber: inv.supplierInvoiceNumber,
+      purchaseDate: inv.purchaseDate,
+      currency: inv.currency,
+      exchangeRateValue: Number(inv.exchangeRateValue),
+      supplierId: inv.supplierId,
+      supplierName: inv.supplier?.name || null,
+      warehouseId: inv.warehouseId,
+      warehouseName: inv.warehouse?.name || null,
+      notes: inv.notes,
+      subtotal: Number(inv.subtotal),
+      totalExpenses: Number(inv.totalExpenses),
+      totalCost: Number(inv.totalCost),
+      paymentMethod: inv.paymentMethod,
+      paid: Number(inv.paid),
+      remaining: Number(inv.remaining),
+      paymentAccountId: inv.paymentAccountId,
+      paymentAccountName: inv.paymentAccount?.name || null,
+      status: inv.status,
+      items: inv.items.map((item) => ({
+        id: item.id,
+        purchaseInvoiceId: item.purchaseInvoiceId,
+        productId: item.productId,
+        productName: item.productName,
+        productCode: item.productCode,
+        quantity: item.quantity,
+        purchasePrice: Number(item.purchasePrice),
+        productionDate: item.productionDate,
+        expiryDate: item.expiryDate,
+        totalPrice: Number(item.totalPrice),
+      })),
+      expenses: inv.expenses.map((exp) => ({
+        id: exp.id,
+        purchaseInvoiceId: exp.purchaseInvoiceId,
+        name: exp.name,
+        amount: Number(exp.amount),
+      })),
+      createdById: inv.createdById,
+      createdAt: inv.createdAt,
+    }));
 
-  return successResponse(data);
+    return successResponse(data);
+  } catch (error) {
+    console.error("GET purchases error:", error);
+    return errorResponse("فشل تحميل فواتير المشتريات", 500);
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -115,7 +120,11 @@ export async function POST(request: NextRequest) {
     const parsed = purchaseSchema.parse(body);
     const errors: string[] = [];
 
-    if (parsed.paymentMethod !== "CREDIT" && parsed.paid > 0 && !parsed.paymentAccountId) {
+    if (
+      parsed.paymentMethod !== "CREDIT" &&
+      parsed.paid > 0 &&
+      !parsed.paymentAccountId
+    ) {
       errors.push("يجب اختيار حساب التسديد عند الدفع");
     }
 
@@ -130,8 +139,14 @@ export async function POST(request: NextRequest) {
     const count = await prisma.purchaseInvoice.count();
     const invoiceNumber = `PI-${String(count + 1).padStart(6, "0")}`;
 
-    const subtotal = parsed.items.reduce((sum, item) => sum + item.totalPrice, 0);
-    const totalExpenses = parsed.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const subtotal = parsed.items.reduce(
+      (sum, item) => sum + item.totalPrice,
+      0,
+    );
+    const totalExpenses = parsed.expenses.reduce(
+      (sum, exp) => sum + exp.amount,
+      0,
+    );
     const totalCost = subtotal + totalExpenses;
     const remaining = totalCost - parsed.paid;
 
@@ -140,7 +155,9 @@ export async function POST(request: NextRequest) {
         data: {
           invoiceNumber,
           supplierInvoiceNumber: parsed.supplierInvoiceNumber || null,
-          purchaseDate: parsed.purchaseDate ? new Date(parsed.purchaseDate) : new Date(),
+          purchaseDate: parsed.purchaseDate
+            ? new Date(parsed.purchaseDate)
+            : new Date(),
           currency: parsed.currency,
           exchangeRateValue: parsed.exchangeRateValue,
           supplierId: parsed.supplierId,
@@ -162,7 +179,9 @@ export async function POST(request: NextRequest) {
               productCode: item.productCode,
               quantity: item.quantity,
               purchasePrice: item.purchasePrice,
-              productionDate: item.productionDate ? new Date(item.productionDate) : null,
+              productionDate: item.productionDate
+                ? new Date(item.productionDate)
+                : null,
               expiryDate: item.expiryDate ? new Date(item.expiryDate) : null,
               totalPrice: item.totalPrice,
             })),
@@ -201,7 +220,10 @@ export async function POST(request: NextRequest) {
           where: { id: item.productId },
           select: { purchasePrice: true },
         });
-        if (product && Number(item.purchasePrice) > Number(product.purchasePrice)) {
+        if (
+          product &&
+          Number(item.purchasePrice) > Number(product.purchasePrice)
+        ) {
           await tx.product.update({
             where: { id: item.productId },
             data: { purchasePrice: item.purchasePrice },
@@ -209,7 +231,11 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      if (parsed.paymentMethod !== "CREDIT" && parsed.paid > 0 && parsed.paymentAccountId) {
+      if (
+        parsed.paymentMethod !== "CREDIT" &&
+        parsed.paid > 0 &&
+        parsed.paymentAccountId
+      ) {
         const account = await tx.paymentAccount.findUnique({
           where: { id: parsed.paymentAccountId },
         });
@@ -226,52 +252,61 @@ export async function POST(request: NextRequest) {
     });
 
     try {
-      await logAudit(currentUser.userId, "CREATE", "PurchaseInvoice", result.id, {
-        invoiceNumber: result.invoiceNumber,
-      });
+      await logAudit(
+        currentUser.userId,
+        "CREATE",
+        "PurchaseInvoice",
+        result.id,
+        {
+          invoiceNumber: result.invoiceNumber,
+        },
+      );
     } catch {
       console.error("Audit log failed for purchase invoice create");
     }
 
-    return successResponse({
-      id: result.id,
-      invoiceNumber: result.invoiceNumber,
-      supplierInvoiceNumber: result.supplierInvoiceNumber,
-      purchaseDate: result.purchaseDate,
-      currency: result.currency,
-      exchangeRateValue: Number(result.exchangeRateValue),
-      supplierId: result.supplierId,
-      supplierName: result.supplier?.name || null,
-      warehouseId: result.warehouseId,
-      warehouseName: result.warehouse?.name || null,
-      notes: result.notes,
-      subtotal: Number(result.subtotal),
-      totalExpenses: Number(result.totalExpenses),
-      totalCost: Number(result.totalCost),
-      paymentMethod: result.paymentMethod,
-      paid: Number(result.paid),
-      remaining: Number(result.remaining),
-      paymentAccountId: result.paymentAccountId,
-      paymentAccountName: result.paymentAccount?.name || null,
-      status: result.status,
-      items: result.items.map((item) => ({
-        id: item.id,
-        productId: item.productId,
-        productName: item.productName,
-        productCode: item.productCode,
-        quantity: item.quantity,
-        purchasePrice: Number(item.purchasePrice),
-        productionDate: item.productionDate,
-        expiryDate: item.expiryDate,
-        totalPrice: Number(item.totalPrice),
-      })),
-      expenses: result.expenses.map((exp) => ({
-        id: exp.id,
-        name: exp.name,
-        amount: Number(exp.amount),
-      })),
-      createdAt: result.createdAt,
-    }, 201);
+    return successResponse(
+      {
+        id: result.id,
+        invoiceNumber: result.invoiceNumber,
+        supplierInvoiceNumber: result.supplierInvoiceNumber,
+        purchaseDate: result.purchaseDate,
+        currency: result.currency,
+        exchangeRateValue: Number(result.exchangeRateValue),
+        supplierId: result.supplierId,
+        supplierName: result.supplier?.name || null,
+        warehouseId: result.warehouseId,
+        warehouseName: result.warehouse?.name || null,
+        notes: result.notes,
+        subtotal: Number(result.subtotal),
+        totalExpenses: Number(result.totalExpenses),
+        totalCost: Number(result.totalCost),
+        paymentMethod: result.paymentMethod,
+        paid: Number(result.paid),
+        remaining: Number(result.remaining),
+        paymentAccountId: result.paymentAccountId,
+        paymentAccountName: result.paymentAccount?.name || null,
+        status: result.status,
+        items: result.items.map((item) => ({
+          id: item.id,
+          productId: item.productId,
+          productName: item.productName,
+          productCode: item.productCode,
+          quantity: item.quantity,
+          purchasePrice: Number(item.purchasePrice),
+          productionDate: item.productionDate,
+          expiryDate: item.expiryDate,
+          totalPrice: Number(item.totalPrice),
+        })),
+        expenses: result.expenses.map((exp) => ({
+          id: exp.id,
+          name: exp.name,
+          amount: Number(exp.amount),
+        })),
+        createdAt: result.createdAt,
+      },
+      201,
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return errorResponse(error.issues.map((e) => e.message).join("، "));
