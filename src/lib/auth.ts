@@ -146,6 +146,36 @@ export function checkRole(
   return user.roles.includes(roleName);
 }
 
+export async function checkDbPermission(
+  userId: string,
+  permissionKey: string,
+): Promise<boolean> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId, isActive: true },
+      include: {
+        roles: {
+          include: {
+            role: {
+              include: {
+                permissions: {
+                  include: { permission: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!user) return false;
+    return user.roles.some((ur) =>
+      ur.role.permissions.some((rp) => rp.permission.key === permissionKey),
+    );
+  } catch {
+    return false;
+  }
+}
+
 export async function logAudit(
   userId: string,
   action: string,

@@ -81,7 +81,7 @@ export const purchaseInvoiceFormSchema = z.object({
   supplierId: z.string().min(1, "المورد مطلوب"),
   warehouseId: z.string().min(1, "المخزن مطلوب"),
   notes: z.string().optional().nullable(),
-  paymentMethod: z.enum(["CASH", "BANK", "CREDIT"] as const).default("CASH"),
+  paymentMethod: z.enum(["CASH", "CREDIT"] as const).default("CASH"),
   paid: z.coerce.number().min(0).default(0),
   paymentAccountId: z.string().optional().nullable(),
 });

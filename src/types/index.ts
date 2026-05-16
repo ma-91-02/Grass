@@ -188,6 +188,9 @@ export interface PurchaseInvoiceItemData {
   productionDate: string | null;
   expiryDate: string | null;
   totalPrice: number;
+  expenseShare: number;
+  finalCost: number;
+  unitFinalCost: number;
 }
 
 export interface PurchaseExpenseData {
@@ -195,6 +198,8 @@ export interface PurchaseExpenseData {
   purchaseInvoiceId: string;
   name: string;
   amount: number;
+  currency: string;
+  amountInInvoiceCurrency: number;
 }
 
 export interface PaymentAccountData {

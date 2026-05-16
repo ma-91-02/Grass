@@ -47,7 +47,9 @@ const PERMISSIONS = [
   { key: "accounts.manage", name: "إدارة الحسابات", module: "accounts" },
   { key: "purchases.view", name: "عرض المشتريات", module: "purchases" },
   { key: "purchases.create", name: "إنشاء فاتورة مشتريات", module: "purchases" },
+  { key: "purchases.edit", name: "تعديل فاتورة مشتريات", module: "purchases" },
   { key: "purchases.delete", name: "حذف فاتورة مشتريات", module: "purchases" },
+  { key: "purchases.print", name: "طباعة فاتورة مشتريات", module: "purchases" },
   { key: "paymentAccounts.view", name: "عرض حسابات التسديد", module: "purchases" },
   { key: "paymentAccounts.manage", name: "إدارة حسابات التسديد", module: "purchases" },
 ]

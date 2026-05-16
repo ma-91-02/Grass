@@ -7,10 +7,18 @@ import { DataTable, type Column } from "@/components/shared/data-table";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Dialog } from "@/components/ui/dialog";
 import { PurchaseInvoiceForm } from "@/components/forms/purchase-invoice-form";
-import { formatCurrency, formatDate, safeJson } from "@/lib/utils";
+import { formatDate, safeJson } from "@/lib/utils";
 import { useToast } from "@/components/ui/toast";
 import type { PurchaseInvoiceData } from "@/types";
 import type { TokenPayload } from "@/lib/auth";
+
+function enNum(n: number | string): string {
+  const num = Number(n) || 0;
+  return num.toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+}
 
 export default function PurchasesPage() {
   const { toast } = useToast();
@@ -19,6 +27,7 @@ export default function PurchasesPage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedInvoice, setSelectedInvoice] =
@@ -65,7 +74,9 @@ export default function PurchasesPage() {
 
   const permissions = user?.permissions || [];
   const canCreate = permissions.includes("purchases.create");
+  const canEdit = permissions.includes("purchases.edit");
   const canDelete = permissions.includes("purchases.delete");
+  const canPrint = permissions.includes("purchases.print");
 
   const filtered = invoices.filter(
     (inv) =>
@@ -111,8 +122,7 @@ export default function PurchasesPage() {
       header: "الكلفة",
       render: (item) => (
         <span className="font-medium">
-          {formatCurrency(item.totalCost)}{" "}
-          {item.currency === "USD" ? "$" : "د.ع"}
+          {enNum(item.totalCost)} {item.currency === "USD" ? "$" : "د.ع"}
         </span>
       ),
       sortable: true,
@@ -124,7 +134,7 @@ export default function PurchasesPage() {
         <span
           className={item.remaining > 0 ? "text-red-600" : "text-green-600"}
         >
-          {formatCurrency(item.paid)}
+          {enNum(item.paid)}
         </span>
       ),
     },
@@ -137,7 +147,16 @@ export default function PurchasesPage() {
             item.remaining > 0 ? "text-red-600 font-medium" : "text-gray-500"
           }
         >
-          {item.remaining > 0 ? formatCurrency(item.remaining) : "—"}
+          {item.remaining > 0 ? enNum(item.remaining) : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "paymentMethod",
+      header: "الدفع",
+      render: (item) => (
+        <span className="text-xs text-gray-500">
+          {item.paymentMethod === "CASH" ? "نقداً" : "على الحساب"}
         </span>
       ),
     },
@@ -148,9 +167,19 @@ export default function PurchasesPage() {
     setShowViewDialog(true);
   }
 
+  function handleEditClick(invoice: PurchaseInvoiceData) {
+    setSelectedInvoice(invoice);
+    setShowEditDialog(true);
+  }
+
   function handleDeleteClick(invoice: PurchaseInvoiceData) {
     setSelectedInvoice(invoice);
     setShowDeleteDialog(true);
+  }
+
+  function handlePrintClick(invoice: PurchaseInvoiceData) {
+    const url = `/api/purchases/${invoice.id}/pdf`;
+    window.open(url, "_blank");
   }
 
   async function handleDeleteConfirm() {
@@ -173,6 +202,12 @@ export default function PurchasesPage() {
 
   function handleCreateSuccess() {
     setShowCreateDialog(false);
+    reloadInvoices();
+  }
+
+  function handleEditSuccess() {
+    setShowEditDialog(false);
+    setSelectedInvoice(null);
     reloadInvoices();
   }
 
@@ -201,14 +236,25 @@ export default function PurchasesPage() {
             onSearchChange={setSearch}
             searchPlaceholder="بحث برقم الفاتورة أو اسم المورد..."
             onView={handleView}
+            onEdit={canEdit ? handleEditClick : undefined}
             onDelete={canDelete ? handleDeleteClick : undefined}
+            extraActions={
+              canPrint
+                ? [
+                    {
+                      label: "طباعة",
+                      onClick: handlePrintClick,
+                    },
+                  ]
+                : undefined
+            }
             viewLabel="عرض"
+            editLabel="تعديل"
             deleteLabel="حذف"
           />
         </CardContent>
       </Card>
 
-      {/* Create Dialog */}
       <Dialog
         open={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
@@ -221,7 +267,24 @@ export default function PurchasesPage() {
         />
       </Dialog>
 
-      {/* View Dialog */}
+      <Dialog
+        open={showEditDialog}
+        onClose={() => {
+          setShowEditDialog(false);
+          setSelectedInvoice(null);
+        }}
+        title={`تعديل فاتورة ${selectedInvoice?.invoiceNumber || ""}`}
+        className="max-w-5xl w-full"
+      >
+        {selectedInvoice && (
+          <PurchaseInvoiceForm
+            userPermissions={permissions}
+            onSuccess={handleEditSuccess}
+            initialData={selectedInvoice}
+          />
+        )}
+      </Dialog>
+
       <Dialog
         open={showViewDialog}
         onClose={() => {
@@ -271,9 +334,7 @@ export default function PurchasesPage() {
                 <span className="font-medium">
                   {selectedInvoice.paymentMethod === "CASH"
                     ? "نقداً"
-                    : selectedInvoice.paymentMethod === "BANK"
-                      ? "بنك"
-                      : "على الحساب"}
+                    : "على الحساب"}
                 </span>
               </div>
             </div>
@@ -306,6 +367,12 @@ export default function PurchasesPage() {
                       <th className="px-3 py-2 text-right font-medium text-gray-600">
                         الإجمالي
                       </th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-600">
+                        حصة المصروفات
+                      </th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-600">
+                        التكلفة النهائية
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -315,12 +382,16 @@ export default function PurchasesPage() {
                           {item.productCode}
                         </td>
                         <td className="px-3 py-2">{item.productName}</td>
-                        <td className="px-3 py-2">{item.quantity}</td>
+                        <td className="px-3 py-2">{enNum(item.quantity)}</td>
                         <td className="px-3 py-2">
-                          {formatCurrency(item.purchasePrice)}
+                          {enNum(item.purchasePrice)}
+                        </td>
+                        <td className="px-3 py-2">{enNum(item.totalPrice)}</td>
+                        <td className="px-3 py-2">
+                          {enNum(item.expenseShare)}
                         </td>
                         <td className="px-3 py-2 font-medium">
-                          {formatCurrency(item.totalPrice)}
+                          {enNum(item.finalCost)}
                         </td>
                       </tr>
                     ))}
@@ -344,6 +415,12 @@ export default function PurchasesPage() {
                         <th className="px-3 py-2 text-right font-medium text-gray-600">
                           المبلغ
                         </th>
+                        <th className="px-3 py-2 text-right font-medium text-gray-600">
+                          العملة
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium text-gray-600">
+                          بعملة الفاتورة
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -351,7 +428,14 @@ export default function PurchasesPage() {
                         <tr key={exp.id} className="border-b border-border">
                           <td className="px-3 py-2">{exp.name}</td>
                           <td className="px-3 py-2">
-                            {formatCurrency(exp.amount)}
+                            {enNum(exp.amount)}{" "}
+                            {exp.currency === "USD" ? "$" : "د.ع"}
+                          </td>
+                          <td className="px-3 py-2">
+                            {exp.currency === "USD" ? "دولار" : "دينار"}
+                          </td>
+                          <td className="px-3 py-2">
+                            {enNum(exp.amountInInvoiceCurrency)} د.ع
                           </td>
                         </tr>
                       ))}
@@ -364,27 +448,27 @@ export default function PurchasesPage() {
             <div className="border-t border-border pt-3 text-sm">
               <div className="flex justify-between py-1">
                 <span className="text-gray-500">إجمالي المواد</span>
-                <span>{formatCurrency(selectedInvoice.subtotal)}</span>
+                <span>{enNum(selectedInvoice.subtotal)}</span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-gray-500">إجمالي المصاريف</span>
-                <span>{formatCurrency(selectedInvoice.totalExpenses)}</span>
+                <span>{enNum(selectedInvoice.totalExpenses)}</span>
               </div>
               <div className="flex justify-between py-1 text-lg font-bold text-dark">
                 <span>إجمالي الكلفة</span>
                 <span>
-                  {formatCurrency(selectedInvoice.totalCost)}{" "}
+                  {enNum(selectedInvoice.totalCost)}{" "}
                   {selectedInvoice.currency === "USD" ? "$" : "د.ع"}
                 </span>
               </div>
               <div className="flex justify-between py-1 text-green-600">
                 <span>المدفوع</span>
-                <span>{formatCurrency(selectedInvoice.paid)}</span>
+                <span>{enNum(selectedInvoice.paid)}</span>
               </div>
               {selectedInvoice.remaining > 0 && (
                 <div className="flex justify-between py-1 text-red-600 font-medium">
                   <span>الباقي</span>
-                  <span>{formatCurrency(selectedInvoice.remaining)}</span>
+                  <span>{enNum(selectedInvoice.remaining)}</span>
                 </div>
               )}
             </div>
@@ -392,7 +476,6 @@ export default function PurchasesPage() {
         )}
       </Dialog>
 
-      {/* Delete Confirmation */}
       <ConfirmDialog
         open={showDeleteDialog}
         onClose={() => {

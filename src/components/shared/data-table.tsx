@@ -38,6 +38,11 @@ interface DataTableProps<T> {
   toggleLabel?: string;
   viewLabel?: string;
   actions?: (item: T) => React.ReactNode;
+  extraActions?: {
+    label: string;
+    onClick: (item: T) => void;
+    icon?: React.ReactNode;
+  }[];
 }
 
 export function DataTable<T extends { id: string; isActive?: boolean }>({
@@ -57,6 +62,7 @@ export function DataTable<T extends { id: string; isActive?: boolean }>({
   toggleLabel,
   viewLabel = "عرض",
   actions,
+  extraActions,
 }: DataTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -148,7 +154,8 @@ export function DataTable<T extends { id: string; isActive?: boolean }>({
                   onDelete ||
                   onToggleStatus ||
                   onView ||
-                  actions) && (
+                  actions ||
+                  extraActions) && (
                   <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 w-32">
                     إجراءات
                   </th>
@@ -161,7 +168,12 @@ export function DataTable<T extends { id: string; isActive?: boolean }>({
                   <td
                     colSpan={
                       columns.length +
-                      (onEdit || onDelete || onToggleStatus || onView || actions
+                      (onEdit ||
+                      onDelete ||
+                      onToggleStatus ||
+                      onView ||
+                      actions ||
+                      extraActions
                         ? 1
                         : 0)
                     }
@@ -185,7 +197,8 @@ export function DataTable<T extends { id: string; isActive?: boolean }>({
                       onDelete ||
                       onToggleStatus ||
                       onView ||
-                      actions) && (
+                      actions ||
+                      extraActions) && (
                       <td className="px-4 py-3">
                         {actions ? (
                           <div className="flex items-center justify-center gap-1">
@@ -232,6 +245,20 @@ export function DataTable<T extends { id: string; isActive?: boolean }>({
                                 <Trash2 className="h-4 w-4" />
                               </button>
                             )}
+                            {extraActions?.map((action, i) => (
+                              <button
+                                key={i}
+                                onClick={() => action.onClick(item)}
+                                className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-primary"
+                                title={action.label}
+                              >
+                                {action.icon || (
+                                  <span className="text-xs">
+                                    {action.label}
+                                  </span>
+                                )}
+                              </button>
+                            ))}
                           </div>
                         )}
                       </td>

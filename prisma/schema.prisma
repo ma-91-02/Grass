@@ -337,6 +337,9 @@ model PurchaseInvoiceItem {
   productionDate   DateTime?
   expiryDate       DateTime?
   totalPrice       Decimal         @default(0)
+  expenseShare     Decimal         @default(0)
+  finalCost        Decimal         @default(0)
+  unitFinalCost    Decimal         @default(0)
 
   @@index([purchaseInvoiceId])
 }
@@ -347,6 +350,8 @@ model PurchaseExpense {
   purchaseInvoice  PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id], onDelete: Cascade)
   name             String
   amount           Decimal         @default(0)
+  currency         Currency        @default(IQD)
+  amountInInvoiceCurrency Decimal   @default(0)
 
   @@index([purchaseInvoiceId])
 }

@@ -13,18 +13,28 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { Plus, Trash2, Save, Search, AlertCircle } from "lucide-react";
-import { formatCurrency, safeJson, parseNumericInput } from "@/lib/utils";
+import { safeJson } from "@/lib/utils";
 import type {
   SupplierData,
   WarehouseData,
   ProductData,
   PaymentAccountData,
+  PurchaseInvoiceData,
 } from "@/types";
 import { PERMISSIONS } from "@/lib/permissions";
+
+function enNum(n: number | string): string {
+  const num = Number(n) || 0;
+  return num.toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+}
 
 interface PurchaseInvoiceFormProps {
   userPermissions: string[];
   onSuccess?: () => void;
+  initialData?: PurchaseInvoiceData | null;
 }
 
 interface LineItem {
@@ -41,11 +51,16 @@ interface LineItem {
 interface ExpenseItem {
   name: string;
   amount: number;
+  currency: "IQD" | "USD";
+  amountInInvoiceCurrency: number;
 }
+
+type TabId = "items" | "expenses" | "summary" | "payment";
 
 export function PurchaseInvoiceForm({
   userPermissions,
   onSuccess,
+  initialData,
 }: PurchaseInvoiceFormProps) {
   const { toast } = useToast();
   const [suppliers, setSuppliers] = useState<SupplierData[]>([]);
@@ -57,25 +72,56 @@ export function PurchaseInvoiceForm({
   const [submitting, setSubmitting] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [lineItems, setLineItems] = useState<LineItem[]>([
-    {
-      productId: "",
-      productName: "",
-      productCode: "",
-      quantity: 1,
-      purchasePrice: 0,
-      productionDate: "",
-      expiryDate: "",
-      totalPrice: 0,
-    },
-  ]);
-  const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
+  const [activeTab, setActiveTab] = useState<TabId>("items");
+  const [lineItems, setLineItems] = useState<LineItem[]>(() => {
+    if (initialData && initialData.items.length > 0) {
+      return initialData.items.map((item) => ({
+        productId: item.productId || "",
+        productName: item.productName,
+        productCode: item.productCode,
+        quantity: item.quantity,
+        purchasePrice: item.purchasePrice,
+        productionDate: item.productionDate
+          ? new Date(item.productionDate).toISOString().split("T")[0]
+          : "",
+        expiryDate: item.expiryDate
+          ? new Date(item.expiryDate).toISOString().split("T")[0]
+          : "",
+        totalPrice: item.totalPrice,
+      }));
+    }
+    return [
+      {
+        productId: "",
+        productName: "",
+        productCode: "",
+        quantity: 1,
+        purchasePrice: 0,
+        productionDate: "",
+        expiryDate: "",
+        totalPrice: 0,
+      },
+    ];
+  });
+  const [expenses, setExpenses] = useState<ExpenseItem[]>(() => {
+    if (initialData && initialData.expenses.length > 0) {
+      return initialData.expenses.map((exp) => ({
+        name: exp.name,
+        amount: exp.amount,
+        currency: exp.currency as "IQD" | "USD",
+        amountInInvoiceCurrency: exp.amountInInvoiceCurrency,
+      }));
+    }
+    return [];
+  });
   const [productSearch, setProductSearch] = useState("");
   const [showProductDropdown, setShowProductDropdown] = useState<number | null>(
     null,
   );
 
+  const isEdit = !!initialData;
   const canCreate = userPermissions.includes(PERMISSIONS.PURCHASES_CREATE);
+  const canEdit = userPermissions.includes(PERMISSIONS.PURCHASES_EDIT);
 
   const {
     register,
@@ -88,16 +134,19 @@ export function PurchaseInvoiceForm({
       purchaseInvoiceFormSchema,
     ) as unknown as import("react-hook-form").Resolver<PurchaseInvoiceFormData>,
     defaultValues: {
-      supplierInvoiceNumber: "",
-      purchaseDate: new Date().toISOString().split("T")[0],
-      currency: "IQD",
-      exchangeRateValue: 0,
-      supplierId: "",
-      warehouseId: "",
-      notes: "",
-      paymentMethod: "CASH",
-      paid: 0,
-      paymentAccountId: "",
+      supplierInvoiceNumber: initialData?.supplierInvoiceNumber || "",
+      purchaseDate: initialData
+        ? new Date(initialData.purchaseDate).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0],
+      currency: (initialData?.currency as "IQD" | "USD") || "IQD",
+      exchangeRateValue: initialData?.exchangeRateValue || 0,
+      supplierId: initialData?.supplierId || "",
+      warehouseId: initialData?.warehouseId || "",
+      notes: initialData?.notes || "",
+      paymentMethod:
+        (initialData?.paymentMethod as "CASH" | "CREDIT") || "CASH",
+      paid: initialData?.paid || 0,
+      paymentAccountId: initialData?.paymentAccountId || "",
     },
   });
 
@@ -105,6 +154,7 @@ export function PurchaseInvoiceForm({
   const paymentMethod = useWatch({ control, name: "paymentMethod" });
   const paid = useWatch({ control, name: "paid" });
   const supplierId = useWatch({ control, name: "supplierId" });
+  const exchangeRateValue = useWatch({ control, name: "exchangeRateValue" });
 
   useEffect(() => {
     async function loadData() {
@@ -152,11 +202,13 @@ export function PurchaseInvoiceForm({
           setPaymentAccounts(accountsJson.data.filter((a) => a.isActive));
         }
 
-        const rates = exchangeRateJson.data as
-          | { usdToIqd: number }[]
-          | undefined;
-        if (rates && rates.length > 0) {
-          setValue("exchangeRateValue", Number(rates[0].usdToIqd));
+        if (!initialData) {
+          const rates = exchangeRateJson.data as
+            | { usdToIqd: number }[]
+            | undefined;
+          if (rates && rates.length > 0) {
+            setValue("exchangeRateValue", Number(rates[0].usdToIqd));
+          }
         }
       } catch {
         setLoadError("فشل تحميل البيانات. تحقق من الاتصال بالخادم.");
@@ -165,7 +217,7 @@ export function PurchaseInvoiceForm({
       }
     }
     loadData();
-  }, [setValue]);
+  }, [setValue, initialData]);
 
   const filteredAccounts = useMemo(
     () => paymentAccounts.filter((a) => a.currency === currency),
@@ -241,20 +293,38 @@ export function PurchaseInvoiceForm({
   }, []);
 
   const addExpense = useCallback(() => {
-    setExpenses((prev) => [...prev, { name: "", amount: 0 }]);
+    setExpenses((prev) => [
+      ...prev,
+      { name: "", amount: 0, currency: "IQD", amountInInvoiceCurrency: 0 },
+    ]);
   }, []);
 
   const updateExpense = useCallback(
-    (index: number, field: keyof ExpenseItem, value: string) => {
+    (index: number, field: keyof ExpenseItem, value: string | number) => {
       setExpenses((prev) => {
         const updated = [...prev];
-        const numValue =
-          field === "amount" ? Number(parseNumericInput(value)) || 0 : value;
-        updated[index] = { ...updated[index], [field]: numValue };
+        const current = { ...updated[index] };
+        if (field === "amount" || field === "amountInInvoiceCurrency") {
+          current[field] = Number(value) || 0;
+        } else if (field === "currency") {
+          current.currency = value as "IQD" | "USD";
+        } else {
+          (current as Record<string, unknown>)[field] = value;
+        }
+        const rate = Number(exchangeRateValue) || 0;
+        if (current.currency === currency) {
+          current.amountInInvoiceCurrency = current.amount;
+        } else if (current.currency === "USD") {
+          current.amountInInvoiceCurrency = current.amount * rate;
+        } else {
+          current.amountInInvoiceCurrency =
+            rate > 0 ? current.amount / rate : 0;
+        }
+        updated[index] = current;
         return updated;
       });
     },
-    [],
+    [exchangeRateValue, currency],
   );
 
   const removeExpense = useCallback((index: number) => {
@@ -263,21 +333,30 @@ export function PurchaseInvoiceForm({
 
   const handleNumericChange = useCallback(
     (index: number, field: "quantity" | "purchasePrice", rawValue: string) => {
-      const val = Number(parseNumericInput(rawValue)) || 0;
-      updateItemTotal(index, {
-        [field]: val,
-      });
+      const cleaned = rawValue.replace(/[^0-9.]/g, "");
+      const val = Number(cleaned) || 0;
+      updateItemTotal(index, { [field]: val });
     },
     [updateItemTotal],
   );
 
   const subtotal = lineItems.reduce((sum, item) => sum + item.totalPrice, 0);
   const totalExpenses = expenses.reduce(
-    (sum, exp) => sum + Number(exp.amount || 0),
+    (sum, exp) => sum + Number(exp.amountInInvoiceCurrency || 0),
     0,
   );
   const totalCost = subtotal + totalExpenses;
   const remaining = totalCost - Number(paid || 0);
+
+  const itemsWithExpenseShare = useMemo(() => {
+    return lineItems.map((item) => {
+      const expenseShare =
+        subtotal > 0 ? (item.totalPrice / subtotal) * totalExpenses : 0;
+      const finalCost = item.totalPrice + expenseShare;
+      const unitFinalCost = item.quantity > 0 ? finalCost / item.quantity : 0;
+      return { ...item, expenseShare, finalCost, unitFinalCost };
+    });
+  }, [lineItems, subtotal, totalExpenses]);
 
   const selectedSupplier = suppliers.find((s) => s.id === supplierId);
   const noSuppliers = !loadingData && suppliers.length === 0;
@@ -295,9 +374,20 @@ export function PurchaseInvoiceForm({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const tabs: { id: TabId; label: string }[] = [
+    { id: "items", label: "المواد" },
+    { id: "expenses", label: "المصاريف" },
+    { id: "summary", label: "ملخص التوزيع" },
+    { id: "payment", label: "الدفع" },
+  ];
+
   const onSubmit = useCallback(
     async (formData: PurchaseInvoiceFormData) => {
-      if (!canCreate) {
+      if (isEdit && !canEdit) {
+        toast("لا تملك صلاحية تعديل فاتورة مشتريات", "error");
+        return;
+      }
+      if (!isEdit && !canCreate) {
         toast("لا تملك صلاحية إنشاء فاتورة مشتريات", "error");
         return;
       }
@@ -329,10 +419,8 @@ export function PurchaseInvoiceForm({
       setSubmitting(true);
       const payload = {
         ...formData,
-        paid: Number(parseNumericInput(String(formData.paid || 0))),
-        exchangeRateValue: Number(
-          parseNumericInput(String(formData.exchangeRateValue || 0)),
-        ),
+        paid: Number(formData.paid || 0),
+        exchangeRateValue: Number(formData.exchangeRateValue || 0),
         items: lineItems.map((item) => ({
           productId: item.productId,
           productName: item.productName,
@@ -346,11 +434,18 @@ export function PurchaseInvoiceForm({
         expenses: expenses.map((exp) => ({
           name: exp.name,
           amount: Number(exp.amount || 0),
+          currency: exp.currency,
+          amountInInvoiceCurrency: Number(exp.amountInInvoiceCurrency || 0),
         })),
       };
 
-      const res = await fetch("/api/purchases", {
-        method: "POST",
+      const url = isEdit
+        ? `/api/purchases/${initialData.id}`
+        : "/api/purchases";
+      const method = isEdit ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -358,13 +453,27 @@ export function PurchaseInvoiceForm({
       setSubmitting(false);
 
       if (json.success) {
-        toast("تم إنشاء فاتورة المشتريات بنجاح", "success");
+        toast(
+          isEdit
+            ? "تم تعديل فاتورة المشتريات بنجاح"
+            : "تم إنشاء فاتورة المشتريات بنجاح",
+          "success",
+        );
         onSuccess?.();
       } else {
-        toast(json.error || "فشل إنشاء فاتورة المشتريات", "error");
+        toast(json.error || "فشل حفظ فاتورة المشتريات", "error");
       }
     },
-    [canCreate, lineItems, expenses, onSuccess, toast],
+    [
+      canCreate,
+      canEdit,
+      isEdit,
+      lineItems,
+      expenses,
+      onSuccess,
+      toast,
+      initialData,
+    ],
   );
 
   if (loadingData) {
@@ -397,9 +506,10 @@ export function PurchaseInvoiceForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* القسم 1: بيانات الفاتورة */}
       <div className="rounded-xl border border-border bg-white p-6">
-        <h2 className="mb-4 text-base font-bold text-dark">بيانات الفاتورة</h2>
+        <h2 className="mb-4 text-base font-bold text-dark">
+          {isEdit ? "تعديل فاتورة مشتريات" : "بيانات الفاتورة"}
+        </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Input
             label="رقم فاتورة المورد"
@@ -427,12 +537,12 @@ export function PurchaseInvoiceForm({
               label="سعر الصرف (دينار لكل دولار)"
               type="text"
               inputMode="decimal"
-              placeholder="مثال: 1320 أو 1,320"
+              placeholder="مثال: 1320"
               {...register("exchangeRateValue")}
               error={errors.exchangeRateValue?.message}
               onChange={(e) => {
-                const parsed = parseNumericInput(e.target.value);
-                e.target.value = parsed;
+                const cleaned = e.target.value.replace(/[^0-9.]/g, "");
+                e.target.value = cleaned;
                 register("exchangeRateValue").onChange(e);
               }}
             />
@@ -440,7 +550,6 @@ export function PurchaseInvoiceForm({
         </div>
       </div>
 
-      {/* القسم 2: المورد والمخزن */}
       <div className="rounded-xl border border-border bg-white p-6">
         <h2 className="mb-4 text-base font-bold text-dark">المورد والمخزن</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -467,7 +576,7 @@ export function PurchaseInvoiceForm({
                 {selectedSupplier.accounts
                   .map(
                     (a) =>
-                      `${a.currency === "IQD" ? "د.ع" : "$"} ${formatCurrency(a.balance)}`,
+                      `${a.currency === "IQD" ? "د.ع" : "$"} ${enNum(a.balance)}`,
                   )
                   .join(" | ")}
               </div>
@@ -501,386 +610,542 @@ export function PurchaseInvoiceForm({
         </div>
       </div>
 
-      {/* القسم 3: المواد */}
-      <div className="rounded-xl border border-border bg-white p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-bold text-dark">مواد الفاتورة</h2>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addLineItem}
-          >
-            <Plus className="h-4 w-4" />
-            إضافة مادة
-          </Button>
+      <div className="rounded-xl border border-border bg-white">
+        <div className="border-b border-border">
+          <div className="flex">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-5 py-3 text-sm font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? "border-b-2 border-primary text-primary"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {products.length === 0 ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-center text-sm text-amber-700">
-            لا توجد مواد. الرجاء إضافة مواد أولاً.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="whitespace-nowrap px-3 py-2 text-right font-medium text-gray-600">
-                    الكود
-                  </th>
-                  <th className="whitespace-nowrap px-3 py-2 text-right font-medium text-gray-600">
-                    المادة
-                  </th>
-                  <th className="whitespace-nowrap px-3 py-2 text-right font-medium text-gray-600">
-                    الكمية
-                  </th>
-                  <th className="whitespace-nowrap px-3 py-2 text-right font-medium text-gray-600">
-                    سعر الشراء
-                  </th>
-                  <th className="whitespace-nowrap px-3 py-2 text-right font-medium text-gray-600">
-                    تاريخ الإنتاج
-                  </th>
-                  <th className="whitespace-nowrap px-3 py-2 text-right font-medium text-gray-600">
-                    تاريخ الانتهاء
-                  </th>
-                  <th className="whitespace-nowrap px-3 py-2 text-right font-medium text-gray-600">
-                    الإجمالي
-                  </th>
-                  <th className="w-10 px-3 py-2"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {lineItems.map((item, index) => (
-                  <tr key={index} className="border-b border-border">
-                    <td className="px-3 py-2">
-                      <div className="relative" data-product-dropdown>
-                        <div
-                          className="flex h-9 w-32 cursor-pointer items-center rounded-lg border border-border bg-white px-2 text-sm focus-within:ring-2 focus-within:ring-primary"
-                          onClick={() =>
-                            setShowProductDropdown(
-                              showProductDropdown === index ? null : index,
-                            )
-                          }
-                        >
-                          <Search className="ml-1.5 h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
-                          <span
-                            className={
-                              item.productCode
-                                ? "font-mono text-dark"
-                                : "text-gray-400"
-                            }
-                          >
-                            {item.productCode || "اختر كود..."}
-                          </span>
-                        </div>
+        <div className="p-6">
+          {activeTab === "items" && (
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-base font-bold text-dark">مواد الفاتورة</h2>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addLineItem}
+                >
+                  <Plus className="h-4 w-4" />
+                  إضافة مادة
+                </Button>
+              </div>
 
-                        {showProductDropdown === index && (
-                          <div className="absolute right-0 top-full z-50 mt-1 w-80 rounded-lg border border-border bg-white shadow-lg">
-                            <div className="border-b border-border p-2">
-                              <input
-                                type="text"
-                                className="h-8 w-full rounded-md border border-border px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                placeholder="بحث بالكود أو الاسم أو الباركود..."
-                                value={productSearch}
-                                onChange={(e) =>
-                                  setProductSearch(e.target.value)
+              {products.length === 0 ? (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-center text-sm text-amber-700">
+                  لا توجد مواد. الرجاء إضافة مواد أولاً.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/50">
+                        <th className="whitespace-nowrap px-3 py-2 text-right font-medium text-gray-600">
+                          الكود
+                        </th>
+                        <th className="whitespace-nowrap px-3 py-2 text-right font-medium text-gray-600">
+                          المادة
+                        </th>
+                        <th className="whitespace-nowrap px-3 py-2 text-right font-medium text-gray-600">
+                          الكمية
+                        </th>
+                        <th className="whitespace-nowrap px-3 py-2 text-right font-medium text-gray-600">
+                          سعر الشراء
+                        </th>
+                        <th className="whitespace-nowrap px-3 py-2 text-right font-medium text-gray-600">
+                          تاريخ الإنتاج
+                        </th>
+                        <th className="whitespace-nowrap px-3 py-2 text-right font-medium text-gray-600">
+                          تاريخ الانتهاء
+                        </th>
+                        <th className="whitespace-nowrap px-3 py-2 text-right font-medium text-gray-600">
+                          الإجمالي
+                        </th>
+                        <th className="w-10 px-3 py-2"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lineItems.map((item, index) => (
+                        <tr key={index} className="border-b border-border">
+                          <td className="px-3 py-2">
+                            <div className="relative" data-product-dropdown>
+                              <div
+                                className="flex h-9 w-32 cursor-pointer items-center rounded-lg border border-border bg-white px-2 text-sm focus-within:ring-2 focus-within:ring-primary"
+                                onClick={() =>
+                                  setShowProductDropdown(
+                                    showProductDropdown === index
+                                      ? null
+                                      : index,
+                                  )
                                 }
-                                autoFocus
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            </div>
-                            <div className="max-h-48 overflow-y-auto">
-                              {filteredProducts.length === 0 ? (
-                                <div className="p-3 text-center text-sm text-gray-400">
-                                  لا توجد نتائج
-                                </div>
-                              ) : (
-                                filteredProducts.map((p) => (
-                                  <button
-                                    key={p.id}
-                                    type="button"
-                                    className={`flex w-full items-center gap-2 px-3 py-2 text-right text-sm hover:bg-muted ${item.productId === p.id ? "bg-primary/10" : ""}`}
-                                    onClick={() =>
-                                      handleProductSelect(index, p.id)
-                                    }
-                                  >
-                                    <span className="font-mono text-xs text-gray-500 w-20 truncate">
-                                      {p.code}
-                                    </span>
-                                    <span className="flex-1 truncate">
-                                      {p.name}
-                                    </span>
-                                    {p.barcode && (
-                                      <span className="text-xs text-gray-400">
-                                        {p.barcode}
-                                      </span>
+                              >
+                                <Search className="ml-1.5 h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
+                                <span
+                                  className={
+                                    item.productCode
+                                      ? "font-mono text-dark"
+                                      : "text-gray-400"
+                                  }
+                                >
+                                  {item.productCode || "اختر كود..."}
+                                </span>
+                              </div>
+
+                              {showProductDropdown === index && (
+                                <div className="absolute right-0 top-full z-50 mt-1 w-80 rounded-lg border border-border bg-white shadow-lg">
+                                  <div className="border-b border-border p-2">
+                                    <input
+                                      type="text"
+                                      className="h-8 w-full rounded-md border border-border px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                      placeholder="بحث بالكود أو الاسم أو الباركود..."
+                                      value={productSearch}
+                                      onChange={(e) =>
+                                        setProductSearch(e.target.value)
+                                      }
+                                      autoFocus
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  </div>
+                                  <div className="max-h-48 overflow-y-auto">
+                                    {filteredProducts.length === 0 ? (
+                                      <div className="p-3 text-center text-sm text-gray-400">
+                                        لا توجد نتائج
+                                      </div>
+                                    ) : (
+                                      filteredProducts.map((p) => (
+                                        <button
+                                          key={p.id}
+                                          type="button"
+                                          className={`flex w-full items-center gap-2 px-3 py-2 text-right text-sm hover:bg-muted ${item.productId === p.id ? "bg-primary/10" : ""}`}
+                                          onClick={() =>
+                                            handleProductSelect(index, p.id)
+                                          }
+                                        >
+                                          <span className="font-mono text-xs text-gray-500 w-20 truncate">
+                                            {p.code}
+                                          </span>
+                                          <span className="flex-1 truncate">
+                                            {p.name}
+                                          </span>
+                                          {p.barcode && (
+                                            <span className="text-xs text-gray-400">
+                                              {p.barcode}
+                                            </span>
+                                          )}
+                                        </button>
+                                      ))
                                     )}
-                                  </button>
-                                ))
+                                  </div>
+                                </div>
                               )}
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 text-gray-600 min-w-[100px]">
-                      {item.productName || "—"}
-                    </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          handleNumericChange(index, "quantity", e.target.value)
-                        }
-                        className="h-9 w-16 rounded-lg border border-border bg-white px-2 text-center text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                        min="1"
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <input
+                          </td>
+                          <td className="px-3 py-2 text-gray-600 min-w-[100px]">
+                            {item.productName || "—"}
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={item.quantity}
+                              onChange={(e) =>
+                                handleNumericChange(
+                                  index,
+                                  "quantity",
+                                  e.target.value,
+                                )
+                              }
+                              className="h-9 w-16 rounded-lg border border-border bg-white px-2 text-center text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                              min="1"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={item.purchasePrice}
+                              onChange={(e) =>
+                                handleNumericChange(
+                                  index,
+                                  "purchasePrice",
+                                  e.target.value,
+                                )
+                              }
+                              className="h-9 w-24 rounded-lg border border-border bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                              min="0"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="date"
+                              value={item.productionDate}
+                              onChange={(e) =>
+                                updateItemTotal(index, {
+                                  productionDate: e.target.value,
+                                })
+                              }
+                              className="h-9 w-32 rounded-lg border border-border bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="date"
+                              value={item.expiryDate}
+                              onChange={(e) =>
+                                updateItemTotal(index, {
+                                  expiryDate: e.target.value,
+                                })
+                              }
+                              className="h-9 w-32 rounded-lg border border-border bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-2 font-medium text-dark">
+                            {enNum(item.totalPrice)}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            {lineItems.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeLineItem(index)}
+                                className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="mt-3 text-left text-sm text-gray-500">
+                إجمالي المواد:{" "}
+                <span className="font-semibold text-dark">
+                  {enNum(subtotal)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "expenses" && (
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-base font-bold text-dark">المصاريف</h2>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addExpense}
+                >
+                  <Plus className="h-4 w-4" />
+                  إضافة مصروف
+                </Button>
+              </div>
+
+              {expenses.length === 0 && (
+                <p className="text-sm text-gray-400">
+                  لا توجد مصاريف مضافة. يمكنك إضافة مصاريف الشحن والنقل وغيرها.
+                </p>
+              )}
+
+              <div className="space-y-2">
+                {expenses.map((exp, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      placeholder="اسم المصروف"
+                      value={exp.name}
+                      onChange={(e) =>
+                        updateExpense(index, "name", e.target.value)
+                      }
+                      className="h-9 flex-1 rounded-lg border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="المبلغ"
+                      value={exp.amount}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/[^0-9.]/g, "");
+                        updateExpense(index, "amount", cleaned || "0");
+                      }}
+                      className="h-9 w-24 rounded-lg border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <select
+                      value={exp.currency}
+                      onChange={(e) =>
+                        updateExpense(index, "currency", e.target.value)
+                      }
+                      className="h-9 w-24 rounded-lg border border-border bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="IQD">د.ع</option>
+                      <option value="USD">$</option>
+                    </select>
+                    {exp.currency !== currency && (
+                      <span className="text-xs text-gray-500 whitespace-nowrap">
+                        ← {enNum(exp.amountInInvoiceCurrency)}{" "}
+                        {currency === "USD" ? "$" : "د.ع"}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeExpense(index)}
+                      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {totalExpenses > 0 && (
+                <div className="mt-3 text-left text-sm text-gray-500">
+                  إجمالي المصاريف (بعملة الفاتورة):{" "}
+                  <span className="font-semibold text-dark">
+                    {enNum(totalExpenses)} د.ع
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "summary" && (
+            <div>
+              <h2 className="mb-4 text-base font-bold text-dark">
+                ملخص توزيع التكاليف
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/50">
+                      <th className="px-3 py-2 text-right font-medium text-gray-600">
+                        المادة
+                      </th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-600">
+                        الكمية
+                      </th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-600">
+                        سعر الشراء
+                      </th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-600">
+                        الإجمالي
+                      </th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-600">
+                        حصة المصروفات
+                      </th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-600">
+                        التكلفة النهائية
+                      </th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-600">
+                        تكلفة الوحدة
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {itemsWithExpenseShare.map((item, index) => (
+                      <tr key={index} className="border-b border-border">
+                        <td className="px-3 py-2">{item.productName}</td>
+                        <td className="px-3 py-2">{enNum(item.quantity)}</td>
+                        <td className="px-3 py-2">
+                          {enNum(item.purchasePrice)}
+                        </td>
+                        <td className="px-3 py-2">{enNum(item.totalPrice)}</td>
+                        <td className="px-3 py-2">
+                          {enNum(item.expenseShare)}
+                        </td>
+                        <td className="px-3 py-2 font-medium">
+                          {enNum(item.finalCost)}
+                        </td>
+                        <td className="px-3 py-2">
+                          {enNum(item.unitFinalCost)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-4 space-y-2 text-sm">
+                <div className="flex justify-between text-gray-600">
+                  <span>إجمالي المواد</span>
+                  <span>{enNum(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>إجمالي المصاريف (بعملة الفاتورة)</span>
+                  <span>{enNum(totalExpenses)}</span>
+                </div>
+                <hr className="border-border" />
+                <div className="flex justify-between text-lg font-bold text-dark">
+                  <span>إجمالي الكلفة</span>
+                  <span>
+                    {enNum(totalCost)}{" "}
+                    <span className="text-xs font-normal text-gray-500">
+                      {currency === "USD" ? "$" : "د.ع"}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "payment" && (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div>
+                <h2 className="mb-4 text-base font-bold text-dark">
+                  طريقة الدفع
+                </h2>
+                <div className="space-y-4">
+                  <Select
+                    label="طريقة الدفع"
+                    options={[
+                      { value: "CASH", label: "نقداً" },
+                      { value: "CREDIT", label: "على الحساب" },
+                    ]}
+                    {...register("paymentMethod")}
+                    error={errors.paymentMethod?.message}
+                  />
+                  {paymentMethod !== "CREDIT" && (
+                    <>
+                      <Input
+                        label="المبلغ المدفوع"
                         type="text"
                         inputMode="decimal"
-                        value={item.purchasePrice}
-                        onChange={(e) =>
-                          handleNumericChange(
-                            index,
-                            "purchasePrice",
-                            e.target.value,
-                          )
-                        }
-                        className="h-9 w-24 rounded-lg border border-border bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                        min="0"
+                        placeholder="0"
+                        {...register("paid")}
+                        error={errors.paid?.message}
+                        onChange={(e) => {
+                          const cleaned = e.target.value.replace(
+                            /[^0-9.]/g,
+                            "",
+                          );
+                          e.target.value = cleaned;
+                          register("paid").onChange(e);
+                        }}
                       />
-                    </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="date"
-                        value={item.productionDate}
-                        onChange={(e) =>
-                          updateItemTotal(index, {
-                            productionDate: e.target.value,
-                          })
-                        }
-                        className="h-9 w-32 rounded-lg border border-border bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="date"
-                        value={item.expiryDate}
-                        onChange={(e) =>
-                          updateItemTotal(index, {
-                            expiryDate: e.target.value,
-                          })
-                        }
-                        className="h-9 w-32 rounded-lg border border-border bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2 font-medium text-dark">
-                      {formatCurrency(item.totalPrice)}
-                    </td>
-                    <td className="px-3 py-2 text-center">
-                      {lineItems.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeLineItem(index)}
-                          className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                      <div>
+                        {filteredAccounts.length === 0 ? (
+                          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+                            لا يوجد حسابات تسديد من عملة{" "}
+                            {currency === "IQD" ? "دينار" : "دولار"}.
+                          </div>
+                        ) : (
+                          <Select
+                            label="حساب التسديد"
+                            placeholder="اختر الحساب"
+                            options={filteredAccounts.map((a) => ({
+                              value: a.id,
+                              label: `${a.name} (${a.type === "CASH" ? "صندوق" : "بنك"})`,
+                            }))}
+                            {...register("paymentAccountId")}
+                            error={errors.paymentAccountId?.message}
+                          />
+                        )}
+                      </div>
+                    </>
+                  )}
+                  {paymentMethod === "CREDIT" && (
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700">
+                      تم اختيار الدفع على الحساب. لن يتم تسجيل أي مبلغ مدفوع
+                      الآن.
+                    </div>
+                  )}
+                </div>
+              </div>
 
-        <div className="mt-3 text-left text-sm text-gray-500">
-          إجمالي المواد:{" "}
-          <span className="font-semibold text-dark">
-            {formatCurrency(subtotal)}
-          </span>
-        </div>
-      </div>
-
-      {/* القسم 4: المصاريف */}
-      <div className="rounded-xl border border-border bg-white p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-bold text-dark">المصاريف</h2>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addExpense}
-          >
-            <Plus className="h-4 w-4" />
-            إضافة مصروف
-          </Button>
-        </div>
-
-        {expenses.length === 0 && (
-          <p className="text-sm text-gray-400">
-            لا توجد مصاريف مضافة. يمكنك إضافة مصاريف الشحن والنقل وغيرها.
-          </p>
-        )}
-
-        <div className="space-y-2">
-          {expenses.map((exp, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <input
-                placeholder="اسم المصروف"
-                value={exp.name}
-                onChange={(e) => updateExpense(index, "name", e.target.value)}
-                className="h-9 flex-1 rounded-lg border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder="المبلغ"
-                value={exp.amount}
-                onChange={(e) => updateExpense(index, "amount", e.target.value)}
-                className="h-9 w-28 rounded-lg border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <button
-                type="button"
-                onClick={() => removeExpense(index)}
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {totalExpenses > 0 && (
-          <div className="mt-3 text-left text-sm text-gray-500">
-            إجمالي المصاريف:{" "}
-            <span className="font-semibold text-dark">
-              {formatCurrency(totalExpenses)}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* القسم 5: الدفع والإجماليات */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-border bg-white p-6">
-          <h2 className="mb-4 text-base font-bold text-dark">طريقة الدفع</h2>
-          <div className="space-y-4">
-            <Select
-              label="طريقة الدفع"
-              options={[
-                { value: "CASH", label: "نقداً" },
-                { value: "BANK", label: "بنك" },
-                { value: "CREDIT", label: "على الحساب" },
-              ]}
-              {...register("paymentMethod")}
-              error={errors.paymentMethod?.message}
-            />
-            <Input
-              label="المبلغ المدفوع"
-              type="text"
-              inputMode="decimal"
-              placeholder="0"
-              {...register("paid")}
-              error={errors.paid?.message}
-              onChange={(e) => {
-                const parsed = parseNumericInput(e.target.value);
-                e.target.value = parsed;
-                register("paid").onChange(e);
-              }}
-            />
-            {paymentMethod !== "CREDIT" && (
               <div>
-                {filteredAccounts.length === 0 ? (
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
-                    لا يوجد حسابات تسديد من عملة{" "}
-                    {currency === "IQD" ? "دينار" : "دولار"}.
+                <h2 className="mb-4 text-base font-bold text-dark">
+                  إجماليات الفاتورة
+                </h2>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between text-gray-600">
+                    <span>إجمالي المواد</span>
+                    <span>{enNum(subtotal)}</span>
                   </div>
-                ) : (
-                  <Select
-                    label="حساب التسديد"
-                    placeholder="اختر الحساب"
-                    options={filteredAccounts.map((a) => ({
-                      value: a.id,
-                      label: `${a.name} (${a.type === "CASH" ? "صندوق" : "بنك"})`,
-                    }))}
-                    {...register("paymentAccountId")}
-                    error={errors.paymentAccountId?.message}
-                  />
-                )}
+                  <div className="flex justify-between text-gray-600">
+                    <span>إجمالي المصاريف</span>
+                    <span>{enNum(totalExpenses)}</span>
+                  </div>
+                  <hr className="border-border" />
+                  <div className="flex justify-between text-lg font-bold text-dark">
+                    <span>إجمالي الكلفة</span>
+                    <span>
+                      {enNum(totalCost)}{" "}
+                      <span className="text-xs font-normal text-gray-500">
+                        {currency === "USD" ? "$" : "د.ع"}
+                      </span>
+                    </span>
+                  </div>
+                  {paymentMethod !== "CREDIT" && (
+                    <>
+                      <div className="flex justify-between text-green-700 font-medium">
+                        <span>المدفوع</span>
+                        <span>{enNum(Number(paid || 0))}</span>
+                      </div>
+                      {remaining > 0 && (
+                        <div className="flex justify-between text-red-700 font-bold">
+                          <span>الباقي</span>
+                          <span>{enNum(remaining)}</span>
+                        </div>
+                      )}
+                      {remaining < 0 && (
+                        <div className="flex justify-between text-amber-700 font-medium">
+                          <span>زيادة الدفع</span>
+                          <span>{enNum(Math.abs(remaining))}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-border bg-white p-6">
-          <h2 className="mb-4 text-base font-bold text-dark">
-            إجماليات الفاتورة
-          </h2>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between text-gray-600">
-              <span>إجمالي المواد</span>
-              <span>{formatCurrency(subtotal)}</span>
             </div>
-            <div className="flex justify-between text-gray-600">
-              <span>إجمالي المصاريف</span>
-              <span>{formatCurrency(totalExpenses)}</span>
-            </div>
-            <hr className="border-border" />
-            <div className="flex justify-between text-lg font-bold text-dark">
-              <span>إجمالي الكلفة</span>
-              <span>
-                {formatCurrency(totalCost)}{" "}
-                <span className="text-xs font-normal text-gray-500">
-                  {currency === "USD" ? "$" : "د.ع"}
-                </span>
-              </span>
-            </div>
-            <div className="flex justify-between text-green-700 font-medium">
-              <span>المدفوع</span>
-              <span>{formatCurrency(Number(paid || 0))}</span>
-            </div>
-            {remaining > 0 && (
-              <div className="flex justify-between text-red-700 font-bold">
-                <span>الباقي</span>
-                <span>{formatCurrency(remaining)}</span>
-              </div>
-            )}
-            {remaining < 0 && (
-              <div className="flex justify-between text-amber-700 font-medium">
-                <span>زيادة الدفع</span>
-                <span>{formatCurrency(Math.abs(remaining))}</span>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
-      {/* زر الحفظ - ثابت وواضح */}
       <div className="sticky bottom-0 z-10 rounded-xl border border-border bg-white p-4 shadow-lg">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            <span className="font-bold text-dark">
-              {formatCurrency(totalCost)}
-            </span>{" "}
+            <span className="font-bold text-dark">{enNum(totalCost)}</span>{" "}
             {currency === "USD" ? "$" : "د.ع"}
             {" — "}
             <span>{lineItems.length} مواد</span>
             {expenses.length > 0 && <span> | {expenses.length} مصاريف</span>}
           </div>
-          <Button
-            type="submit"
-            size="lg"
-            disabled={submitting || !canCreate || noSuppliers || noWarehouses}
-          >
-            <Save className="h-5 w-5" />
-            {submitting ? "جاري الحفظ..." : "حفظ الفاتورة"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="submit"
+              size="lg"
+              disabled={
+                submitting ||
+                (isEdit ? !canEdit : !canCreate) ||
+                noSuppliers ||
+                noWarehouses
+              }
+            >
+              <Save className="h-5 w-5" />
+              {submitting
+                ? "جاري الحفظ..."
+                : isEdit
+                  ? "حفظ التعديلات"
+                  : "حفظ الفاتورة"}
+            </Button>
+          </div>
         </div>
       </div>
     </form>
