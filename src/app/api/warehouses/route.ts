@@ -17,7 +17,18 @@ export async function GET() {
     orderBy: { name: "asc" },
   })
 
-  return successResponse(warehouses)
+  const invoiceCounts = await prisma.invoice.groupBy({
+    by: ["warehouseId"],
+    _count: { id: true },
+  })
+  const inUseMap = new Map(invoiceCounts.map((ic) => [ic.warehouseId, ic._count.id > 0]))
+
+  const data = warehouses.map((w) => ({
+    ...w,
+    inUse: inUseMap.get(w.id) || false,
+  }))
+
+  return successResponse(data)
 }
 
 export async function POST(request: NextRequest) {
@@ -33,12 +44,40 @@ export async function POST(request: NextRequest) {
       return errorResponse("يوجد مخزن بهذا الاسم مسبقاً", 409)
     }
 
-    const count = await prisma.warehouse.count()
-    const code = `WH-${String(count + 1).padStart(4, "0")}`
-
-    const warehouse = await prisma.warehouse.create({
-      data: { ...parsed, code },
+    const allCodes = await prisma.warehouse.findMany({
+      where: { code: { startsWith: "WH-" } },
+      select: { code: true },
     })
+    let maxNum = 0
+    for (const { code } of allCodes) {
+      const num = parseInt(code.replace("WH-", ""), 10)
+      if (!isNaN(num) && num > maxNum) maxNum = num
+    }
+    const code = `WH-${String(maxNum + 1).padStart(4, "0")}`
+
+    let warehouse
+    try {
+      warehouse = await prisma.warehouse.create({
+        data: { ...parsed, code },
+      })
+    } catch (createError: unknown) {
+      if (createError && typeof createError === "object" && "code" in createError && (createError as Record<string, unknown>).code === "P2002") {
+        const fallbackCodes = await prisma.warehouse.findMany({
+          where: { code: { startsWith: "WH-" } },
+          select: { code: true },
+        })
+        let fbMax = 0
+        for (const { code } of fallbackCodes) {
+          const num = parseInt(code.replace("WH-", ""), 10)
+          if (!isNaN(num) && num > fbMax) fbMax = num
+        }
+        warehouse = await prisma.warehouse.create({
+          data: { ...parsed, code: `WH-${String(fbMax + 1).padStart(4, "0")}` },
+        })
+      } else {
+        throw createError
+      }
+    }
 
     await logAudit(user.userId, "CREATE", "Warehouse", warehouse.id, { name: warehouse.name })
 

@@ -29,6 +29,7 @@ interface DataTableProps<T> {
   deleteLabel?: string
   toggleLabel?: string
   viewLabel?: string
+  actions?: (item: T) => React.ReactNode
 }
 
 export function DataTable<T extends { id: string; isActive?: boolean }>({
@@ -47,6 +48,7 @@ export function DataTable<T extends { id: string; isActive?: boolean }>({
   deleteLabel = "حذف",
   toggleLabel,
   viewLabel = "عرض",
+  actions,
 }: DataTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
@@ -126,7 +128,7 @@ export function DataTable<T extends { id: string; isActive?: boolean }>({
                     </span>
                   </th>
                 ))}
-                {(onEdit || onDelete || onToggleStatus || onView) && (
+                {(onEdit || onDelete || onToggleStatus || onView || actions) && (
                   <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 w-32">
                     إجراءات
                   </th>
@@ -136,7 +138,7 @@ export function DataTable<T extends { id: string; isActive?: boolean }>({
             <tbody>
               {paged.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length + 1} className="px-4 py-16 text-center text-gray-500">
+                  <td colSpan={columns.length + (onEdit || onDelete || onToggleStatus || onView || actions ? 1 : 0)} className="px-4 py-16 text-center text-gray-500">
                     لا توجد بيانات
                   </td>
                 </tr>
@@ -148,46 +150,50 @@ export function DataTable<T extends { id: string; isActive?: boolean }>({
                         {col.render(item)}
                       </td>
                     ))}
-                    {(onEdit || onDelete || onToggleStatus || onView) && (
+                    {(onEdit || onDelete || onToggleStatus || onView || actions) && (
                       <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-1">
-                          {onView && (
-                            <button
-                              onClick={() => onView(item)}
-                              className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-primary"
-                              title={viewLabel}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </button>
-                          )}
-                          {onEdit && (
-                            <button
-                              onClick={() => onEdit(item)}
-                              className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-blue-600"
-                              title={editLabel}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
-                          )}
-                          {onToggleStatus && (
-                            <button
-                              onClick={() => onToggleStatus(item)}
-                              className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-amber-600"
-                              title={toggleLabel || (item.isActive ? "تعطيل" : "تفعيل")}
-                            >
-                              <Ban className="h-4 w-4" />
-                            </button>
-                          )}
-                          {onDelete && (
-                            <button
-                              onClick={() => onDelete(item)}
-                              className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-red-600"
-                              title={deleteLabel}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          )}
-                        </div>
+                        {actions ? (
+                          <div className="flex items-center justify-center gap-1">{actions(item)}</div>
+                        ) : (
+                          <div className="flex items-center justify-center gap-1">
+                            {onView && (
+                              <button
+                                onClick={() => onView(item)}
+                                className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-primary"
+                                title={viewLabel}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                            )}
+                            {onEdit && (
+                              <button
+                                onClick={() => onEdit(item)}
+                                className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-blue-600"
+                                title={editLabel}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                            )}
+                            {onToggleStatus && (
+                              <button
+                                onClick={() => onToggleStatus(item)}
+                                className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-amber-600"
+                                title={toggleLabel || (item.isActive ? "تعطيل" : "تفعيل")}
+                              >
+                                <Ban className="h-4 w-4" />
+                              </button>
+                            )}
+                            {onDelete && (
+                              <button
+                                onClick={() => onDelete(item)}
+                                className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-red-600"
+                                title={deleteLabel}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </td>
                     )}
                   </tr>

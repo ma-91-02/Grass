@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getCurrentUser, logAudit } from "@/lib/auth"
-import { successResponse, errorResponse, unauthorizedError, notFoundError, conflictError } from "@/lib/api-response"
+import { successResponse, errorResponse, unauthorizedError, notFoundError, conflictError, serverError } from "@/lib/api-response"
 import { z } from "zod"
 
 const warehouseSchema = z.object({
@@ -21,7 +21,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   if (!warehouse) return notFoundError()
 
-  return successResponse(warehouse)
+  const invoiceCount = await prisma.invoice.count({ where: { warehouseId: id } })
+
+  return successResponse({ ...warehouse, inUse: invoiceCount > 0 })
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -63,5 +65,29 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return errorResponse(error.issues.map((e) => e.message).join("، "))
     }
     return errorResponse("فشل تحديث المخزن", 500)
+  }
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const currentUser = await getCurrentUser()
+  if (!currentUser) return unauthorizedError()
+
+  const { id } = await params
+  const existing = await prisma.warehouse.findUnique({ where: { id } })
+  if (!existing) return notFoundError()
+
+  try {
+    const invoiceCount = await prisma.invoice.count({ where: { warehouseId: id } })
+    if (invoiceCount > 0) {
+      return conflictError("لا يمكن حذف هذا المخزن نهائياً لأنه يحتوي على عمليات أو بيانات مرتبطة")
+    }
+
+    await prisma.warehouse.delete({ where: { id } })
+
+    await logAudit(currentUser.userId, "DELETE", "Warehouse", id, { name: existing.name })
+
+    return successResponse({ deleted: true })
+  } catch (error) {
+    return serverError(error)
   }
 }

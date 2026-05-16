@@ -16,6 +16,7 @@ interface Warehouse {
   code: string
   address: string | null
   isActive: boolean
+  inUse: boolean
 }
 
 export default function WarehousesPage() {
@@ -89,15 +90,13 @@ export default function WarehousesPage() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/warehouses/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: false }),
+        method: "DELETE",
       })
       const json = await res.json()
       if (!json.success) throw new Error(json.error || "فشل حذف المخزن")
       return json.data
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["warehouses"] }); toast("تم حذف المخزن بنجاح", "success"); setDeleteItem(null) },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["warehouses"] }); toast("تم حذف المخزن نهائياً", "success"); setDeleteItem(null) },
     onError: (err: Error) => toast(err.message, "error"),
   })
 
@@ -125,9 +124,15 @@ export default function WarehousesPage() {
         error={error instanceof Error ? error.message : null}
         search={search}
         onSearchChange={setSearch}
-        onEdit={openEdit}
-        onDelete={(item: Warehouse) => setDeleteItem(item)}
-        onToggleStatus={(item: Warehouse) => setToggleItem(item)}
+        actions={(item: Warehouse) => (
+          <>
+            <button onClick={() => openEdit(item)} className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-blue-600" title="تعديل"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
+            <button onClick={() => setToggleItem(item)} className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-amber-600" title={item.isActive ? "تعطيل" : "تفعيل"}><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg></button>
+            {!item.isActive && !item.inUse && (
+              <button onClick={() => setDeleteItem(item)} className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-red-600" title="حذف نهائي"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+            )}
+          </>
+        )}
       />
 
       <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditItem(null) }} title={editItem ? "تعديل مخزن" : "إضافة مخزن جديد"}>
@@ -138,7 +143,7 @@ export default function WarehousesPage() {
         />
       </Dialog>
 
-      <ConfirmDialog open={!!deleteItem} onClose={() => setDeleteItem(null)} onConfirm={() => deleteItem && deleteMutation.mutate(deleteItem.id)} title="تعطيل مخزن" message={`هل أنت متأكد من تعطيل المخزن "${deleteItem?.name}"؟`} confirmLabel="تعطيل" loading={deleteMutation.isPending} />
+      <ConfirmDialog open={!!deleteItem} onClose={() => setDeleteItem(null)} onConfirm={() => deleteItem && deleteMutation.mutate(deleteItem.id)} title="حذف نهائي" message={`سيتم حذف هذا المخزن نهائياً لأنه غير مستخدم في أي عملية. هل أنت متأكد؟`} confirmLabel="حذف نهائي" loading={deleteMutation.isPending} />
       <ConfirmDialog open={!!toggleItem} onClose={() => setToggleItem(null)} onConfirm={() => toggleItem && toggleMutation.mutate({ id: toggleItem.id, isActive: !toggleItem.isActive })} title={toggleItem?.isActive ? "تعطيل مخزن" : "تفعيل مخزن"} message={`هل أنت متأكد من ${toggleItem?.isActive ? "تعطيل" : "تفعيل"} المخزن "${toggleItem?.name}"؟`} confirmLabel={toggleItem?.isActive ? "تعطيل" : "تفعيل"} loading={toggleMutation.isPending} />
     </div>
   )
