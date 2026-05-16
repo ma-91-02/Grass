@@ -219,9 +219,10 @@ export function ProductForm({
         <Input
           label="عدد القطع في الكارتون"
           type="number"
+          step="1"
           disabled={selectedPackaging !== "كارتون"}
           error={errors.piecesPerCarton?.message}
-          {...register("piecesPerCarton")}
+          {...register("piecesPerCarton", { valueAsNumber: true })}
         />
 
         {canViewPurchasePrice && (
@@ -229,8 +230,9 @@ export function ProductForm({
             <Input
               label="سعر الشراء"
               type="number"
+              step="0.01"
               error={errors.purchasePrice?.message}
-              {...register("purchasePrice")}
+              {...register("purchasePrice", { valueAsNumber: true })}
             />
             <Select
               label="عملة الشراء"
@@ -264,7 +266,8 @@ export function ProductForm({
                 <Input
                   label="السعر"
                   type="number"
-                  {...register(`prices.${idx}.price`)}
+                  step="0.01"
+                  {...register(`prices.${idx}.price`, { valueAsNumber: true })}
                   error={errors.prices?.[idx]?.price?.message}
                 />
                 <Select

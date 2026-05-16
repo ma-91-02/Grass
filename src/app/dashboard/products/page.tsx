@@ -80,7 +80,7 @@ export default function ProductsPage() {
     },
   });
 
-  const { data: categories = [], refetch: refetchCategories } = useQuery({
+  const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
       const res = await fetch("/api/categories");
@@ -311,7 +311,9 @@ export default function ProductsPage() {
           onSubmit={handleSubmit}
           loading={createMutation.isPending || updateMutation.isPending}
           categories={categories}
-          onCategoriesChange={() => refetchCategories()}
+          onCategoriesChange={(updated) => {
+            qc.setQueryData(["categories"], updated);
+          }}
           userPermissions={userPermissions}
         />
       </Dialog>
