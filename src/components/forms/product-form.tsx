@@ -12,9 +12,11 @@ import {
   type CustomerType,
 } from "@/types";
 import { PERMISSIONS } from "@/lib/permissions";
-import { useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { useMemo, useState, useCallback } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { parseNumericInput } from "@/lib/utils";
 
 interface Category {
   id: string;
@@ -42,6 +44,9 @@ export function ProductForm({
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [addingCategoryLoading, setAddingCategoryLoading] = useState(false);
+  const [deleteCategoryTarget, setDeleteCategoryTarget] =
+    useState<Category | null>(null);
+  const [deleteCategoryLoading, setDeleteCategoryLoading] = useState(false);
 
   const canViewPurchasePrice = userPermissions.includes(
     PERMISSIONS.PRODUCTS_VIEW_PURCHASE_PRICE,
@@ -74,6 +79,7 @@ export function ProductForm({
     handleSubmit,
     control,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(
@@ -94,6 +100,26 @@ export function ProductForm({
 
   const selectedPackaging = useWatch({ control, name: "packaging" });
 
+  const handleFormSubmit = useCallback(
+    async (data: ProductFormData) => {
+      const converted: ProductFormData = {
+        ...data,
+        purchasePrice: Number(
+          parseNumericInput(String(data.purchasePrice ?? 0)),
+        ),
+        piecesPerCarton: Number(
+          parseNumericInput(String(data.piecesPerCarton ?? 0)),
+        ),
+        prices: data.prices?.map((p) => ({
+          ...p,
+          price: Number(parseNumericInput(String(p.price ?? 0))),
+        })),
+      };
+      await onSubmit(converted);
+    },
+    [onSubmit],
+  );
+
   async function handleAddCategory() {
     if (!newCategoryName.trim()) {
       toast("الرجاء إدخال اسم المجموعة", "error");
@@ -109,16 +135,46 @@ export function ProductForm({
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل إنشاء المجموعة");
       const newCat = json.data as Category;
-      onCategoriesChange?.([...categories, newCat]);
+      const updated = [...categories, newCat];
+      onCategoriesChange?.(updated);
       setValue("categoryId", newCat.id);
       setNewCategoryName("");
       setAddingCategory(false);
       toast("تم إنشاء المجموعة بنجاح", "success");
     } catch (err) {
-      toast(err instanceof Error ? err.message : "فشل إنشاء المجموعة", "error");
+      const msg = err instanceof Error ? err.message : "فشل إنشاء المجموعة";
+      toast(msg, "error");
     } finally {
       setAddingCategoryLoading(false);
     }
+  }
+
+  async function handleDeleteCategory(cat: Category) {
+    setDeleteCategoryLoading(true);
+    try {
+      const res = await fetch(`/api/categories/${cat.id}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "فشل حذف المجموعة");
+      const updated = categories.filter((c) => c.id !== cat.id);
+      onCategoriesChange?.(updated);
+      if (getValues("categoryId") === cat.id) {
+        setValue("categoryId", "");
+      }
+      setDeleteCategoryTarget(null);
+      toast("تم حذف المجموعة بنجاح", "success");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "فشل حذف المجموعة";
+      toast(msg, "error");
+    } finally {
+      setDeleteCategoryLoading(false);
+    }
+  }
+
+  function onArabicInput(e: React.FormEvent<HTMLInputElement>) {
+    const target = e.target as HTMLInputElement;
+    target.value = parseNumericInput(target.value);
   }
 
   if (!canSubmit) {
@@ -132,7 +188,7 @@ export function ProductForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <Input
           label="اسم المادة"
@@ -204,6 +260,26 @@ export function ProductForm({
               </Button>
             </div>
           )}
+          {categories.length > 0 && (
+            <div className="max-h-32 overflow-y-auto space-y-1 pt-1">
+              {categories.map((cat) => (
+                <div
+                  key={cat.id}
+                  className="flex items-center justify-between rounded-md bg-muted/30 px-2 py-1 text-sm"
+                >
+                  <span>{cat.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteCategoryTarget(cat)}
+                    className="rounded p-0.5 text-gray-400 hover:text-red-600"
+                    title="حذف المجموعة"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <Select
@@ -223,6 +299,7 @@ export function ProductForm({
           disabled={selectedPackaging !== "كارتون"}
           error={errors.piecesPerCarton?.message}
           {...register("piecesPerCarton", { valueAsNumber: true })}
+          onInput={onArabicInput}
         />
 
         {canViewPurchasePrice && (
@@ -233,6 +310,7 @@ export function ProductForm({
               step="0.01"
               error={errors.purchasePrice?.message}
               {...register("purchasePrice", { valueAsNumber: true })}
+              onInput={onArabicInput}
             />
             <Select
               label="عملة الشراء"
@@ -267,8 +345,11 @@ export function ProductForm({
                   label="السعر"
                   type="number"
                   step="0.01"
-                  {...register(`prices.${idx}.price`, { valueAsNumber: true })}
+                  {...register(`prices.${idx}.price`, {
+                    valueAsNumber: true,
+                  })}
                   error={errors.prices?.[idx]?.price?.message}
+                  onInput={onArabicInput}
                 />
                 <Select
                   label="العملة"
@@ -289,6 +370,18 @@ export function ProductForm({
           {loading ? "جاري الحفظ..." : "حفظ"}
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={!!deleteCategoryTarget}
+        onClose={() => setDeleteCategoryTarget(null)}
+        onConfirm={() =>
+          deleteCategoryTarget && handleDeleteCategory(deleteCategoryTarget)
+        }
+        title="حذف مجموعة"
+        message={`هل أنت متأكد من حذف المجموعة "${deleteCategoryTarget?.name}"؟`}
+        confirmLabel="حذف"
+        loading={deleteCategoryLoading}
+      />
     </form>
   );
 }
