@@ -1,12 +1,18 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Plus, Search } from "lucide-react"
+import { useState, useCallback, useEffect } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { PageHeader } from "@/components/shared/page-header"
+import { DataTable } from "@/components/shared/data-table"
+import { Dialog } from "@/components/ui/dialog"
+import { ConfirmDialog } from "@/components/shared/confirm-dialog"
+import { ProductForm } from "@/components/forms/product-form"
+import { useToast } from "@/components/ui/toast"
 import { Badge } from "@/components/ui/badge"
+import { formatCurrency } from "@/lib/utils"
 import { CUSTOMER_TYPE_LABELS, type CustomerType } from "@/types"
+import type { TokenPayload } from "@/lib/auth"
+import { PERMISSIONS } from "@/lib/permissions"
 
 interface ProductPrice {
   id: string
@@ -19,24 +25,64 @@ interface Product {
   name: string
   code: string
   barcode: string | null
+  categoryId: string | null
   categoryName: string | null
+  packagingId: string | null
+  packagingName: string | null
+  piecesPerCarton: number
   unit: string
   purchasePrice: number
   isActive: boolean
   prices: ProductPrice[]
 }
 
+interface Category { id: string; name: string }
+interface Packaging { id: string; name: string; piecesPerCarton: number }
+
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
+  const qc = useQueryClient()
+  const { toast } = useToast()
   const [search, setSearch] = useState("")
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editItem, setEditItem] = useState<Product | null>(null)
+  const [deleteItem, setDeleteItem] = useState<Product | null>(null)
+  const [toggleItem, setToggleItem] = useState<Product | null>(null)
+  const [user, setUser] = useState<TokenPayload | null>(null)
 
   useEffect(() => {
-    fetch("/api/products")
-      .then((res) => res.json())
-      .then((data) => setProducts(data.data))
-      .finally(() => setLoading(false))
+    fetch("/api/auth/me").then(r => r.json()).then(d => setUser(d.data)).catch(() => {})
   }, [])
+
+  const userPermissions = user?.permissions || []
+  const canViewPurchasePrice = userPermissions.includes(PERMISSIONS.PRODUCTS_VIEW_PURCHASE_PRICE)
+
+  const { data: products = [], isLoading: productsLoading, error: productsError } = useQuery({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const res = await fetch("/api/products")
+      const json = await res.json()
+      if (!json.success) throw new Error(json.error || "فشل تحميل المواد")
+      return json.data as Product[]
+    },
+  })
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const res = await fetch("/api/categories")
+      const json = await res.json()
+      return json.data as Category[]
+    },
+  })
+
+  const { data: packagings = [] } = useQuery({
+    queryKey: ["packagings"],
+    queryFn: async () => {
+      const res = await fetch("/api/packaging")
+      const json = await res.json()
+      return json.data as Packaging[]
+    },
+  })
 
   const filtered = products.filter(
     (p) =>
@@ -45,71 +91,123 @@ export default function ProductsPage() {
       p.barcode?.includes(search)
   )
 
+  const createMutation = useMutation({
+    mutationFn: async (data: unknown) => {
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      const json = await res.json()
+      if (!json.success) throw new Error(json.error || "فشل إنشاء المادة")
+      return json.data
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["products"] }); toast("تم إنشاء المادة بنجاح", "success"); setDialogOpen(false) },
+    onError: (err: Error) => toast(err.message, "error"),
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: unknown }) => {
+      const res = await fetch(`/api/products/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      const json = await res.json()
+      if (!json.success) throw new Error(json.error || "فشل تحديث المادة")
+      return json.data
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["products"] }); toast("تم تحديث المادة بنجاح", "success"); setEditItem(null); setDialogOpen(false) },
+    onError: (err: Error) => toast(err.message, "error"),
+  })
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      const res = await fetch(`/api/products/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive }),
+      })
+      const json = await res.json()
+      if (!json.success) throw new Error(json.error || "فشل تغيير الحالة")
+      return json.data
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["products"] }); toast("تم تغيير الحالة بنجاح", "success"); setToggleItem(null) },
+    onError: (err: Error) => toast(err.message, "error"),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/products/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: false }),
+      })
+      const json = await res.json()
+      if (!json.success) throw new Error(json.error || "فشل حذف المادة")
+      return json.data
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["products"] }); toast("تم حذف المادة بنجاح", "success"); setDeleteItem(null) },
+    onError: (err: Error) => toast(err.message, "error"),
+  })
+
+  const openAdd = () => { setEditItem(null); setDialogOpen(true) }
+  const openEdit = (item: Product) => { setEditItem(item); setDialogOpen(true) }
+
+  const handleSubmit = useCallback(async (data: unknown) => {
+    if (editItem) updateMutation.mutate({ id: editItem.id, data })
+    else createMutation.mutate(data)
+  }, [editItem, updateMutation, createMutation])
+
+  const columns = [
+    { key: "code", header: "الكود", render: (p: Product) => <span className="font-mono text-xs text-gray-500">{p.code}</span>, sortable: true },
+    { key: "name", header: "الاسم", render: (p: Product) => <span className="font-medium">{p.name}</span>, sortable: true },
+    { key: "barcode", header: "الباركود", render: (p: Product) => <span dir="ltr" className="text-xs text-gray-500">{p.barcode || "-"}</span> },
+    { key: "categoryName", header: "المجموعة", render: (p: Product) => <span>{p.categoryName || "-"}</span> },
+    { key: "unit", header: "الوحدة", render: (p: Product) => <span>{p.unit}</span> },
+    ...(canViewPurchasePrice ? [{ key: "purchasePrice" as string, header: "سعر الشراء", render: (p: Product) => <span>{formatCurrency(p.purchasePrice)}</span> }] : []),
+    { key: "isActive", header: "الحالة", render: (p: Product) => <Badge variant={p.isActive ? "success" : "danger"}>{p.isActive ? "نشط" : "محذوف"}</Badge> },
+  ]
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-dark">المواد</h1>
-          <p className="text-sm text-gray-500">إدارة المواد والمنتجات</p>
-        </div>
-        <Button>
-          <Plus className="h-4 w-4" />
-          مادة جديدة
-        </Button>
-      </div>
+      <PageHeader title="المواد" description="إدارة المواد والمنتجات" actionLabel="مادة جديدة" onAction={openAdd} />
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="بحث بالاسم أو الكود أو الباركود..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pr-10"
-          />
-        </div>
-      </div>
+      <DataTable
+        columns={columns as any}
+        data={filtered}
+        loading={productsLoading}
+        error={productsError instanceof Error ? productsError.message : null}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="بحث بالاسم أو الكود أو الباركود..."
+        onEdit={openEdit}
+        onDelete={(item: Product) => setDeleteItem(item)}
+        onToggleStatus={(item: Product) => setToggleItem(item)}
+      />
 
-      {loading ? (
-        <div className="text-center py-12 text-gray-500">جاري التحميل...</div>
-      ) : filtered.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-gray-500">
-            لا يوجد مواد
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="p-0">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-right p-4 text-sm font-medium text-gray-500">الكود</th>
-                  <th className="text-right p-4 text-sm font-medium text-gray-500">الاسم</th>
-                  <th className="text-right p-4 text-sm font-medium text-gray-500">المجموعة</th>
-                  <th className="text-right p-4 text-sm font-medium text-gray-500">الوحدة</th>
-                  <th className="text-right p-4 text-sm font-medium text-gray-500">الحالة</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((product) => (
-                  <tr key={product.id} className="border-b border-border hover:bg-muted/50">
-                    <td className="p-4 text-gray-600 font-mono text-sm">{product.code}</td>
-                    <td className="p-4 text-dark font-medium">{product.name}</td>
-                    <td className="p-4 text-gray-600">{product.categoryName || "-"}</td>
-                    <td className="p-4 text-gray-600">{product.unit}</td>
-                    <td className="p-4">
-                      <Badge variant={product.isActive ? "success" : "danger"}>
-                        {product.isActive ? "نشط" : "غير نشط"}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
-      )}
+      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditItem(null) }} title={editItem ? "تعديل مادة" : "إضافة مادة جديدة"}>
+        <ProductForm
+          defaultValues={editItem ? {
+            name: editItem.name,
+            barcode: editItem.barcode || "",
+            categoryId: editItem.categoryId || "",
+            packagingId: editItem.packagingId || "",
+            piecesPerCarton: editItem.piecesPerCarton,
+            unit: editItem.unit,
+            purchasePrice: editItem.purchasePrice,
+            prices: editItem.prices || [],
+          } : undefined}
+          onSubmit={handleSubmit}
+          loading={createMutation.isPending || updateMutation.isPending}
+          categories={categories}
+          packagings={packagings}
+          userPermissions={userPermissions}
+        />
+      </Dialog>
+
+      <ConfirmDialog open={!!deleteItem} onClose={() => setDeleteItem(null)} onConfirm={() => deleteItem && deleteMutation.mutate(deleteItem.id)} title="حذف مادة" message={`هل أنت متأكد من حذف المادة "${deleteItem?.name}"؟`} confirmLabel="حذف" loading={deleteMutation.isPending} />
+      <ConfirmDialog open={!!toggleItem} onClose={() => setToggleItem(null)} onConfirm={() => toggleItem && toggleMutation.mutate({ id: toggleItem.id, isActive: !toggleItem.isActive })} title={toggleItem?.isActive ? "تعطيل مادة" : "تفعيل مادة"} message={`هل أنت متأكد من ${toggleItem?.isActive ? "تعطيل" : "تفعيل"} المادة "${toggleItem?.name}"؟`} confirmLabel={toggleItem?.isActive ? "تعطيل" : "تفعيل"} loading={toggleMutation.isPending} />
     </div>
   )
 }

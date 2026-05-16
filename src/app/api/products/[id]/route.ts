@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getCurrentUser, logAudit } from "@/lib/auth"
-import { successResponse, errorResponse, unauthorizedError, notFoundError } from "@/lib/api-response"
+import { getCurrentUser, logAudit, checkPermission } from "@/lib/auth"
+import { successResponse, errorResponse, unauthorizedError, notFoundError, forbiddenError } from "@/lib/api-response"
 import { z } from "zod"
+import { PERMISSIONS } from "@/lib/permissions"
 
 const productSchema = z.object({
   name: z.string().min(1).optional(),
@@ -31,7 +32,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   if (!product) return notFoundError()
 
-  return successResponse({
+  const canViewPurchasePrice = checkPermission(user, PERMISSIONS.PRODUCTS_VIEW_PURCHASE_PRICE)
+
+  const result: Record<string, unknown> = {
     id: product.id,
     name: product.name,
     code: product.code,
@@ -42,7 +45,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     packagingName: product.packaging?.name || null,
     piecesPerCarton: product.piecesPerCarton,
     unit: product.unit,
-    purchasePrice: Number(product.purchasePrice),
     isActive: product.isActive,
     prices: product.prices.map((pr) => ({
       id: pr.id,
@@ -50,7 +52,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       customerType: pr.customerType,
       price: Number(pr.price),
     })),
-  })
+  }
+
+  if (canViewPurchasePrice) {
+    result.purchasePrice = Number(product.purchasePrice)
+  }
+
+  return successResponse(result)
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -65,13 +73,21 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const body = await request.json()
     const parsed = productSchema.parse(body)
 
-    const { prices, ...productData } = parsed
+    const canEditPrices = checkPermission(currentUser, PERMISSIONS.PRODUCTS_EDIT_PRICE)
+    const canViewPurchasePrice = checkPermission(currentUser, PERMISSIONS.PRODUCTS_VIEW_PURCHASE_PRICE)
+
+    if (!canEditPrices && (parsed.prices || parsed.purchasePrice !== undefined)) {
+      return forbiddenError("لا تملك صلاحية تعديل الأسعار أو سعر الشراء")
+    }
+
+    const { prices, purchasePrice, ...productData } = parsed
 
     const product = await prisma.product.update({
       where: { id },
       data: {
         ...productData,
-        ...(prices
+        ...(canViewPurchasePrice && purchasePrice !== undefined ? { purchasePrice } : {}),
+        ...(canEditPrices && prices
           ? {
               prices: {
                 deleteMany: {},
@@ -85,7 +101,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     await logAudit(currentUser.userId, "UPDATE", "Product", id, { name: product.name })
 
-    return successResponse({
+    const patchResult: Record<string, unknown> = {
       id: product.id,
       name: product.name,
       code: product.code,
@@ -94,7 +110,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       packagingName: product.packaging?.name || null,
       piecesPerCarton: product.piecesPerCarton,
       unit: product.unit,
-      purchasePrice: Number(product.purchasePrice),
       isActive: product.isActive,
       prices: product.prices.map((pr) => ({
         id: pr.id,
@@ -102,7 +117,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         customerType: pr.customerType,
         price: Number(pr.price),
       })),
-    })
+    }
+
+    if (canViewPurchasePrice) {
+      patchResult.purchasePrice = Number(product.purchasePrice)
+    }
+
+    return successResponse(patchResult)
   } catch (error) {
     if (error instanceof z.ZodError) {
       return errorResponse(error.issues.map((e) => e.message).join("، "))

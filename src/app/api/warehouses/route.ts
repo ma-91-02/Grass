@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getCurrentUser } from "@/lib/auth"
+import { getCurrentUser, logAudit } from "@/lib/auth"
 import { successResponse, errorResponse, unauthorizedError } from "@/lib/api-response"
 import { z } from "zod"
 
@@ -39,6 +39,8 @@ export async function POST(request: NextRequest) {
     const warehouse = await prisma.warehouse.create({
       data: parsed,
     })
+
+    await logAudit(user.userId, "CREATE", "Warehouse", warehouse.id, { name: warehouse.name })
 
     return successResponse(warehouse, 201)
   } catch (error) {

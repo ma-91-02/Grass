@@ -1,10 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Plus, Search } from "lucide-react"
+import { useState, useCallback } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { PageHeader } from "@/components/shared/page-header"
+import { DataTable } from "@/components/shared/data-table"
+import { Dialog } from "@/components/ui/dialog"
+import { ConfirmDialog } from "@/components/shared/confirm-dialog"
+import { WarehouseForm } from "@/components/forms/warehouse-form"
+import { useToast } from "@/components/ui/toast"
 import { Badge } from "@/components/ui/badge"
 
 interface Warehouse {
@@ -16,84 +19,127 @@ interface Warehouse {
 }
 
 export default function WarehousesPage() {
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([])
-  const [loading, setLoading] = useState(true)
+  const qc = useQueryClient()
+  const { toast } = useToast()
   const [search, setSearch] = useState("")
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editItem, setEditItem] = useState<Warehouse | null>(null)
+  const [deleteItem, setDeleteItem] = useState<Warehouse | null>(null)
+  const [toggleItem, setToggleItem] = useState<Warehouse | null>(null)
 
-  useEffect(() => {
-    fetch("/api/warehouses")
-      .then((res) => res.json())
-      .then((data) => setWarehouses(data.data))
-      .finally(() => setLoading(false))
-  }, [])
+  const { data: warehouses = [], isLoading, error } = useQuery({
+    queryKey: ["warehouses"],
+    queryFn: async () => {
+      const res = await fetch("/api/warehouses")
+      const json = await res.json()
+      if (!json.success) throw new Error(json.error || "فشل تحميل المخازن")
+      return json.data as Warehouse[]
+    },
+  })
 
   const filtered = warehouses.filter(
     (w) => w.name.includes(search) || w.code.includes(search)
   )
 
+  const createMutation = useMutation({
+    mutationFn: async (data: unknown) => {
+      const res = await fetch("/api/warehouses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      const json = await res.json()
+      if (!json.success) throw new Error(json.error || "فشل إنشاء المخزن")
+      return json.data
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["warehouses"] }); toast("تم إنشاء المخزن بنجاح", "success"); setDialogOpen(false) },
+    onError: (err: Error) => toast(err.message, "error"),
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: unknown }) => {
+      const res = await fetch(`/api/warehouses/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      const json = await res.json()
+      if (!json.success) throw new Error(json.error || "فشل تحديث المخزن")
+      return json.data
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["warehouses"] }); toast("تم تحديث المخزن بنجاح", "success"); setEditItem(null); setDialogOpen(false) },
+    onError: (err: Error) => toast(err.message, "error"),
+  })
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      const res = await fetch(`/api/warehouses/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive }),
+      })
+      const json = await res.json()
+      if (!json.success) throw new Error(json.error || "فشل تغيير الحالة")
+      return json.data
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["warehouses"] }); toast("تم تغيير الحالة بنجاح", "success"); setToggleItem(null) },
+    onError: (err: Error) => toast(err.message, "error"),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/warehouses/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: false }),
+      })
+      const json = await res.json()
+      if (!json.success) throw new Error(json.error || "فشل حذف المخزن")
+      return json.data
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["warehouses"] }); toast("تم حذف المخزن بنجاح", "success"); setDeleteItem(null) },
+    onError: (err: Error) => toast(err.message, "error"),
+  })
+
+  const openAdd = () => { setEditItem(null); setDialogOpen(true) }
+  const openEdit = (item: Warehouse) => { setEditItem(item); setDialogOpen(true) }
+
+  const handleSubmit = useCallback(async (data: unknown) => {
+    if (editItem) updateMutation.mutate({ id: editItem.id, data })
+    else createMutation.mutate(data)
+  }, [editItem, updateMutation, createMutation])
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-dark">المخازن</h1>
-          <p className="text-sm text-gray-500">إدارة المخازن والمستودعات</p>
-        </div>
-        <Button>
-          <Plus className="h-4 w-4" />
-          مخزن جديد
-        </Button>
-      </div>
+      <PageHeader title="المخازن" description="إدارة المخازن والمستودعات" actionLabel="مخزن جديد" onAction={openAdd} />
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="بحث..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pr-10"
-          />
-        </div>
-      </div>
+      <DataTable
+        columns={[
+          { key: "code", header: "الكود", render: (w: Warehouse) => <span className="font-mono text-xs text-gray-500">{w.code}</span>, sortable: true },
+          { key: "name", header: "الاسم", render: (w: Warehouse) => <span className="font-medium">{w.name}</span>, sortable: true },
+          { key: "address", header: "العنوان", render: (w: Warehouse) => <span className="text-gray-600">{w.address || "-"}</span> },
+          { key: "isActive", header: "الحالة", render: (w: Warehouse) => <Badge variant={w.isActive ? "success" : "danger"}>{w.isActive ? "نشط" : "محذوف"}</Badge> },
+        ]}
+        data={filtered}
+        loading={isLoading}
+        error={error instanceof Error ? error.message : null}
+        search={search}
+        onSearchChange={setSearch}
+        onEdit={openEdit}
+        onDelete={(item: Warehouse) => setDeleteItem(item)}
+        onToggleStatus={(item: Warehouse) => setToggleItem(item)}
+      />
 
-      {loading ? (
-        <div className="text-center py-12 text-gray-500">جاري التحميل...</div>
-      ) : filtered.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-gray-500">
-            لا يوجد مخازن
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="p-0">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-right p-4 text-sm font-medium text-gray-500">الكود</th>
-                  <th className="text-right p-4 text-sm font-medium text-gray-500">الاسم</th>
-                  <th className="text-right p-4 text-sm font-medium text-gray-500">العنوان</th>
-                  <th className="text-right p-4 text-sm font-medium text-gray-500">الحالة</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((w) => (
-                  <tr key={w.id} className="border-b border-border hover:bg-muted/50">
-                    <td className="p-4 text-gray-600 font-mono text-sm">{w.code}</td>
-                    <td className="p-4 text-dark font-medium">{w.name}</td>
-                    <td className="p-4 text-gray-600">{w.address || "-"}</td>
-                    <td className="p-4">
-                      <Badge variant={w.isActive ? "success" : "danger"}>
-                        {w.isActive ? "نشط" : "غير نشط"}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
-      )}
+      <Dialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditItem(null) }} title={editItem ? "تعديل مخزن" : "إضافة مخزن جديد"}>
+        <WarehouseForm
+          defaultValues={editItem ? { name: editItem.name, code: editItem.code, address: editItem.address || "" } : undefined}
+          onSubmit={handleSubmit}
+          loading={createMutation.isPending || updateMutation.isPending}
+        />
+      </Dialog>
+
+      <ConfirmDialog open={!!deleteItem} onClose={() => setDeleteItem(null)} onConfirm={() => deleteItem && deleteMutation.mutate(deleteItem.id)} title="حذف مخزن" message={`هل أنت متأكد من حذف المخزن "${deleteItem?.name}"؟`} confirmLabel="حذف" loading={deleteMutation.isPending} />
+      <ConfirmDialog open={!!toggleItem} onClose={() => setToggleItem(null)} onConfirm={() => toggleItem && toggleMutation.mutate({ id: toggleItem.id, isActive: !toggleItem.isActive })} title={toggleItem?.isActive ? "تعطيل مخزن" : "تفعيل مخزن"} message={`هل أنت متأكد من ${toggleItem?.isActive ? "تعطيل" : "تفعيل"} المخزن "${toggleItem?.name}"؟`} confirmLabel={toggleItem?.isActive ? "تعطيل" : "تفعيل"} loading={toggleMutation.isPending} />
     </div>
   )
 }
