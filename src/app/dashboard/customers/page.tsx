@@ -554,8 +554,12 @@ export default function CustomersPage() {
                 }}>
                   إلغاء
                 </Button>
-                <Button type="submit" form="customer-form">
-                  حفظ
+                <Button
+                  type="submit"
+                  form="customer-form"
+                  disabled={createCustomerMutation.isPending || updateCustomerMutation.isPending}
+                >
+                  {createCustomerMutation.isPending || updateCustomerMutation.isPending ? "جاري الحفظ..." : "حفظ"}
                 </Button>
               </>
             }
@@ -710,8 +714,12 @@ export default function CustomersPage() {
                 }}>
                   إلغاء
                 </Button>
-                <Button type="submit" form="supplier-form">
-                  حفظ
+                <Button
+                  type="submit"
+                  form="supplier-form"
+                  disabled={createSupplierMutation.isPending || updateSupplierMutation.isPending}
+                >
+                  {createSupplierMutation.isPending || updateSupplierMutation.isPending ? "جاري الحفظ..." : "حفظ"}
                 </Button>
               </>
             }
@@ -858,8 +866,12 @@ export default function CustomersPage() {
                 }}>
                   إلغاء
                 </Button>
-                <Button type="submit" form="category-form">
-                  حفظ
+                <Button
+                  type="submit"
+                  form="category-form"
+                  disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
+                >
+                  {createCategoryMutation.isPending || updateCategoryMutation.isPending ? "جاري الحفظ..." : "حفظ"}
                 </Button>
               </>
             }
