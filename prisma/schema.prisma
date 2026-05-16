@@ -150,6 +150,7 @@ model Supplier {
   updatedAt     DateTime @updatedAt
 
   accounts      SupplierAccount[]
+  purchaseInvoices PurchaseInvoice[]
 }
 
 model SupplierAccount {
@@ -201,7 +202,9 @@ model Product {
   updatedAt        DateTime   @updatedAt
 
   prices           ProductPrice[]
-  invoiceItems     InvoiceItem[]
+  invoiceItems         InvoiceItem[]
+  purchaseInvoiceItems PurchaseInvoiceItem[]
+  stockMovements       StockMovement[]
 }
 
 model ProductPrice {
@@ -227,6 +230,8 @@ model Warehouse {
   updatedAt   DateTime  @updatedAt
 
   invoices    Invoice[]
+  purchaseInvoices PurchaseInvoice[]
+  stockMovements   StockMovement[]
 }
 
 model ExchangeRate {
@@ -288,4 +293,91 @@ model Payment {
   note        String?
   createdById String?
   createdAt   DateTime @default(now())
+}
+
+model PurchaseInvoice {
+  id                     String               @id @default(cuid())
+  invoiceNumber          String               @unique
+  supplierInvoiceNumber  String?
+  purchaseDate           DateTime             @default(now())
+  currency               Currency             @default(IQD)
+  exchangeRateValue      Decimal              @default(0)
+  supplierId             String?
+  supplier               Supplier?            @relation(fields: [supplierId], references: [id])
+  warehouseId            String?
+  warehouse              Warehouse?           @relation(fields: [warehouseId], references: [id])
+  notes                  String?
+  subtotal               Decimal              @default(0)
+  totalExpenses          Decimal              @default(0)
+  totalCost              Decimal              @default(0)
+  paymentMethod          String               @default("CASH")
+  paid                   Decimal              @default(0)
+  remaining              Decimal              @default(0)
+  paymentAccountId       String?
+  paymentAccount         PaymentAccount?      @relation(fields: [paymentAccountId], references: [id])
+  status                 String               @default("COMPLETED")
+  createdById            String?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+
+  items                  PurchaseInvoiceItem[]
+  expenses               PurchaseExpense[]
+}
+
+model PurchaseInvoiceItem {
+  id               String          @id @default(cuid())
+  purchaseInvoiceId String
+  purchaseInvoice  PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id], onDelete: Cascade)
+  productId        String?
+  product          Product?        @relation(fields: [productId], references: [id])
+  productName      String
+  productCode      String
+  quantity         Int             @default(1)
+  purchasePrice    Decimal         @default(0)
+  productionDate   DateTime?
+  expiryDate       DateTime?
+  totalPrice       Decimal         @default(0)
+
+  @@index([purchaseInvoiceId])
+}
+
+model PurchaseExpense {
+  id               String          @id @default(cuid())
+  purchaseInvoiceId String
+  purchaseInvoice  PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id], onDelete: Cascade)
+  name             String
+  amount           Decimal         @default(0)
+
+  @@index([purchaseInvoiceId])
+}
+
+model PaymentAccount {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  type      String   @default("CASH")
+  currency  Currency @default(IQD)
+  balance   Decimal  @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  purchaseInvoices PurchaseInvoice[]
+}
+
+model StockMovement {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id])
+  warehouseId   String?
+  warehouse     Warehouse? @relation(fields: [warehouseId], references: [id])
+  type          String   @default("IN")
+  quantity      Int      @default(0)
+  referenceType String?
+  referenceId   String?
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  @@index([productId])
+  @@index([warehouseId])
+  @@index([referenceType, referenceId])
 }

@@ -73,9 +73,23 @@ export const exchangeRateFormSchema = z.object({
   note: z.string().optional().nullable(),
 });
 
+export const purchaseInvoiceFormSchema = z.object({
+  supplierInvoiceNumber: z.string().optional().nullable(),
+  purchaseDate: z.string().optional(),
+  currency: z.enum(["USD", "IQD"] as const),
+  exchangeRateValue: z.coerce.number().min(0).default(0),
+  supplierId: z.string().min(1, "المورد مطلوب"),
+  warehouseId: z.string().min(1, "المخزن مطلوب"),
+  notes: z.string().optional().nullable(),
+  paymentMethod: z.enum(["CASH", "BANK", "CREDIT"] as const).default("CASH"),
+  paid: z.coerce.number().min(0).default(0),
+  paymentAccountId: z.string().optional().nullable(),
+});
+
 export type CustomerFormData = z.infer<typeof customerFormSchema>;
 export type SupplierFormData = z.infer<typeof supplierFormSchema>;
 export type CustomerCategoryFormData = z.infer<typeof customerCategoryFormSchema>;
 export type ProductFormData = z.infer<typeof productFormSchema>;
 export type WarehouseFormData = z.infer<typeof warehouseFormSchema>;
 export type ExchangeRateFormData = z.infer<typeof exchangeRateFormSchema>;
+export type PurchaseInvoiceFormData = z.infer<typeof purchaseInvoiceFormSchema>;

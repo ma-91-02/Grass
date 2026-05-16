@@ -37,4 +37,9 @@ export const PERMISSIONS = {
   SETTINGS_MANAGE: "settings.manage",
   ACCOUNTS_VIEW: "accounts.view",
   ACCOUNTS_MANAGE: "accounts.manage",
+  PURCHASES_VIEW: "purchases.view",
+  PURCHASES_CREATE: "purchases.create",
+  PURCHASES_DELETE: "purchases.delete",
+  PAYMENT_ACCOUNTS_VIEW: "paymentAccounts.view",
+  PAYMENT_ACCOUNTS_MANAGE: "paymentAccounts.manage",
 } as const;

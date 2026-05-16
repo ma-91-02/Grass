@@ -45,6 +45,11 @@ const PERMISSIONS = [
   { key: "settings.manage", name: "إدارة الإعدادات", module: "settings" },
   { key: "accounts.view", name: "عرض الحسابات", module: "accounts" },
   { key: "accounts.manage", name: "إدارة الحسابات", module: "accounts" },
+  { key: "purchases.view", name: "عرض المشتريات", module: "purchases" },
+  { key: "purchases.create", name: "إنشاء فاتورة مشتريات", module: "purchases" },
+  { key: "purchases.delete", name: "حذف فاتورة مشتريات", module: "purchases" },
+  { key: "paymentAccounts.view", name: "عرض حسابات التسديد", module: "purchases" },
+  { key: "paymentAccounts.manage", name: "إدارة حسابات التسديد", module: "purchases" },
 ]
 
 const ROLES = [
@@ -63,6 +68,8 @@ const ROLES = [
       "exchangeRates.view", "exchangeRates.manage",
       "invoices.view", "invoices.create", "invoices.edit",
       "accounts.view", "accounts.manage",
+      "purchases.view", "purchases.create",
+      "paymentAccounts.view", "paymentAccounts.manage",
       "reports.view",
     ],
   },
@@ -163,6 +170,24 @@ async function main() {
       code: "WH-MAIN",
       address: "بغداد",
     },
+  })
+
+  await prisma.paymentAccount.upsert({
+    where: { name: "صندوق IQD" },
+    update: { type: "CASH", currency: "IQD", balance: 0 },
+    create: { name: "صندوق IQD", type: "CASH", currency: "IQD", balance: 0 },
+  })
+
+  await prisma.paymentAccount.upsert({
+    where: { name: "صندوق USD" },
+    update: { type: "CASH", currency: "USD", balance: 0 },
+    create: { name: "صندوق USD", type: "CASH", currency: "USD", balance: 0 },
+  })
+
+  await prisma.paymentAccount.upsert({
+    where: { name: "مصرف الرافدين" },
+    update: { type: "BANK", currency: "IQD", balance: 0 },
+    create: { name: "مصرف الرافدين", type: "BANK", currency: "IQD", balance: 0 },
   })
 
   const قطعةPackaging = await prisma.productPackaging.upsert({

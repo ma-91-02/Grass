@@ -149,3 +149,59 @@ export interface AuditLogData {
   details: unknown;
   createdAt: string;
 }
+
+export interface PurchaseInvoiceData {
+  id: string;
+  invoiceNumber: string;
+  supplierInvoiceNumber: string | null;
+  purchaseDate: string;
+  currency: string;
+  exchangeRateValue: number;
+  supplierId: string | null;
+  supplierName: string | null;
+  warehouseId: string | null;
+  warehouseName: string | null;
+  notes: string | null;
+  subtotal: number;
+  totalExpenses: number;
+  totalCost: number;
+  paymentMethod: string;
+  paid: number;
+  remaining: number;
+  paymentAccountId: string | null;
+  paymentAccountName: string | null;
+  status: string;
+  items: PurchaseInvoiceItemData[];
+  expenses: PurchaseExpenseData[];
+  createdById: string | null;
+  createdAt: string;
+}
+
+export interface PurchaseInvoiceItemData {
+  id: string;
+  purchaseInvoiceId: string;
+  productId: string | null;
+  productName: string;
+  productCode: string;
+  quantity: number;
+  purchasePrice: number;
+  productionDate: string | null;
+  expiryDate: string | null;
+  totalPrice: number;
+}
+
+export interface PurchaseExpenseData {
+  id: string;
+  purchaseInvoiceId: string;
+  name: string;
+  amount: number;
+}
+
+export interface PaymentAccountData {
+  id: string;
+  name: string;
+  type: string;
+  currency: string;
+  balance: number;
+  isActive: boolean;
+}
