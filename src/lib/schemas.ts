@@ -27,7 +27,6 @@ export const productFormSchema = z.object({
 
 export const warehouseFormSchema = z.object({
   name: z.string().min(1, "الاسم مطلوب"),
-  code: z.string().min(1, "الكود مطلوب"),
   address: z.string().optional().nullable(),
 })
 

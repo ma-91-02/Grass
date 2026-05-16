@@ -118,7 +118,7 @@ export default function WarehousesPage() {
           { key: "code", header: "الكود", render: (w: Warehouse) => <span className="font-mono text-xs text-gray-500">{w.code}</span>, sortable: true },
           { key: "name", header: "الاسم", render: (w: Warehouse) => <span className="font-medium">{w.name}</span>, sortable: true },
           { key: "address", header: "العنوان", render: (w: Warehouse) => <span className="text-gray-600">{w.address || "-"}</span> },
-          { key: "isActive", header: "الحالة", render: (w: Warehouse) => <Badge variant={w.isActive ? "success" : "danger"}>{w.isActive ? "نشط" : "محذوف"}</Badge> },
+          { key: "isActive", header: "الحالة", render: (w: Warehouse) => <Badge variant={w.isActive ? "success" : "danger"}>{w.isActive ? "نشط" : "معطل"}</Badge> },
         ]}
         data={filtered}
         loading={isLoading}
@@ -138,7 +138,7 @@ export default function WarehousesPage() {
         />
       </Dialog>
 
-      <ConfirmDialog open={!!deleteItem} onClose={() => setDeleteItem(null)} onConfirm={() => deleteItem && deleteMutation.mutate(deleteItem.id)} title="حذف مخزن" message={`هل أنت متأكد من حذف المخزن "${deleteItem?.name}"؟`} confirmLabel="حذف" loading={deleteMutation.isPending} />
+      <ConfirmDialog open={!!deleteItem} onClose={() => setDeleteItem(null)} onConfirm={() => deleteItem && deleteMutation.mutate(deleteItem.id)} title="تعطيل مخزن" message={`هل أنت متأكد من تعطيل المخزن "${deleteItem?.name}"؟`} confirmLabel="تعطيل" loading={deleteMutation.isPending} />
       <ConfirmDialog open={!!toggleItem} onClose={() => setToggleItem(null)} onConfirm={() => toggleItem && toggleMutation.mutate({ id: toggleItem.id, isActive: !toggleItem.isActive })} title={toggleItem?.isActive ? "تعطيل مخزن" : "تفعيل مخزن"} message={`هل أنت متأكد من ${toggleItem?.isActive ? "تعطيل" : "تفعيل"} المخزن "${toggleItem?.name}"؟`} confirmLabel={toggleItem?.isActive ? "تعطيل" : "تفعيل"} loading={toggleMutation.isPending} />
     </div>
   )

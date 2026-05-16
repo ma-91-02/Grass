@@ -1,12 +1,11 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getCurrentUser, logAudit } from "@/lib/auth"
-import { successResponse, errorResponse, unauthorizedError, notFoundError } from "@/lib/api-response"
+import { successResponse, errorResponse, unauthorizedError, notFoundError, conflictError } from "@/lib/api-response"
 import { z } from "zod"
 
 const warehouseSchema = z.object({
   name: z.string().min(1, "الاسم مطلوب").optional(),
-  code: z.string().min(1, "الكود مطلوب").optional(),
   address: z.string().optional().nullable(),
   isActive: z.boolean().optional(),
 })
@@ -37,18 +36,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const body = await request.json()
     const parsed = warehouseSchema.parse(body)
 
-    if (parsed.name || parsed.code) {
-      const duplicate = await prisma.warehouse.findFirst({
-        where: {
-          OR: [
-            ...(parsed.name ? [{ name: parsed.name }] : []),
-            ...(parsed.code ? [{ code: parsed.code }] : []),
-          ],
-          NOT: { id },
-        },
-      })
-      if (duplicate) {
-        return errorResponse("مخزن آخر بنفس الاسم أو الكود موجود مسبقاً", 409)
+    if (parsed.isActive === false) {
+      const invoiceCount = await prisma.invoice.count({ where: { warehouseId: id } })
+      if (invoiceCount > 0) {
+        return conflictError("لا يمكن تعطيل أو حذف هذا المخزن لأنه يحتوي على مواد أو حركات مخزنية")
+      }
+    }
+
+    if (parsed.name) {
+      const duplicate = await prisma.warehouse.findUnique({ where: { name: parsed.name } })
+      if (duplicate && duplicate.id !== id) {
+        return errorResponse("مخزن آخر بنفس الاسم موجود مسبقاً", 409)
       }
     }
 

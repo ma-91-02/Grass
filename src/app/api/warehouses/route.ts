@@ -6,7 +6,6 @@ import { z } from "zod"
 
 const warehouseSchema = z.object({
   name: z.string().min(1, "الاسم مطلوب"),
-  code: z.string().min(1, "الكود مطلوب"),
   address: z.string().optional().nullable(),
 })
 
@@ -29,15 +28,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const parsed = warehouseSchema.parse(body)
 
-    const existing = await prisma.warehouse.findFirst({
-      where: { OR: [{ name: parsed.name }, { code: parsed.code }] },
-    })
-    if (existing) {
-      return errorResponse("المخزن موجود مسبقاً بهذا الاسم أو الكود", 409)
+    const existingName = await prisma.warehouse.findUnique({ where: { name: parsed.name } })
+    if (existingName) {
+      return errorResponse("يوجد مخزن بهذا الاسم مسبقاً", 409)
     }
 
+    const count = await prisma.warehouse.count()
+    const code = `WH-${String(count + 1).padStart(4, "0")}`
+
     const warehouse = await prisma.warehouse.create({
-      data: parsed,
+      data: { ...parsed, code },
     })
 
     await logAudit(user.userId, "CREATE", "Warehouse", warehouse.id, { name: warehouse.name })

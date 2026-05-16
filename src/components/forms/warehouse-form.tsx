@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
 interface WarehouseFormProps {
-  defaultValues?: Partial<WarehouseFormData>
+  defaultValues?: Partial<WarehouseFormData> & { code?: string }
   onSubmit: (data: WarehouseFormData) => Promise<void>
   loading?: boolean
 }
 
 export function WarehouseForm({ defaultValues, onSubmit, loading }: WarehouseFormProps) {
+  const isEdit = !!defaultValues?.code
   const {
     register,
     handleSubmit,
@@ -21,7 +22,6 @@ export function WarehouseForm({ defaultValues, onSubmit, loading }: WarehouseFor
     resolver: zodResolver(warehouseFormSchema) as any,
     defaultValues: {
       name: "",
-      code: "",
       address: "",
       ...defaultValues,
     },
@@ -31,7 +31,9 @@ export function WarehouseForm({ defaultValues, onSubmit, loading }: WarehouseFor
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <Input label="اسم المخزن" error={errors.name?.message} {...register("name")} required />
-        <Input label="كود المخزن" error={errors.code?.message} {...register("code")} required dir="ltr" />
+        {isEdit ? (
+          <Input label="كود المخزن" value={defaultValues?.code || ""} readOnly dir="ltr" />
+        ) : null}
         <Input label="العنوان" error={errors.address?.message} {...register("address")} />
       </div>
       <div className="flex justify-end gap-3 pt-2">
