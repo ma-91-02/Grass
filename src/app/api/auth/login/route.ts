@@ -5,7 +5,7 @@ import {
   checkRateLimit,
   loginSchema,
 } from "@/lib/auth";
-import { successResponse } from "@/lib/api-response";
+import { successResponse, errorResponse } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,17 +14,14 @@ export async function POST(request: NextRequest) {
 
     const rateCheck = checkRateLimit(ip);
     if (!rateCheck.allowed) {
-      return successResponse(
-        { error: "محاولات تسجيل دخول كثيرة. حاول لاحقاً." },
-        429,
-      );
+      return errorResponse("محاولات تسجيل دخول كثيرة. حاول لاحقاً.", 429);
     }
 
     let body: unknown;
     try {
       body = await request.json();
     } catch {
-      return successResponse({ error: "بيانات الطلب غير صحيحة" }, 400);
+      return errorResponse("بيانات الطلب غير صحيحة", 400);
     }
 
     const parsed = loginSchema.safeParse(body);
@@ -32,7 +29,7 @@ export async function POST(request: NextRequest) {
       const fieldErrors = parsed.error.flatten().fieldErrors;
       const firstError =
         Object.values(fieldErrors).flat()[0] || "بيانات غير صحيحة";
-      return successResponse({ error: firstError }, 400);
+      return errorResponse(firstError, 400);
     }
 
     const { email, password } = parsed.data;
@@ -46,7 +43,7 @@ export async function POST(request: NextRequest) {
         ipAddress: ip === "unknown" ? undefined : ip,
         userAgent,
       });
-      return successResponse({ error: "بيانات الدخول غير صحيحة" }, 401);
+      return errorResponse("بيانات الدخول غير صحيحة", 401);
     }
 
     await recordAuthAudit({
@@ -67,6 +64,6 @@ export async function POST(request: NextRequest) {
       token: result.token,
     });
   } catch {
-    return successResponse({ error: "خطأ في تسجيل الدخول" }, 500);
+    return errorResponse("خطأ في تسجيل الدخول", 500);
   }
 }

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { loginSchema } from "@/lib/auth/validation";
 import { checkRateLimit, resetRateLimit } from "@/lib/auth/rate-limit";
+import { successResponse, errorResponse } from "@/lib/api-response";
 
 describe("hashPassword and verifyPassword", () => {
   it("hashes and verifies a password correctly", async () => {
@@ -73,6 +74,42 @@ describe("loginSchema", () => {
       password: "",
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("API response consistency", () => {
+  it("errorResponse returns success: false", async () => {
+    const res = errorResponse("خطأ", 400);
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toBe("خطأ");
+  });
+
+  it("errorResponse returns correct status", () => {
+    const res = errorResponse("غير مصرح", 401);
+    expect(res.status).toBe(401);
+  });
+
+  it("errorResponse returns success: false for 429", () => {
+    const res = errorResponse("كثيرة", 429);
+    expect(res.status).toBe(429);
+  });
+
+  it("errorResponse returns success: false for 500", () => {
+    const res = errorResponse("خطأ", 500);
+    expect(res.status).toBe(500);
+  });
+
+  it("successResponse returns success: true", async () => {
+    const res = successResponse({ user: "test" });
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(body.data.user).toBe("test");
+  });
+
+  it("successResponse returns 200 by default", () => {
+    const res = successResponse({ ok: true });
+    expect(res.status).toBe(200);
   });
 });
 
