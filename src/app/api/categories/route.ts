@@ -1,10 +1,12 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, logAudit } from "@/lib/auth";
+import { getCurrentUser, logAudit, checkPermission } from "@/lib/auth";
+import { PERMISSIONS } from "@/lib/permissions";
 import {
   successResponse,
   errorResponse,
   unauthorizedError,
+  forbiddenError,
   conflictError,
 } from "@/lib/api-response";
 import { z } from "zod";
@@ -17,6 +19,8 @@ const categorySchema = z.object({
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
+  if (!checkPermission(user, PERMISSIONS.PRODUCTS_VIEW))
+    return forbiddenError();
 
   const categories = await prisma.productCategory.findMany({
     orderBy: { name: "asc" },
@@ -28,6 +32,8 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
+  if (!checkPermission(user, PERMISSIONS.PRODUCTS_CREATE))
+    return forbiddenError();
 
   try {
     const body = await request.json();

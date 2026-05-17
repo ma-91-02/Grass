@@ -1,10 +1,12 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, logAudit } from "@/lib/auth";
+import { getCurrentUser, logAudit, checkPermission } from "@/lib/auth";
+import { PERMISSIONS } from "@/lib/permissions";
 import {
   successResponse,
   errorResponse,
   unauthorizedError,
+  forbiddenError,
   notFoundError,
   conflictError,
   serverError,
@@ -23,6 +25,8 @@ export async function GET(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
+  if (!checkPermission(user, PERMISSIONS.WAREHOUSES_VIEW))
+    return forbiddenError();
 
   const { id } = await params;
   const warehouse = await prisma.warehouse.findUnique({
@@ -44,6 +48,8 @@ export async function PATCH(
 ) {
   const currentUser = await getCurrentUser();
   if (!currentUser) return unauthorizedError();
+  if (!checkPermission(currentUser, PERMISSIONS.WAREHOUSES_MANAGE))
+    return forbiddenError();
 
   const { id } = await params;
   const existing = await prisma.warehouse.findUnique({ where: { id } });
@@ -97,6 +103,8 @@ export async function DELETE(
 ) {
   const currentUser = await getCurrentUser();
   if (!currentUser) return unauthorizedError();
+  if (!checkPermission(currentUser, PERMISSIONS.WAREHOUSES_MANAGE))
+    return forbiddenError();
 
   const { id } = await params;
   const existing = await prisma.warehouse.findUnique({ where: { id } });

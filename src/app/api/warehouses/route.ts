@@ -1,10 +1,12 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, logAudit } from "@/lib/auth";
+import { getCurrentUser, logAudit, checkPermission } from "@/lib/auth";
+import { PERMISSIONS } from "@/lib/permissions";
 import {
   successResponse,
   errorResponse,
   unauthorizedError,
+  forbiddenError,
 } from "@/lib/api-response";
 import { z } from "zod";
 
@@ -16,6 +18,8 @@ const warehouseSchema = z.object({
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
+  if (!checkPermission(user, PERMISSIONS.WAREHOUSES_VIEW))
+    return forbiddenError();
 
   const warehouses = await prisma.warehouse.findMany({
     orderBy: { name: "asc" },
@@ -40,6 +44,8 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
+  if (!checkPermission(user, PERMISSIONS.WAREHOUSES_MANAGE))
+    return forbiddenError();
 
   try {
     const body = await request.json();

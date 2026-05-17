@@ -152,6 +152,18 @@ export class PostingService {
           error: `الحساب "${account.name}" غير قابل للترحيل`,
         };
       }
+      if (!account.allowManualJournal) {
+        await PostingService.recordOperation(
+          input,
+          journalEntry.id,
+          "FAILED_VALIDATION",
+          `الحساب "${account.name}" لا يسمح بالقيد اليدوي`,
+        );
+        return {
+          success: false,
+          error: `الحساب "${account.name}" لا يسمح بالقيد اليدوي`,
+        };
+      }
       if (account.companyId !== journalEntry.companyId) {
         await PostingService.recordOperation(
           input,

@@ -1,10 +1,12 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, logAudit } from "@/lib/auth";
+import { getCurrentUser, logAudit, checkPermission } from "@/lib/auth";
+import { PERMISSIONS } from "@/lib/permissions";
 import {
   successResponse,
   errorResponse,
   unauthorizedError,
+  forbiddenError,
   notFoundError,
   conflictError,
 } from "@/lib/api-response";
@@ -15,6 +17,8 @@ export async function DELETE(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
+  if (!checkPermission(user, PERMISSIONS.PRODUCTS_DELETE))
+    return forbiddenError();
 
   try {
     const { id } = await params;

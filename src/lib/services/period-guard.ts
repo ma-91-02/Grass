@@ -9,7 +9,7 @@ export class PeriodGuard {
     const period = await prisma.fiscalPeriod.findFirst({
       where: {
         companyId,
-        branchId: branchId || null,
+        ...(branchId ? { branchId } : {}),
         startDate: { lte: entryDate },
         endDate: { gte: entryDate },
       },
@@ -58,7 +58,7 @@ export class PeriodGuard {
     return prisma.fiscalPeriod.findFirst({
       where: {
         companyId,
-        branchId: branchId || null,
+        ...(branchId ? { branchId } : {}),
         status: "OPEN",
         startDate: { lte: date },
         endDate: { gte: date },

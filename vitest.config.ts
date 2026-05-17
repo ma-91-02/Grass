@@ -11,5 +11,8 @@ export default defineConfig({
     globals: true,
     environment: "node",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    env: {
+      JWT_SECRET: "test-jwt-secret-key-for-vitest",
+    },
   },
 });

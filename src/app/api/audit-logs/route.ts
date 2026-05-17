@@ -1,11 +1,17 @@
-import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
-import { successResponse, unauthorizedError } from "@/lib/api-response";
+import { getCurrentUser, checkPermission } from "@/lib/auth";
+import { PERMISSIONS } from "@/lib/permissions";
+import {
+  successResponse,
+  unauthorizedError,
+  forbiddenError,
+} from "@/lib/api-response";
 
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
+  if (!checkPermission(user, PERMISSIONS.AUDIT_LOGS_VIEW))
+    return forbiddenError();
 
   const logs = await prisma.auditLog.findMany({
     include: { user: { select: { name: true } } },
