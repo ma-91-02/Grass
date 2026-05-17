@@ -115,19 +115,13 @@ export async function POST(request: NextRequest) {
       if (!account.isPosting)
         return errorResponse(`الحساب "${account.name}" غير قابل للترحيل`);
       if (!account.allowManualJournal)
-        return errorResponse(
-          `الحساب "${account.name}" لا يسمح بالقيد اليدوي`,
-        );
+        return errorResponse(`الحساب "${account.name}" لا يسمح بالقيد اليدوي`);
       if (account.companyId !== parsed.companyId)
-        return errorResponse(
-          `الحساب "${account.name}" لا ينتمي لنفس الشركة`,
-        );
+        return errorResponse(`الحساب "${account.name}" لا ينتمي لنفس الشركة`);
     }
 
     // 3. Validate currency isolation
-    const accountCurrencyMap = new Map(
-      accounts.map((a) => [a.id, a.currency]),
-    );
+    const accountCurrencyMap = new Map(accounts.map((a) => [a.id, a.currency]));
     const currencyCheck = CurrencyGuard.validateJournalCurrency(
       parsed.currency,
       linesForValidation,

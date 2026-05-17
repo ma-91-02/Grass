@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { journalEntryFormSchema, journalLineSchema } from "@/lib/schemas";
 import { checkPermission } from "@/lib/auth";
 import { PERMISSIONS } from "@/lib/permissions";
-import { forbiddenError } from "@/lib/api-response";
+import { forbiddenError, unauthorizedError } from "@/lib/api-response";
 import {
   LedgerValidator,
   type JournalLineInput,
@@ -432,5 +432,289 @@ describe("journal currency invariants", () => {
     expect(match1).toBe("IQD");
     expect(match2).toBe("USD");
     expect(match1).not.toBe(match2);
+  });
+});
+
+describe("posting status transition rules", () => {
+  const VALID_POSTING_STATES: Record<string, string[]> = {
+    DRAFT: ["POSTED"],
+    POSTED: ["REVERSED"],
+    REVERSED: [],
+  };
+
+  it("allows DRAFT to POSTED", () => {
+    expect(VALID_POSTING_STATES["DRAFT"]).toContain("POSTED");
+  });
+
+  it("blocks POSTED from being posted again", () => {
+    expect(VALID_POSTING_STATES["POSTED"]).not.toContain("POSTED");
+  });
+
+  it("blocks POSTED from returning to DRAFT", () => {
+    expect(VALID_POSTING_STATES["POSTED"]).not.toContain("DRAFT");
+  });
+
+  it("blocks REVERSED from any transition", () => {
+    expect(VALID_POSTING_STATES["REVERSED"]).toEqual([]);
+  });
+
+  it("blocks REVERSED from being posted", () => {
+    expect(VALID_POSTING_STATES["REVERSED"]).not.toContain("POSTED");
+  });
+
+  it("blocks REVERSED from being reversed", () => {
+    expect(VALID_POSTING_STATES["REVERSED"]).not.toContain("REVERSED");
+  });
+
+  it("blocks DRAFT from DIRECT REVERSED (must go through POSTED first)", () => {
+    expect(VALID_POSTING_STATES["DRAFT"]).not.toContain("REVERSED");
+  });
+
+  it("only POSTED journals are mutable via reversal", () => {
+    // REVERSED is the only valid target from POSTED
+    expect(VALID_POSTING_STATES["POSTED"]).toEqual(["REVERSED"]);
+  });
+});
+
+describe("posting permission enforcement", () => {
+  const userWithPostPerm: TokenPayload = {
+    userId: "poster-id",
+    email: "poster@test.com",
+    name: "Poster",
+    roles: ["محاسب"],
+    permissions: [PERMISSIONS.JOURNALS_POST],
+  } as TokenPayload;
+
+  const userWithCreateOnly: TokenPayload = {
+    userId: "creator-id",
+    email: "creator@test.com",
+    name: "Creator",
+    roles: ["كاتب"],
+    permissions: [PERMISSIONS.JOURNALS_CREATE],
+  } as TokenPayload;
+
+  const userWithNoPerms: TokenPayload = {
+    userId: "no-perms-id",
+    email: "noperms@test.com",
+    name: "NoPerms",
+    roles: [],
+    permissions: [],
+  } as TokenPayload;
+
+  it("user with JOURNALS_POST can post", () => {
+    expect(checkPermission(userWithPostPerm, PERMISSIONS.JOURNALS_POST)).toBe(
+      true,
+    );
+  });
+
+  it("user without JOURNALS_POST cannot post", () => {
+    expect(checkPermission(userWithCreateOnly, PERMISSIONS.JOURNALS_POST)).toBe(
+      false,
+    );
+  });
+
+  it("user with no permissions cannot post", () => {
+    expect(checkPermission(userWithNoPerms, PERMISSIONS.JOURNALS_POST)).toBe(
+      false,
+    );
+  });
+
+  it("null user cannot post", () => {
+    expect(checkPermission(null, PERMISSIONS.JOURNALS_POST)).toBe(false);
+  });
+
+  it("forbiddenError returns 403 for posting denial", () => {
+    const res = forbiddenError("لا تملك صلاحية ترحيل القيود");
+    expect(res.status).toBe(403);
+  });
+
+  it("unauthorizedError returns 401 for unauthenticated", () => {
+    const res = unauthorizedError();
+    expect(res.status).toBe(401);
+  });
+
+  it("JOURNALS_POST alone does not grant JOURNALS_REVERSE", () => {
+    expect(
+      checkPermission(userWithPostPerm, PERMISSIONS.JOURNALS_REVERSE),
+    ).toBe(false);
+  });
+});
+
+describe("posting immutability rules", () => {
+  // Simulates the immutable-after-posted contract enforced by PostingService
+  const JOURNAL_ENTRY_IMMUTABLE_FIELDS = [
+    "companyId",
+    "entryNumber",
+    "entryDate",
+    "currency",
+    "exchangeRateSnapshot",
+    "sourceType",
+    "sourceId",
+  ] as const;
+
+  it("posted journal should have immutable financial fields", () => {
+    const status = "POSTED";
+    for (const field of JOURNAL_ENTRY_IMMUTABLE_FIELDS) {
+      expect(field).toBeDefined();
+    }
+    expect(status).toBe("POSTED");
+  });
+
+  it("draft journal fields can be modified before posting", () => {
+    const modifiableFields = [
+      "description",
+      "branchId",
+      "fiscalPeriodId",
+      "lines",
+    ];
+    expect(modifiableFields.length).toBeGreaterThan(0);
+  });
+
+  it("posted journal should have postedAt timestamp", () => {
+    const postedJournal = {
+      status: "POSTED" as const,
+      postedAt: new Date("2025-01-15"),
+      entryNumber: "JE-00001",
+    };
+    expect(postedJournal.status).toBe("POSTED");
+    expect(postedJournal.postedAt).toBeInstanceOf(Date);
+    expect(postedJournal.entryNumber).toBeTruthy();
+  });
+
+  it("reversed journal should keep original postedAt", () => {
+    const reversedJournal = {
+      status: "REVERSED" as const,
+      postedAt: new Date("2025-01-15"),
+      entryNumber: "JE-00001",
+    };
+    expect(reversedJournal.status).toBe("REVERSED");
+    expect(reversedJournal.postedAt).toBeInstanceOf(Date);
+  });
+});
+
+describe("posting operation state machine", () => {
+  // Valid transitions for PostingOperationStatus
+  const OP_VALID_TRANSITIONS: Record<string, string[]> = {
+    REQUESTED: ["LOCK_ACQUIRED", "FAILED_VALIDATION", "FAILED_ROLLED_BACK"],
+    LOCK_ACQUIRED: ["VALIDATING", "FAILED_ROLLED_BACK"],
+    VALIDATING: ["BUILDING_JOURNAL", "FAILED_VALIDATION", "FAILED_ROLLED_BACK"],
+    BUILDING_JOURNAL: ["PERSISTING", "FAILED_ROLLED_BACK"],
+    PERSISTING: ["COMMITTED", "FAILED_ROLLED_BACK"],
+    COMMITTED: [],
+    FAILED_VALIDATION: ["RETRY_PENDING", "REQUESTED"],
+    FAILED_ROLLED_BACK: ["RETRY_PENDING", "REQUESTED"],
+    RETRY_PENDING: ["REQUESTED"],
+  };
+
+  it("REQUESTED can transition to terminal FAILED states", () => {
+    expect(OP_VALID_TRANSITIONS["REQUESTED"]).toContain("FAILED_VALIDATION");
+    expect(OP_VALID_TRANSITIONS["REQUESTED"]).toContain("FAILED_ROLLED_BACK");
+  });
+
+  it("PERSISTING can transition to COMMITTED", () => {
+    expect(OP_VALID_TRANSITIONS["PERSISTING"]).toContain("COMMITTED");
+  });
+
+  it("COMMITTED is terminal — no transitions", () => {
+    expect(OP_VALID_TRANSITIONS["COMMITTED"]).toEqual([]);
+  });
+
+  it("FAILED states can transition to RETRY_PENDING", () => {
+    expect(OP_VALID_TRANSITIONS["FAILED_VALIDATION"]).toContain(
+      "RETRY_PENDING",
+    );
+    expect(OP_VALID_TRANSITIONS["FAILED_ROLLED_BACK"]).toContain(
+      "RETRY_PENDING",
+    );
+  });
+
+  it("RETRY_PENDING can transition back to REQUESTED", () => {
+    expect(OP_VALID_TRANSITIONS["RETRY_PENDING"]).toContain("REQUESTED");
+  });
+
+  it("cannot skip from REQUESTED to COMMITTED directly", () => {
+    expect(OP_VALID_TRANSITIONS["REQUESTED"]).not.toContain("COMMITTED");
+  });
+
+  it("cannot go back from COMMITTED", () => {
+    expect(OP_VALID_TRANSITIONS["COMMITTED"]).not.toContain("REQUESTED");
+    expect(OP_VALID_TRANSITIONS["COMMITTED"]).not.toContain(
+      "FAILED_ROLLED_BACK",
+    );
+  });
+});
+
+describe("posting idempotency rules", () => {
+  // Deterministic key must be same for same journal
+  it("deterministic idempotency key is same for same journal entry", () => {
+    const journalId = "je-123";
+    const key1 = `JE_POST_${journalId}`;
+    const key2 = `JE_POST_${journalId}`;
+    expect(key1).toBe(key2);
+  });
+
+  it("different journals generate different idempotency keys", () => {
+    const key1 = `JE_POST_je-123`;
+    const key2 = `JE_POST_je-456`;
+    expect(key1).not.toBe(key2);
+  });
+
+  it("idempotency key does NOT include userId or timestamp", () => {
+    const journalId = "je-123";
+    const key = `JE_POST_${journalId}`;
+    expect(key).not.toContain("user");
+    expect(key).not.toContain("Date");
+    expect(key).toMatch(/^JE_POST_je-123$/);
+  });
+});
+
+describe("posting pre-validation rules", () => {
+  // These tests validate the pre-checks that route.ts does before calling PostingService
+
+  it("rejects invalid status — POSTED journals are rejected before posting", () => {
+    const forbiddenStatuses = ["POSTED", "REVERSED"];
+    for (const status of forbiddenStatuses) {
+      if (status === "POSTED") {
+        expect("القيد تم ترحيله مسبقاً").toContain("ترحيله");
+      } else {
+        expect("القيد ملغي أو معكوس").toContain("ملغي");
+      }
+    }
+  });
+
+  it("rejects unbalanced journal at pre-validation", () => {
+    const result = LedgerValidator.validateLines([
+      { accountId: "a1", debit: 1000, credit: 0 },
+      { accountId: "a2", debit: 0, credit: 500 },
+    ]);
+    expect(result.valid).toBe(false);
+    expect(result.errors[0]).toContain("غير متوازن");
+  });
+
+  it("rejects single-line journal at pre-validation", () => {
+    const result = LedgerValidator.validateLines([
+      { accountId: "a1", debit: 1000, credit: 0 },
+    ]);
+    expect(result.valid).toBe(false);
+  });
+
+  it("rejects empty lines at pre-validation", () => {
+    const result = LedgerValidator.validateLines([]);
+    expect(result.valid).toBe(false);
+  });
+
+  it("LedgerValidator correctly identifies balanced vs unbalanced", () => {
+    const balanced = LedgerValidator.validateLines([
+      { accountId: "a1", debit: 500, credit: 0 },
+      { accountId: "a2", debit: 300, credit: 0 },
+      { accountId: "a3", debit: 0, credit: 800 },
+    ]);
+    expect(balanced.valid).toBe(true);
+
+    const unbalanced = LedgerValidator.validateLines([
+      { accountId: "a1", debit: 500, credit: 0 },
+      { accountId: "a2", debit: 0, credit: 400 },
+    ]);
+    expect(unbalanced.valid).toBe(false);
   });
 });

@@ -4,8 +4,8 @@ import {
   successResponse,
   errorResponse,
   unauthorizedError,
+  forbiddenError,
   notFoundError,
-  serverError,
 } from "@/lib/api-response";
 import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
@@ -20,7 +20,7 @@ export async function POST(
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.JOURNALS_POST))
-    return unauthorizedError();
+    return forbiddenError();
 
   const { id } = await params;
 
@@ -49,18 +49,17 @@ export async function POST(
     return errorResponse(validation.errors.join(" | "));
   }
 
-  if (entry.fiscalPeriodId) {
-    const periodCheck = await PeriodGuard.checkPeriodOpen(
-      entry.companyId,
-      entry.entryDate,
-      entry.branchId || undefined,
-    );
-    if (!periodCheck.allowed) {
-      return errorResponse(periodCheck.error!);
-    }
+  const periodCheck = await PeriodGuard.checkPeriodOpen(
+    entry.companyId,
+    entry.entryDate,
+    entry.branchId || undefined,
+  );
+  if (!periodCheck.allowed) {
+    return errorResponse(periodCheck.error!);
   }
 
-  const idempotencyKey = `JE_POST_${id}_${user.userId}_${Date.now()}`;
+  // Deterministic idempotency key — same journal always produces same key
+  const idempotencyKey = `JE_POST_${id}`;
 
   const result = await PostingService.postJournal({
     journalEntryId: id,
@@ -69,7 +68,7 @@ export async function POST(
   });
 
   if (!result.success) {
-    return serverError(new Error(result.error || "فشل الترحيل"));
+    return errorResponse(result.error || "فشل الترحيل", 422);
   }
 
   return successResponse({
