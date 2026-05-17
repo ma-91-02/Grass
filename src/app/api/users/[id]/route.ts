@@ -8,6 +8,7 @@ import {
 } from "@/lib/auth";
 import {
   successResponse,
+  errorResponse,
   unauthorizedError,
   forbiddenError,
   notFoundError,
@@ -100,11 +101,100 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const existing = await prisma.user.findUnique({ where: { id } });
-  if (!existing) return notFoundError();
+  const target = await prisma.user.findUnique({
+    where: { id },
+    include: { roles: { include: { role: true } } },
+  });
+  if (!target) return notFoundError();
+
+  if (currentUser.userId === id) {
+    return errorResponse("لا يمكنك حذف نفسك");
+  }
+
+  const isSystemAdmin = target.roles.some((r) => r.role.name === "مدير النظام");
+
+  if (isSystemAdmin) {
+    const otherActiveAdmins = await prisma.user.count({
+      where: {
+        isActive: true,
+        id: { not: id },
+        roles: { some: { role: { name: "مدير النظام" } } },
+      },
+    });
+    if (otherActiveAdmins === 0) {
+      return errorResponse("لا يمكن حذف آخر مشرف نظام نشط");
+    }
+  }
+
+  const [
+    auditLogCount,
+    customerCount,
+    supplierCount,
+    invoiceCount,
+    purchaseInvoiceCount,
+    paymentCount,
+    exchangeRateCount,
+    accountCount,
+    journalEntryCount,
+  ] = await Promise.all([
+    prisma.auditLog.count({ where: { userId: id } }),
+    prisma.customer.count({ where: { createdById: id } }),
+    prisma.supplier.count({ where: { createdById: id } }),
+    prisma.invoice.count({ where: { createdById: id } }),
+    prisma.purchaseInvoice.count({ where: { createdById: id } }),
+    prisma.payment.count({ where: { createdById: id } }),
+    prisma.exchangeRate.count({ where: { createdById: id } }),
+    prisma.account.count({ where: { createdById: id } }),
+    prisma.journalEntry.count({ where: { createdById: id } }),
+  ]);
+
+  const totalRelated =
+    auditLogCount +
+    customerCount +
+    supplierCount +
+    invoiceCount +
+    purchaseInvoiceCount +
+    paymentCount +
+    exchangeRateCount +
+    accountCount +
+    journalEntryCount;
+
+  if (totalRelated > 0) {
+    await prisma.user.update({
+      where: { id },
+      data: { isActive: false },
+    });
+
+    await logAudit(currentUser.userId, "DEACTIVATE", "User", id, {
+      reason: "user_has_related_records",
+      relatedRecords: {
+        auditLogs: auditLogCount,
+        customers: customerCount,
+        suppliers: supplierCount,
+        invoices: invoiceCount,
+        purchases: purchaseInvoiceCount,
+        payments: paymentCount,
+        exchangeRates: exchangeRateCount,
+        accounts: accountCount,
+        journalEntries: journalEntryCount,
+      },
+    });
+
+    return successResponse({
+      action: "deactivated",
+      userId: id,
+      isActive: false,
+    });
+  }
 
   await prisma.user.delete({ where: { id } });
-  await logAudit(currentUser.userId, "DELETE", "User", id);
 
-  return successResponse({ deleted: true });
+  await logAudit(currentUser.userId, "DELETE", "User", id, {
+    wasPermanent: true,
+  });
+
+  return successResponse({
+    action: "deleted",
+    userId: id,
+  });
 }
