@@ -52,6 +52,24 @@ const PERMISSIONS = [
   { key: "purchases.print", name: "طباعة فاتورة مشتريات", module: "purchases" },
   { key: "paymentAccounts.view", name: "عرض حسابات التسديد", module: "purchases" },
   { key: "paymentAccounts.manage", name: "إدارة حسابات التسديد", module: "purchases" },
+
+  // Phase 1 — Foundation Core
+  { key: "accounts.create", name: "إنشاء حساب", module: "accounts" },
+  { key: "accounts.edit", name: "تعديل حساب", module: "accounts" },
+  { key: "accounts.delete", name: "حذف حساب", module: "accounts" },
+  { key: "accounts.statement", name: "كشف حساب", module: "accounts" },
+  { key: "accounts.tree", name: "شجرة الحسابات", module: "accounts" },
+  { key: "companies.view", name: "عرض الشركات", module: "companies" },
+  { key: "companies.create", name: "إنشاء شركة", module: "companies" },
+  { key: "companies.edit", name: "تعديل شركة", module: "companies" },
+  { key: "branches.view", name: "عرض الفروع", module: "branches" },
+  { key: "branches.create", name: "إنشاء فرع", module: "branches" },
+  { key: "branches.edit", name: "تعديل فرع", module: "branches" },
+  { key: "fiscalPeriods.view", name: "عرض الفترات المالية", module: "fiscalPeriods" },
+  { key: "fiscalPeriods.manage", name: "إدارة الفترات المالية", module: "fiscalPeriods" },
+  { key: "journals.create", name: "إنشاء قيد يومي", module: "journals" },
+  { key: "journals.post", name: "ترحيل قيد يومي", module: "journals" },
+  { key: "journals.reverse", name: "عكس قيد يومي", module: "journals" },
 ]
 
 const ROLES = [
@@ -203,6 +221,124 @@ async function main() {
     update: { piecesPerCarton: 12 },
     create: { name: "كارتون", piecesPerCarton: 12 },
   })
+
+  // Phase 1 — Seed Foundation Core Data
+
+  const company = await prisma.company.upsert({
+    where: { code: "GRASS" },
+    update: { name: "شركة GRASS للتوزيع", taxId: null, address: "بغداد", phone: null, email: "info@grass.com" },
+    create: { code: "GRASS", name: "شركة GRASS للتوزيع", taxId: null, address: "بغداد", phone: null, email: "info@grass.com" },
+  })
+  console.log(`Company created: ${company.name}`)
+
+  const branch = await prisma.branch.upsert({
+    where: { companyId_code: { companyId: company.id, code: "MAIN" } },
+    update: { name: "الفرع الرئيسي", address: "بغداد" },
+    create: { companyId: company.id, code: "MAIN", name: "الفرع الرئيسي", address: "بغداد" },
+  })
+  console.log(`Branch created: ${branch.name}`)
+
+  const fiscalYear = new Date().getFullYear()
+  const periodName = `${fiscalYear}`
+  const existingPeriod = await prisma.fiscalPeriod.findFirst({
+    where: { companyId: company.id, branchId: branch.id, name: periodName },
+  })
+  if (!existingPeriod) {
+    await prisma.fiscalPeriod.create({
+      data: {
+        companyId: company.id,
+        branchId: branch.id,
+        name: periodName,
+        startDate: new Date(fiscalYear, 0, 1),
+        endDate: new Date(fiscalYear, 11, 31),
+        status: "OPEN",
+      },
+    })
+  }
+  console.log(`Fiscal period ready: ${periodName}`)
+
+  const chartOfAccounts: { code: string; name: string; type: string; currency: string; normalBalance: string; isPosting: boolean; parentCode?: string; isSystem?: boolean; isProtected?: boolean }[] = [
+    { code: "1", name: "الأصول", type: "ASSET", currency: "IQD", normalBalance: "DEBIT", isPosting: false },
+    { code: "1.1", name: "الأصول المتداولة", type: "ASSET", currency: "IQD", normalBalance: "DEBIT", isPosting: false, parentCode: "1" },
+    { code: "1.1.1", name: "الصندوق - دينار", type: "ASSET", currency: "IQD", normalBalance: "DEBIT", isPosting: true, parentCode: "1.1", isSystem: true, isProtected: true },
+    { code: "1.1.2", name: "الصندوق - دولار", type: "ASSET", currency: "USD", normalBalance: "DEBIT", isPosting: true, parentCode: "1.1", isSystem: true, isProtected: true },
+    { code: "1.1.3", name: "المصرف - جاري", type: "ASSET", currency: "IQD", normalBalance: "DEBIT", isPosting: true, parentCode: "1.1", isSystem: true, isProtected: true },
+    { code: "1.1.4", name: "المصرف - دولار", type: "ASSET", currency: "USD", normalBalance: "DEBIT", isPosting: true, parentCode: "1.1", isSystem: true, isProtected: true },
+    { code: "1.1.5", name: "المخزون", type: "ASSET", currency: "IQD", normalBalance: "DEBIT", isPosting: true, parentCode: "1.1", isSystem: true, isProtected: true },
+    { code: "1.1.6", name: "الذمم المدينة - دينار", type: "ASSET", currency: "IQD", normalBalance: "DEBIT", isPosting: true, parentCode: "1.1", isSystem: true, isProtected: true },
+    { code: "1.1.7", name: "الذمم المدينة - دولار", type: "ASSET", currency: "USD", normalBalance: "DEBIT", isPosting: true, parentCode: "1.1", isSystem: true, isProtected: true },
+    { code: "1.2", name: "الأصول الثابتة", type: "ASSET", currency: "IQD", normalBalance: "DEBIT", isPosting: false, parentCode: "1" },
+    { code: "1.2.1", name: "الأثاث والتجهيزات", type: "ASSET", currency: "IQD", normalBalance: "DEBIT", isPosting: true, parentCode: "1.2" },
+    { code: "1.2.2", name: "السيارات", type: "ASSET", currency: "IQD", normalBalance: "DEBIT", isPosting: true, parentCode: "1.2" },
+    { code: "2", name: "الخصوم", type: "LIABILITY", currency: "IQD", normalBalance: "CREDIT", isPosting: false },
+    { code: "2.1", name: "الخصوم المتداولة", type: "LIABILITY", currency: "IQD", normalBalance: "CREDIT", isPosting: false, parentCode: "2" },
+    { code: "2.1.1", name: "الذمم الدائنة - دينار", type: "LIABILITY", currency: "IQD", normalBalance: "CREDIT", isPosting: true, parentCode: "2.1", isSystem: true, isProtected: true },
+    { code: "2.1.2", name: "الذمم الدائنة - دولار", type: "LIABILITY", currency: "USD", normalBalance: "CREDIT", isPosting: true, parentCode: "2.1", isSystem: true, isProtected: true },
+    { code: "2.1.3", name: "الرواتب والأجور المستحقة", type: "LIABILITY", currency: "IQD", normalBalance: "CREDIT", isPosting: true, parentCode: "2.1" },
+    { code: "3", name: "حقوق الملكية", type: "EQUITY", currency: "IQD", normalBalance: "CREDIT", isPosting: false },
+    { code: "3.1", name: "رأس المال", type: "EQUITY", currency: "IQD", normalBalance: "CREDIT", isPosting: true, parentCode: "3", isSystem: true, isProtected: true },
+    { code: "3.2", name: "الأرباح المحتجزة", type: "EQUITY", currency: "IQD", normalBalance: "CREDIT", isPosting: true, parentCode: "3", isSystem: true, isProtected: true },
+    { code: "4", name: "الإيرادات", type: "INCOME", currency: "IQD", normalBalance: "CREDIT", isPosting: false },
+    { code: "4.1", name: "إيرادات المبيعات", type: "INCOME", currency: "IQD", normalBalance: "CREDIT", isPosting: true, parentCode: "4", isSystem: true, isProtected: true },
+    { code: "4.2", name: "إيرادات أخرى", type: "INCOME", currency: "IQD", normalBalance: "CREDIT", isPosting: true, parentCode: "4" },
+    { code: "5", name: "المصروفات", type: "EXPENSE", currency: "IQD", normalBalance: "DEBIT", isPosting: false },
+    { code: "5.1", name: "تكلفة البضاعة المباعة", type: "EXPENSE", currency: "IQD", normalBalance: "DEBIT", isPosting: true, parentCode: "5", isSystem: true, isProtected: true },
+    { code: "5.2", name: "المصروفات العمومية والإدارية", type: "EXPENSE", currency: "IQD", normalBalance: "DEBIT", isPosting: false, parentCode: "5" },
+    { code: "5.2.1", name: "الرواتب", type: "EXPENSE", currency: "IQD", normalBalance: "DEBIT", isPosting: true, parentCode: "5.2" },
+    { code: "5.2.2", name: "الإيجار", type: "EXPENSE", currency: "IQD", normalBalance: "DEBIT", isPosting: true, parentCode: "5.2" },
+    { code: "5.2.3", name: "الكهرباء والماء", type: "EXPENSE", currency: "IQD", normalBalance: "DEBIT", isPosting: true, parentCode: "5.2" },
+    { code: "5.2.4", name: "الاتصالات", type: "EXPENSE", currency: "IQD", normalBalance: "DEBIT", isPosting: true, parentCode: "5.2" },
+    { code: "5.2.5", name: "المواصلات", type: "EXPENSE", currency: "IQD", normalBalance: "DEBIT", isPosting: true, parentCode: "5.2" },
+  ]
+
+  // Build account tree by resolving parent codes
+  const codeToId: Record<string, string> = {}
+  for (const acct of chartOfAccounts) {
+    const existing = await prisma.account.findFirst({
+      where: { companyId: company.id, code: acct.code },
+    })
+    if (existing) {
+      codeToId[acct.code] = existing.id
+    }
+  }
+
+  for (const acct of chartOfAccounts) {
+    const parentId = acct.parentCode ? codeToId[acct.parentCode] : null
+    const level = acct.code.split(".").length
+    const upserted = await prisma.account.upsert({
+      where: { companyId_code: { companyId: company.id, code: acct.code } },
+      update: {
+        name: acct.name,
+        type: acct.type,
+        currency: acct.currency as never,
+        normalBalance: acct.normalBalance as never,
+        isPosting: acct.isPosting,
+        isSystem: acct.isSystem || false,
+        isProtected: acct.isProtected || false,
+        parentId,
+        level,
+        isActive: true,
+        allowManualJournal: true,
+      },
+      create: {
+        companyId: company.id,
+        code: acct.code,
+        name: acct.name,
+        type: acct.type,
+        currency: acct.currency as never,
+        normalBalance: acct.normalBalance as never,
+        isPosting: acct.isPosting,
+        isSystem: acct.isSystem || false,
+        isProtected: acct.isProtected || false,
+        parentId,
+        level,
+        isActive: true,
+        allowManualJournal: true,
+      },
+    })
+    codeToId[acct.code] = upserted.id
+  }
+  console.log(`Created ${chartOfAccounts.length} chart of accounts`)
 
   console.log(`Packaging created: ${قطعةPackaging.name}, ${كارتونPackaging.name}`)
   console.log("Admin user created: admin@grass.com / admin123")

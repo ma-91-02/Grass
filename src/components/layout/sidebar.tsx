@@ -17,6 +17,8 @@ import {
   BarChart3,
   Truck,
   ChevronDown,
+  BookOpen,
+  Building2,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -40,6 +42,16 @@ const menuItems = [
     title: "الحسابات",
     href: "/dashboard/accounts",
     icon: DollarSign,
+  },
+  {
+    title: "القيود اليومية",
+    href: "/dashboard/journal-entries",
+    icon: BookOpen,
+  },
+  {
+    title: "الشركة والفروع",
+    href: "/dashboard/company",
+    icon: Building2,
   },
   {
     title: "التقارير",

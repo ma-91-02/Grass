@@ -78,16 +78,60 @@ model UserRole {
   @@id([userId, roleId])
 }
 
+enum NormalBalance {
+  DEBIT
+  CREDIT
+}
+
+enum PeriodStatus {
+  FUTURE
+  OPEN
+  CLOSING_IN_PROGRESS
+  SOFT_CLOSED
+  HARD_CLOSED
+  ARCHIVED
+}
+
+enum PostingOperationStatus {
+  REQUESTED
+  LOCK_ACQUIRED
+  VALIDATING
+  BUILDING_JOURNAL
+  PERSISTING
+  COMMITTED
+  FAILED_VALIDATION
+  FAILED_ROLLED_BACK
+  RETRY_PENDING
+}
+
+enum JournalEntryStatus {
+  DRAFT
+  POSTED
+  REVERSED
+}
+
 model AuditLog {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  action     String
-  entity     String
-  entityId   String?
-  details    Json?
-  ipAddress  String?
-  createdAt  DateTime @default(now())
+  id           String                     @id @default(cuid())
+  userId       String
+  user         User                       @relation(fields: [userId], references: [id])
+  action       String
+  entity       String
+  entityId     String?
+  details      Json?
+  beforeJson   Json?
+  afterJson    Json?
+  metadataJson Json?
+  requestId    String?
+  ipAddress    String?
+  userAgent    String?
+  companyId    String?
+  branchId     String?
+  createdAt    DateTime                   @default(now())
+
+  @@index([entity, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([requestId])
 }
 
 model CustomerCategory {
@@ -385,4 +429,164 @@ model StockMovement {
   @@index([productId])
   @@index([warehouseId])
   @@index([referenceType, referenceId])
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  taxId     String?
+  address   String?
+  phone     String?
+  email     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branches      Branch[]
+  accounts      Account[]
+  fiscalPeriods FiscalPeriod[]
+  journalEntries JournalEntry[]
+
+  @@index([code])
+}
+
+model Branch {
+  id        String   @id @default(cuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name      String
+  code      String
+  address   String?
+  phone     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fiscalPeriods  FiscalPeriod[]
+  journalEntries JournalEntry[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+}
+
+model FiscalPeriod {
+  id        String       @id @default(cuid())
+  companyId String
+  company   Company      @relation(fields: [companyId], references: [id])
+  branchId  String?
+  branch    Branch?      @relation(fields: [branchId], references: [id])
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  status    PeriodStatus @default(FUTURE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  journalEntries JournalEntry[]
+
+  @@unique([companyId, branchId, name])
+  @@index([companyId, status])
+  @@index([companyId, startDate, endDate])
+  @@index([companyId, branchId])
+}
+
+model Account {
+  id                 String       @id @default(cuid())
+  companyId          String
+  company            Company      @relation(fields: [companyId], references: [id])
+  code               String
+  name               String
+  parentId           String?
+  parent             Account?     @relation("AccountTree", fields: [parentId], references: [id])
+  children           Account[]    @relation("AccountTree")
+  type               String       // ASSET, LIABILITY, EQUITY, INCOME, EXPENSE
+  subtype            String?
+  normalBalance      NormalBalance @default(DEBIT)
+  currency           Currency     @default(IQD)
+  level              Int          @default(0)
+  isPosting          Boolean      @default(true)
+  isSystem           Boolean      @default(false)
+  isProtected        Boolean      @default(false)
+  isActive           Boolean      @default(true)
+  allowManualJournal Boolean      @default(true)
+  description        String?
+  createdById        String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  journalLines JournalLine[]
+
+  @@unique([companyId, code])
+  @@index([companyId, parentId])
+  @@index([companyId, type])
+  @@index([companyId, isActive])
+}
+
+model JournalEntry {
+  id                   String             @id @default(cuid())
+  companyId            String
+  company              Company            @relation(fields: [companyId], references: [id])
+  branchId             String?
+  branch               Branch?            @relation(fields: [branchId], references: [id])
+  fiscalPeriodId       String?
+  fiscalPeriod         FiscalPeriod?      @relation(fields: [fiscalPeriodId], references: [id])
+  entryNumber          String
+  entryDate            DateTime           @default(now())
+  currency             Currency           @default(IQD)
+  exchangeRateSnapshot Decimal            @default(1)
+  description          String?
+  sourceType           String?
+  sourceId             String?
+  status               JournalEntryStatus @default(DRAFT)
+  postedAt             DateTime?
+  createdById          String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  lines             JournalLine[]
+  postingOperations PostingOperation[]
+
+  @@unique([companyId, entryNumber])
+  @@index([companyId, fiscalPeriodId])
+  @@index([companyId, status])
+  @@index([companyId, sourceType, sourceId])
+  @@index([companyId, branchId])
+  @@index([companyId, entryDate])
+}
+
+model JournalLine {
+  id             String       @id @default(cuid())
+  journalEntryId String
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  accountId      String
+  account        Account      @relation(fields: [accountId], references: [id])
+  debit          Decimal      @default(0)
+  credit         Decimal      @default(0)
+  description    String?
+  createdAt      DateTime     @default(now())
+
+  @@index([journalEntryId])
+  @@index([accountId])
+}
+
+model PostingOperation {
+  id              String                 @id @default(cuid())
+  idempotencyKey  String                 @unique
+  hash            String?
+  sourceType      String
+  sourceId        String
+  journalEntryId  String?
+  journalEntry    JournalEntry?           @relation(fields: [journalEntryId], references: [id])
+  status          PostingOperationStatus  @default(REQUESTED)
+  result          Json?
+  error           String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  @@index([sourceType, sourceId])
+  @@index([status])
+  @@index([idempotencyKey])
 }

@@ -86,6 +86,76 @@ export const purchaseInvoiceFormSchema = z.object({
   paymentAccountId: z.string().optional().nullable(),
 });
 
+// Phase 1 — Foundation Core Schemas
+
+export const companyFormSchema = z.object({
+  name: z.string().min(1, "اسم الشركة مطلوب"),
+  code: z.string().min(1, "كود الشركة مطلوب"),
+  taxId: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  email: z.string().email("البريد الإلكتروني غير صحيح").optional().nullable(),
+});
+
+export const branchFormSchema = z.object({
+  companyId: z.string().min(1, "الشركة مطلوبة"),
+  name: z.string().min(1, "اسم الفرع مطلوب"),
+  code: z.string().min(1, "كود الفرع مطلوب"),
+  address: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+});
+
+export const fiscalPeriodFormSchema = z.object({
+  companyId: z.string().min(1, "الشركة مطلوبة"),
+  branchId: z.string().optional().nullable(),
+  name: z.string().min(1, "اسم الفترة مطلوب"),
+  startDate: z.string().min(1, "تاريخ البداية مطلوب"),
+  endDate: z.string().min(1, "تاريخ النهاية مطلوب"),
+});
+
+export const accountFormSchema = z.object({
+  companyId: z.string().min(1, "الشركة مطلوبة"),
+  code: z.string().min(1, "رقم الحساب مطلوب"),
+  name: z.string().min(1, "اسم الحساب مطلوب"),
+  parentId: z.string().optional().nullable(),
+  type: z.enum(["ASSET", "LIABILITY", "EQUITY", "INCOME", "EXPENSE"]),
+  subtype: z.string().optional().nullable(),
+  normalBalance: z.enum(["DEBIT", "CREDIT"]).default("DEBIT"),
+  currency: z.enum(["IQD", "USD"]).default("IQD"),
+  isPosting: z.boolean().default(true),
+  isSystem: z.boolean().default(false),
+  isProtected: z.boolean().default(false),
+  allowManualJournal: z.boolean().default(true),
+  description: z.string().optional().nullable(),
+});
+
+export const journalLineSchema = z.object({
+  accountId: z.string().min(1, "الحساب مطلوب"),
+  debit: z.coerce.number().min(0).default(0),
+  credit: z.coerce.number().min(0).default(0),
+  description: z.string().optional().nullable(),
+});
+
+export const journalEntryFormSchema = z.object({
+  companyId: z.string().min(1, "الشركة مطلوبة"),
+  branchId: z.string().optional().nullable(),
+  fiscalPeriodId: z.string().optional().nullable(),
+  entryDate: z.string().optional(),
+  currency: z.enum(["IQD", "USD"]).default("IQD"),
+  exchangeRateSnapshot: z.coerce.number().min(0).default(1),
+  description: z.string().optional().nullable(),
+  sourceType: z.string().optional().nullable(),
+  sourceId: z.string().optional().nullable(),
+  lines: z.array(journalLineSchema).min(2, "يجب إضافة سطرين على الأقل"),
+});
+
+export type CompanyFormData = z.infer<typeof companyFormSchema>;
+export type BranchFormData = z.infer<typeof branchFormSchema>;
+export type FiscalPeriodFormData = z.infer<typeof fiscalPeriodFormSchema>;
+export type AccountFormData = z.infer<typeof accountFormSchema>;
+export type JournalLineInput = z.infer<typeof journalLineSchema>;
+export type JournalEntryFormData = z.infer<typeof journalEntryFormSchema>;
+
 export type CustomerFormData = z.infer<typeof customerFormSchema>;
 export type SupplierFormData = z.infer<typeof supplierFormSchema>;
 export type CustomerCategoryFormData = z.infer<
