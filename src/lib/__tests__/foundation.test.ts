@@ -8,6 +8,7 @@ import {
   unitSchema,
   productFormSchema,
   warehouseFormSchema,
+  stockMovementFormSchema,
 } from "@/lib/schemas";
 import { checkPermission, checkRole } from "@/lib/auth";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -994,5 +995,74 @@ describe("warehouseFormSchema", () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { address, ...rest } = base;
     expect(warehouseFormSchema.safeParse(rest).success).toBe(true);
+  });
+});
+
+describe("stockMovementFormSchema", () => {
+  const base = {
+    companyId: "c1",
+    productId: "p1",
+    warehouseId: "w1",
+    movementType: "IN",
+    quantity: 10,
+    movementDate: "2025-01-01",
+    reason: "شراء",
+    notes: "ملاحظة",
+  } as const;
+
+  it("accepts valid movement", () => {
+    expect(stockMovementFormSchema.safeParse(base).success).toBe(true);
+  });
+
+  it("accepts OPENING_BALANCE", () => {
+    expect(
+      stockMovementFormSchema.safeParse({
+        ...base,
+        movementType: "OPENING_BALANCE",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("accepts TRANSFER_OUT", () => {
+    expect(
+      stockMovementFormSchema.safeParse({
+        ...base,
+        movementType: "TRANSFER_OUT",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects empty companyId", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { companyId, ...rest } = base;
+    expect(stockMovementFormSchema.safeParse(rest).success).toBe(false);
+  });
+
+  it("rejects empty productId", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { productId, ...rest } = base;
+    expect(stockMovementFormSchema.safeParse(rest).success).toBe(false);
+  });
+
+  it("rejects empty warehouseId", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { warehouseId, ...rest } = base;
+    expect(stockMovementFormSchema.safeParse(rest).success).toBe(false);
+  });
+
+  it("rejects invalid movementType", () => {
+    expect(
+      stockMovementFormSchema.safeParse({ ...base, movementType: "INVALID" })
+        .success,
+    ).toBe(false);
+  });
+
+  it("rejects quantity <= 0", () => {
+    expect(
+      stockMovementFormSchema.safeParse({ ...base, quantity: 0 }).success,
+    ).toBe(false);
+    expect(
+      stockMovementFormSchema.safeParse({ ...base, quantity: -5 }).success,
+    ).toBe(false);
   });
 });

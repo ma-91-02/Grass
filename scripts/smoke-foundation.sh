@@ -133,6 +133,28 @@ else
   FAIL=$((FAIL+1))
 fi
 
+# ---- STOCK MOVEMENTS (with companyId) ----
+echo "--- STOCK MOVEMENTS ---"
+if [ -n "$COMPANY_ID" ]; then
+  SM_CODE=$(curl -s -o "$OUT" -w "%{http_code}" "$BASE_URL/api/stock-movements?companyId=$COMPANY_ID" -b "$COOKIE_JAR")
+  if [ "$SM_CODE" = "200" ]; then
+    SM_SUCCESS=$(python3 -c "import json; d=json.load(open('$OUT')); print(d.get('success',False))" 2>/dev/null)
+    if [ "$SM_SUCCESS" = "True" ]; then
+      green "GET /api/stock-movements?companyId=... -> 200 + success:true"
+      PASS=$((PASS+1))
+    else
+      red "GET /api/stock-movements body missing success:true"
+      FAIL=$((FAIL+1))
+    fi
+  else
+    red "GET /api/stock-movements?companyId=... -> $SM_CODE (expected 200)"
+    FAIL=$((FAIL+1))
+  fi
+else
+  red "GET /api/stock-movements (no companyId available)"
+  FAIL=$((FAIL+1))
+fi
+
 # ---- FISCAL PERIODS (with companyId) ----
 echo "--- FISCAL PERIODS ---"
 if [ -n "$COMPANY_ID" ]; then

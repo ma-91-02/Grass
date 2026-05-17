@@ -291,9 +291,10 @@ export async function POST(request: NextRequest) {
       for (const item of parsed.items) {
         await tx.stockMovement.create({
           data: {
+            companyId: invoice.companyId,
             productId: item.productId,
             warehouseId: parsed.warehouseId,
-            type: "IN",
+            movementType: "IN",
             quantity: item.quantity,
             referenceType: "PURCHASE_INVOICE",
             referenceId: invoice.id,

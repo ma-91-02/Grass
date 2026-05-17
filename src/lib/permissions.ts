@@ -39,6 +39,12 @@ export const PERMISSIONS = {
   WAREHOUSES_DELETE: "warehouses.delete",
   // Legacy alias for backward compatibility
   WAREHOUSES_MANAGE: "warehouses.manage",
+
+  STOCK_MOVEMENTS_VIEW: "stockMovements.view",
+  STOCK_MOVEMENTS_CREATE: "stockMovements.create",
+  STOCK_MOVEMENTS_EDIT: "stockMovements.edit",
+  STOCK_MOVEMENTS_DELETE: "stockMovements.delete",
+  STOCK_MOVEMENTS_POST: "stockMovements.post",
   EXCHANGE_RATES_VIEW: "exchangeRates.view",
   EXCHANGE_RATES_MANAGE: "exchangeRates.manage",
   INVOICES_VIEW: "invoices.view",

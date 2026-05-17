@@ -94,6 +94,27 @@ export const warehouseFormSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
+export const stockMovementFormSchema = z.object({
+  companyId: z.string().min(1, "الشركة مطلوبة"),
+  productId: z.string().min(1, "المادة مطلوبة"),
+  warehouseId: z.string().min(1, "المخزن مطلوب"),
+  movementType: z.enum([
+    "OPENING_BALANCE",
+    "IN",
+    "OUT",
+    "ADJUSTMENT_IN",
+    "ADJUSTMENT_OUT",
+    "TRANSFER_OUT",
+    "TRANSFER_IN",
+  ]),
+  quantity: z.coerce.number().int().min(1, "الكمية يجب أن تكون أكبر من 0"),
+  movementDate: z.string().optional().nullable(),
+  referenceType: z.string().optional().nullable(),
+  referenceId: z.string().optional().nullable(),
+  reason: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+});
+
 export const exchangeRateFormSchema = z.object({
   usdToIqd: z.coerce.number().min(1, "سعر الصرف مطلوب"),
   note: z.string().optional().nullable(),
@@ -191,5 +212,6 @@ export type ProductCategoryFormData = z.infer<typeof productCategoryFormSchema>;
 export type UnitFormData = z.infer<typeof unitSchema>;
 export type ProductFormData = z.infer<typeof productFormSchema>;
 export type WarehouseFormData = z.infer<typeof warehouseFormSchema>;
+export type StockMovementFormData = z.infer<typeof stockMovementFormSchema>;
 export type ExchangeRateFormData = z.infer<typeof exchangeRateFormSchema>;
 export type PurchaseInvoiceFormData = z.infer<typeof purchaseInvoiceFormSchema>;

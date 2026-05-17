@@ -56,6 +56,31 @@ const PERMISSIONS = [
   { key: "warehouses.edit", name: "تعديل مخزن", module: "warehouses" },
   { key: "warehouses.delete", name: "حذف مخزن", module: "warehouses" },
   { key: "warehouses.manage", name: "إدارة المخازن", module: "warehouses" },
+  {
+    key: "stockMovements.view",
+    name: "عرض حركات المخزون",
+    module: "inventory",
+  },
+  {
+    key: "stockMovements.create",
+    name: "إنشاء حركة مخزون",
+    module: "inventory",
+  },
+  {
+    key: "stockMovements.edit",
+    name: "تعديل حركة مخزون",
+    module: "inventory",
+  },
+  {
+    key: "stockMovements.delete",
+    name: "حذف حركة مخزون",
+    module: "inventory",
+  },
+  {
+    key: "stockMovements.post",
+    name: "ترحيل حركة مخزون",
+    module: "inventory",
+  },
   { key: "exchangeRates.view", name: "عرض سعر الصرف", module: "exchangeRates" },
   {
     key: "exchangeRates.manage",
@@ -137,6 +162,9 @@ const ROLES = [
       "warehouses.view",
       "warehouses.create",
       "warehouses.edit",
+      "stockMovements.view",
+      "stockMovements.create",
+      "stockMovements.edit",
       "exchangeRates.view",
       "exchangeRates.manage",
       "invoices.view",
@@ -174,6 +202,11 @@ const ROLES = [
       "warehouses.create",
       "warehouses.edit",
       "warehouses.delete",
+      "stockMovements.view",
+      "stockMovements.create",
+      "stockMovements.edit",
+      "stockMovements.delete",
+      "stockMovements.post",
     ],
   },
   {

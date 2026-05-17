@@ -114,6 +114,22 @@ enum JournalEntryStatus {
   REVERSED
 }
 
+enum MovementType {
+  OPENING_BALANCE
+  IN
+  OUT
+  ADJUSTMENT_IN
+  ADJUSTMENT_OUT
+  TRANSFER_OUT
+  TRANSFER_IN
+}
+
+enum MovementStatus {
+  DRAFT
+  POSTED
+  CANCELLED
+}
+
 model AuditLog {
   id           String                     @id @default(cuid())
   userId       String
@@ -466,21 +482,31 @@ model PaymentAccount {
 }
 
 model StockMovement {
-  id            String   @id @default(cuid())
+  id            String         @id @default(cuid())
+  companyId     String?
+  company       Company?       @relation(fields: [companyId], references: [id], onDelete: SetNull)
   productId     String
-  product       Product  @relation(fields: [productId], references: [id])
+  product       Product        @relation(fields: [productId], references: [id])
   warehouseId   String?
-  warehouse     Warehouse? @relation(fields: [warehouseId], references: [id])
-  type          String   @default("IN")
-  quantity      Int      @default(0)
+  warehouse     Warehouse?     @relation(fields: [warehouseId], references: [id])
+  movementType  MovementType
+  quantity      Int
+  movementDate  DateTime       @default(now())
   referenceType String?
   referenceId   String?
+  reason        String?
   notes         String?
-  createdAt     DateTime @default(now())
+  status        MovementStatus @default(DRAFT)
+  createdById   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
+  @@index([companyId])
   @@index([productId])
   @@index([warehouseId])
   @@index([referenceType, referenceId])
+  @@index([status])
+  @@index([movementDate])
 }
 
 model Company {
@@ -505,6 +531,7 @@ model Company {
   products      Product[]
   units         Unit[]
   warehouses    Warehouse[]
+  stockMovements StockMovement[]
 
   @@index([code])
 }
