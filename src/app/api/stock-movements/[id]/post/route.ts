@@ -73,9 +73,13 @@ export async function POST(
       warehouseId: movement.warehouseId,
       movementType: movement.movementType,
       quantity: movement.quantity,
+      unitCost: Number(movement.unitCost ?? 0),
+      currency: movement.currency,
       previousStatus: "DRAFT",
       newStatus: "POSTED",
       newBalance: result.balance?.quantityOnHand,
+      newAverageCost: result.balance?.averageCost,
+      newTotalValue: result.balance?.totalValue,
     });
 
     return successResponse({

@@ -147,6 +147,8 @@ export async function POST(request: NextRequest) {
         warehouseId: parsed.warehouseId,
         movementType: parsed.movementType,
         quantity: parsed.quantity,
+        unitCost: parsed.unitCost ?? 0,
+        currency: parsed.currency,
         movementDate,
         referenceType: parsed.referenceType,
         referenceId: parsed.referenceId,

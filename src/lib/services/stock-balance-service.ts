@@ -17,6 +17,8 @@ export interface ApplyMovementResult {
     id: string;
     quantityOnHand: number;
     reservedQuantity: number;
+    averageCost: number;
+    totalValue: number;
   };
   movement?: {
     id: string;
@@ -46,6 +48,8 @@ export class StockBalanceService {
         warehouseId: true,
         movementType: true,
         quantity: true,
+        unitCost: true,
+        currency: true,
         status: true,
       },
     });
@@ -68,6 +72,7 @@ export class StockBalanceService {
 
     const movementType = movement.movementType;
     const companyId = movement.companyId;
+    const movementUnitCost = Number(movement.unitCost ?? 0);
 
     // Get or create balance
     const balance = await tx.stockBalance.findUnique({
@@ -81,14 +86,28 @@ export class StockBalanceService {
     });
 
     let newQuantity: number;
+    let newAverageCost: number;
+    let newTotalValue: number;
 
     if (INCREASE_TYPES.has(movementType)) {
-      // Increase balance
+      // Validate unitCost for increase movements
+      if (movementUnitCost < 0) {
+        return { success: false, error: "تكلفة الوحدة لا يمكن أن تكون سالبة" };
+      }
+
       if (!balance) {
+        // First balance record
         newQuantity = movement.quantity;
+        newAverageCost = movementUnitCost;
       } else {
         newQuantity = balance.quantityOnHand + movement.quantity;
+        const oldValue =
+          Number(balance.quantityOnHand) * Number(balance.averageCost);
+        const inValue = movement.quantity * movementUnitCost;
+        newAverageCost =
+          newQuantity > 0 ? (oldValue + inValue) / newQuantity : 0;
       }
+      newTotalValue = newQuantity * newAverageCost;
     } else if (DECREASE_TYPES.has(movementType)) {
       // Decrease balance - requires existing balance
       if (!balance) {
@@ -104,6 +123,9 @@ export class StockBalanceService {
           error: "الرصيد لا يكفي لإخراج هذه الكمية",
         };
       }
+      // Average cost does not change on decrease
+      newAverageCost = Number(balance.averageCost);
+      newTotalValue = newQuantity * newAverageCost;
     } else {
       return { success: false, error: "نوع الحركة غير معروف" };
     }
@@ -119,6 +141,9 @@ export class StockBalanceService {
       },
       update: {
         quantityOnHand: newQuantity,
+        averageCost: newAverageCost,
+        totalValue: newTotalValue,
+        currency: movement.currency,
         lastMovementId: movement.id,
       },
       create: {
@@ -127,6 +152,10 @@ export class StockBalanceService {
         warehouseId: movement.warehouseId,
         quantityOnHand: newQuantity,
         reservedQuantity: 0,
+        unitCost: movementUnitCost,
+        averageCost: newAverageCost,
+        totalValue: newTotalValue,
+        currency: movement.currency,
         lastMovementId: movement.id,
       },
     });
@@ -143,6 +172,8 @@ export class StockBalanceService {
         id: upsertedBalance.id,
         quantityOnHand: upsertedBalance.quantityOnHand,
         reservedQuantity: upsertedBalance.reservedQuantity,
+        averageCost: Number(upsertedBalance.averageCost),
+        totalValue: Number(upsertedBalance.totalValue),
       },
       movement: {
         id: updatedMovement.id,

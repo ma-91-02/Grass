@@ -32,6 +32,8 @@ const stockMovementUpdateSchema = z.object({
     ])
     .optional(),
   quantity: z.coerce.number().int().min(1).optional(),
+  unitCost: z.coerce.number().min(0).optional().nullable(),
+  currency: z.enum(["USD", "IQD"] as const).optional(),
   movementDate: z.string().optional().nullable(),
   referenceType: z.string().optional().nullable(),
   referenceId: z.string().optional().nullable(),

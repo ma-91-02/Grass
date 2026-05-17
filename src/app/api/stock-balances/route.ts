@@ -67,6 +67,10 @@ export async function GET(request: NextRequest) {
     quantityOnHand: b.quantityOnHand,
     reservedQuantity: b.reservedQuantity,
     availableQuantity: b.quantityOnHand - b.reservedQuantity,
+    unitCost: Number(b.unitCost),
+    averageCost: Number(b.averageCost),
+    totalValue: Number(b.totalValue),
+    currency: b.currency,
     lastMovementId: b.lastMovementId,
     updatedAt: b.updatedAt,
   }));

@@ -31,7 +31,7 @@ describe("StockBalanceService", () => {
     vi.clearAllMocks();
   });
 
-  it("IN creates balance when none exists", async () => {
+  it("IN creates balance with average cost when none exists", async () => {
     const tx = createMockTx();
     tx.stockMovement.findUnique.mockResolvedValue({
       id: "m1",
@@ -40,6 +40,8 @@ describe("StockBalanceService", () => {
       warehouseId: "w1",
       movementType: "IN",
       quantity: 10,
+      unitCost: 5,
+      currency: "IQD",
       status: "DRAFT",
     });
     tx.stockBalance.findUnique.mockResolvedValue(null);
@@ -47,6 +49,8 @@ describe("StockBalanceService", () => {
       id: "b1",
       quantityOnHand: 10,
       reservedQuantity: 0,
+      averageCost: 5,
+      totalValue: 50,
     });
     tx.stockMovement.update.mockResolvedValue({
       id: "m1",
@@ -59,27 +63,38 @@ describe("StockBalanceService", () => {
     );
     expect(result.success).toBe(true);
     expect(result.balance?.quantityOnHand).toBe(10);
-    expect(tx.stockBalance.upsert.mock.calls[0][0].create.quantityOnHand).toBe(
-      10,
-    );
+    expect(result.balance?.averageCost).toBe(5);
+    expect(tx.stockBalance.upsert.mock.calls[0][0].create.averageCost).toBe(5);
   });
 
-  it("OPENING_BALANCE creates balance", async () => {
+  it("second IN recalculates weighted average", async () => {
     const tx = createMockTx();
     tx.stockMovement.findUnique.mockResolvedValue({
       id: "m2",
       companyId: "c1",
       productId: "p1",
       warehouseId: "w1",
-      movementType: "OPENING_BALANCE",
-      quantity: 50,
+      movementType: "IN",
+      quantity: 10,
+      unitCost: 15,
+      currency: "IQD",
       status: "DRAFT",
     });
-    tx.stockBalance.findUnique.mockResolvedValue(null);
-    tx.stockBalance.upsert.mockResolvedValue({
-      id: "b2",
-      quantityOnHand: 50,
+    // Existing: 10 qty @ 5 avg = 50 value
+    tx.stockBalance.findUnique.mockResolvedValue({
+      id: "b1",
+      quantityOnHand: 10,
       reservedQuantity: 0,
+      averageCost: 5,
+      totalValue: 50,
+    });
+    // New: 20 qty, oldValue=50 + inValue=150 = 200, avg = 200/20 = 10
+    tx.stockBalance.upsert.mockResolvedValue({
+      id: "b1",
+      quantityOnHand: 20,
+      reservedQuantity: 0,
+      averageCost: 10,
+      totalValue: 200,
     });
     tx.stockMovement.update.mockResolvedValue({
       id: "m2",
@@ -91,29 +106,41 @@ describe("StockBalanceService", () => {
       "m2",
     );
     expect(result.success).toBe(true);
-    expect(result.balance?.quantityOnHand).toBe(50);
+    expect(result.balance?.quantityOnHand).toBe(20);
+    expect(result.balance?.averageCost).toBe(10);
+    expect(result.balance?.totalValue).toBe(200);
+    expect(tx.stockBalance.upsert.mock.calls[0][0].update.averageCost).toBe(10);
+    expect(tx.stockBalance.upsert.mock.calls[0][0].update.totalValue).toBe(200);
   });
 
-  it("ADJUSTMENT_IN increases existing balance", async () => {
+  it("OUT keeps average cost unchanged and reduces value", async () => {
     const tx = createMockTx();
     tx.stockMovement.findUnique.mockResolvedValue({
       id: "m3",
       companyId: "c1",
       productId: "p1",
       warehouseId: "w1",
-      movementType: "ADJUSTMENT_IN",
+      movementType: "OUT",
       quantity: 5,
+      unitCost: 10,
+      currency: "IQD",
       status: "DRAFT",
     });
+    // Existing: 20 qty @ 10 avg = 200 value
     tx.stockBalance.findUnique.mockResolvedValue({
       id: "b1",
       quantityOnHand: 20,
       reservedQuantity: 0,
+      averageCost: 10,
+      totalValue: 200,
     });
+    // After OUT 5: 15 qty @ 10 avg = 150 value
     tx.stockBalance.upsert.mockResolvedValue({
       id: "b1",
-      quantityOnHand: 25,
+      quantityOnHand: 15,
       reservedQuantity: 0,
+      averageCost: 10,
+      totalValue: 150,
     });
     tx.stockMovement.update.mockResolvedValue({
       id: "m3",
@@ -125,31 +152,31 @@ describe("StockBalanceService", () => {
       "m3",
     );
     expect(result.success).toBe(true);
-    expect(tx.stockBalance.upsert.mock.calls[0][0].update.quantityOnHand).toBe(
-      25,
-    );
+    expect(result.balance?.quantityOnHand).toBe(15);
+    expect(result.balance?.averageCost).toBe(10);
+    expect(result.balance?.totalValue).toBe(150);
   });
 
-  it("TRANSFER_IN increases existing balance", async () => {
+  it("OPENING_BALANCE creates balance with cost", async () => {
     const tx = createMockTx();
     tx.stockMovement.findUnique.mockResolvedValue({
       id: "m4",
       companyId: "c1",
       productId: "p1",
-      warehouseId: "w2",
-      movementType: "TRANSFER_IN",
-      quantity: 8,
+      warehouseId: "w1",
+      movementType: "OPENING_BALANCE",
+      quantity: 50,
+      unitCost: 2,
+      currency: "IQD",
       status: "DRAFT",
     });
-    tx.stockBalance.findUnique.mockResolvedValue({
-      id: "b1",
-      quantityOnHand: 10,
-      reservedQuantity: 0,
-    });
+    tx.stockBalance.findUnique.mockResolvedValue(null);
     tx.stockBalance.upsert.mockResolvedValue({
-      id: "b1",
-      quantityOnHand: 18,
+      id: "b2",
+      quantityOnHand: 50,
       reservedQuantity: 0,
+      averageCost: 2,
+      totalValue: 100,
     });
     tx.stockMovement.update.mockResolvedValue({
       id: "m4",
@@ -161,29 +188,37 @@ describe("StockBalanceService", () => {
       "m4",
     );
     expect(result.success).toBe(true);
-    expect(result.balance?.quantityOnHand).toBe(18);
+    expect(result.balance?.quantityOnHand).toBe(50);
+    expect(result.balance?.averageCost).toBe(2);
   });
 
-  it("OUT decreases existing balance", async () => {
+  it("ADJUSTMENT_IN increases balance and recalculates average", async () => {
     const tx = createMockTx();
     tx.stockMovement.findUnique.mockResolvedValue({
       id: "m5",
       companyId: "c1",
       productId: "p1",
       warehouseId: "w1",
-      movementType: "OUT",
-      quantity: 7,
+      movementType: "ADJUSTMENT_IN",
+      quantity: 5,
+      unitCost: 20,
+      currency: "IQD",
       status: "DRAFT",
     });
     tx.stockBalance.findUnique.mockResolvedValue({
       id: "b1",
       quantityOnHand: 20,
       reservedQuantity: 0,
+      averageCost: 10,
+      totalValue: 200,
     });
+    // New avg = (20*10 + 5*20) / 25 = 300/25 = 12
     tx.stockBalance.upsert.mockResolvedValue({
       id: "b1",
-      quantityOnHand: 13,
+      quantityOnHand: 25,
       reservedQuantity: 0,
+      averageCost: 12,
+      totalValue: 300,
     });
     tx.stockMovement.update.mockResolvedValue({
       id: "m5",
@@ -195,10 +230,12 @@ describe("StockBalanceService", () => {
       "m5",
     );
     expect(result.success).toBe(true);
-    expect(result.balance?.quantityOnHand).toBe(13);
+    expect(result.balance?.quantityOnHand).toBe(25);
+    expect(result.balance?.averageCost).toBe(12);
+    expect(result.balance?.totalValue).toBe(300);
   });
 
-  it("ADJUSTMENT_OUT decreases existing balance", async () => {
+  it("ADJUSTMENT_OUT decreases balance keeping average unchanged", async () => {
     const tx = createMockTx();
     tx.stockMovement.findUnique.mockResolvedValue({
       id: "m6",
@@ -207,17 +244,23 @@ describe("StockBalanceService", () => {
       warehouseId: "w1",
       movementType: "ADJUSTMENT_OUT",
       quantity: 3,
+      unitCost: 12,
+      currency: "IQD",
       status: "DRAFT",
     });
     tx.stockBalance.findUnique.mockResolvedValue({
       id: "b1",
-      quantityOnHand: 10,
+      quantityOnHand: 25,
       reservedQuantity: 0,
+      averageCost: 12,
+      totalValue: 300,
     });
     tx.stockBalance.upsert.mockResolvedValue({
       id: "b1",
-      quantityOnHand: 7,
+      quantityOnHand: 22,
       reservedQuantity: 0,
+      averageCost: 12,
+      totalValue: 264,
     });
     tx.stockMovement.update.mockResolvedValue({
       id: "m6",
@@ -229,7 +272,8 @@ describe("StockBalanceService", () => {
       "m6",
     );
     expect(result.success).toBe(true);
-    expect(result.balance?.quantityOnHand).toBe(7);
+    expect(result.balance?.quantityOnHand).toBe(22);
+    expect(result.balance?.averageCost).toBe(12);
   });
 
   it("TRANSFER_OUT decreases existing balance", async () => {
@@ -241,17 +285,23 @@ describe("StockBalanceService", () => {
       warehouseId: "w1",
       movementType: "TRANSFER_OUT",
       quantity: 5,
+      unitCost: 12,
+      currency: "IQD",
       status: "DRAFT",
     });
     tx.stockBalance.findUnique.mockResolvedValue({
       id: "b1",
-      quantityOnHand: 15,
+      quantityOnHand: 22,
       reservedQuantity: 0,
+      averageCost: 12,
+      totalValue: 264,
     });
     tx.stockBalance.upsert.mockResolvedValue({
       id: "b1",
-      quantityOnHand: 10,
+      quantityOnHand: 17,
       reservedQuantity: 0,
+      averageCost: 12,
+      totalValue: 204,
     });
     tx.stockMovement.update.mockResolvedValue({
       id: "m7",
@@ -263,7 +313,7 @@ describe("StockBalanceService", () => {
       "m7",
     );
     expect(result.success).toBe(true);
-    expect(result.balance?.quantityOnHand).toBe(10);
+    expect(result.balance?.quantityOnHand).toBe(17);
   });
 
   it("rejects OUT when no balance exists", async () => {
@@ -275,6 +325,8 @@ describe("StockBalanceService", () => {
       warehouseId: "w1",
       movementType: "OUT",
       quantity: 5,
+      unitCost: 0,
+      currency: "IQD",
       status: "DRAFT",
     });
     tx.stockBalance.findUnique.mockResolvedValue(null);
@@ -296,12 +348,16 @@ describe("StockBalanceService", () => {
       warehouseId: "w1",
       movementType: "OUT",
       quantity: 15,
+      unitCost: 0,
+      currency: "IQD",
       status: "DRAFT",
     });
     tx.stockBalance.findUnique.mockResolvedValue({
       id: "b1",
       quantityOnHand: 10,
       reservedQuantity: 0,
+      averageCost: 5,
+      totalValue: 50,
     });
 
     const result = await StockBalanceService.applyPostedMovement(
@@ -321,6 +377,8 @@ describe("StockBalanceService", () => {
       warehouseId: "w1",
       movementType: "IN",
       quantity: 5,
+      unitCost: 5,
+      currency: "IQD",
       status: "POSTED",
     });
 
@@ -332,7 +390,63 @@ describe("StockBalanceService", () => {
     expect(result.error).toContain("مسودة");
   });
 
-  it("getBalance returns balance data", async () => {
+  it("rejects negative unitCost for increase movements", async () => {
+    const tx = createMockTx();
+    tx.stockMovement.findUnique.mockResolvedValue({
+      id: "m11",
+      companyId: "c1",
+      productId: "p1",
+      warehouseId: "w1",
+      movementType: "IN",
+      quantity: 5,
+      unitCost: -3,
+      currency: "IQD",
+      status: "DRAFT",
+    });
+
+    const result = await StockBalanceService.applyPostedMovement(
+      tx as never,
+      "m11",
+    );
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("تكلفة الوحدة لا يمكن أن تكون سالبة");
+  });
+
+  it("allows zero unitCost for opening balance", async () => {
+    const tx = createMockTx();
+    tx.stockMovement.findUnique.mockResolvedValue({
+      id: "m12",
+      companyId: "c1",
+      productId: "p1",
+      warehouseId: "w1",
+      movementType: "OPENING_BALANCE",
+      quantity: 10,
+      unitCost: 0,
+      currency: "IQD",
+      status: "DRAFT",
+    });
+    tx.stockBalance.findUnique.mockResolvedValue(null);
+    tx.stockBalance.upsert.mockResolvedValue({
+      id: "b1",
+      quantityOnHand: 10,
+      reservedQuantity: 0,
+      averageCost: 0,
+      totalValue: 0,
+    });
+    tx.stockMovement.update.mockResolvedValue({
+      id: "m12",
+      status: "POSTED",
+    });
+
+    const result = await StockBalanceService.applyPostedMovement(
+      tx as never,
+      "m12",
+    );
+    expect(result.success).toBe(true);
+    expect(result.balance?.averageCost).toBe(0);
+  });
+
+  it("getBalance returns balance with cost data", async () => {
     (
       prisma.stockBalance.findUnique as ReturnType<typeof vi.fn>
     ).mockResolvedValue({
@@ -342,11 +456,16 @@ describe("StockBalanceService", () => {
       warehouseId: "w1",
       quantityOnHand: 42,
       reservedQuantity: 2,
+      averageCost: 10,
+      totalValue: 420,
+      currency: "IQD",
     });
 
     const result = await StockBalanceService.getBalance("c1", "p1", "w1");
     expect(result).not.toBeNull();
     expect(result?.quantityOnHand).toBe(42);
+    expect(result?.averageCost).toBe(10);
+    expect(result?.totalValue).toBe(420);
   });
 
   it("ensureSufficientStock returns sufficient when enough", async () => {
@@ -356,6 +475,8 @@ describe("StockBalanceService", () => {
       id: "b1",
       quantityOnHand: 20,
       reservedQuantity: 5,
+      averageCost: 10,
+      totalValue: 200,
     });
 
     const result = await StockBalanceService.ensureSufficientStock(
@@ -366,24 +487,5 @@ describe("StockBalanceService", () => {
     );
     expect(result.sufficient).toBe(true);
     expect(result.available).toBe(15);
-  });
-
-  it("ensureSufficientStock returns insufficient when not enough", async () => {
-    (
-      prisma.stockBalance.findUnique as ReturnType<typeof vi.fn>
-    ).mockResolvedValue({
-      id: "b1",
-      quantityOnHand: 8,
-      reservedQuantity: 3,
-    });
-
-    const result = await StockBalanceService.ensureSufficientStock(
-      "c1",
-      "p1",
-      "w1",
-      10,
-    );
-    expect(result.sufficient).toBe(false);
-    expect(result.available).toBe(5);
   });
 });

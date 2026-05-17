@@ -493,6 +493,8 @@ model StockMovement {
   warehouse     Warehouse?     @relation(fields: [warehouseId], references: [id])
   movementType  MovementType
   quantity      Int
+  unitCost      Decimal?       @default(0)
+  currency      Currency       @default(IQD)
   movementDate  DateTime       @default(now())
   referenceType String?
   referenceId   String?
@@ -520,6 +522,10 @@ model StockBalance {
   warehouse        Warehouse @relation(fields: [warehouseId], references: [id])
   quantityOnHand   Int      @default(0)
   reservedQuantity Int      @default(0)
+  unitCost         Decimal  @default(0)
+  averageCost      Decimal  @default(0)
+  totalValue       Decimal  @default(0)
+  currency         Currency @default(IQD)
   lastMovementId   String?
   updatedAt        DateTime @updatedAt
 
