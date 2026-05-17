@@ -5,6 +5,7 @@ import {
   successResponse,
   errorResponse,
   unauthorizedError,
+  forbiddenError,
   serverError,
 } from "@/lib/api-response";
 import { companyFormSchema } from "@/lib/schemas";
@@ -15,7 +16,7 @@ export async function GET() {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.COMPANIES_VIEW))
-    return unauthorizedError();
+    return forbiddenError();
 
   const companies = await prisma.company.findMany({
     orderBy: { name: "asc" },
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.COMPANIES_CREATE))
-    return unauthorizedError();
+    return forbiddenError();
 
   try {
     const body = await request.json();

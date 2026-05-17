@@ -43,7 +43,7 @@ export async function GET(
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.FISCAL_PERIODS_VIEW))
-    return unauthorizedError();
+    return forbiddenError();
 
   const { id } = await params;
 
@@ -60,7 +60,7 @@ export async function PATCH(
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.FISCAL_PERIODS_MANAGE))
-    return unauthorizedError();
+    return forbiddenError();
 
   const { id } = await params;
 

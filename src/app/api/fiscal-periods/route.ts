@@ -5,6 +5,7 @@ import {
   successResponse,
   errorResponse,
   unauthorizedError,
+  forbiddenError,
   serverError,
 } from "@/lib/api-response";
 import { fiscalPeriodFormSchema } from "@/lib/schemas";
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.FISCAL_PERIODS_VIEW))
-    return unauthorizedError();
+    return forbiddenError();
 
   const { searchParams } = new URL(request.url);
   const companyId = searchParams.get("companyId");
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.FISCAL_PERIODS_MANAGE))
-    return unauthorizedError();
+    return forbiddenError();
 
   try {
     const body = await request.json();
