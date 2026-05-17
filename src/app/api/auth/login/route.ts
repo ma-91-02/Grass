@@ -3,6 +3,7 @@ import {
   authenticateUser,
   recordAuthAudit,
   checkRateLimit,
+  resetRateLimit,
   loginSchema,
 } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/lib/api-response";
@@ -45,6 +46,8 @@ export async function POST(request: NextRequest) {
       });
       return errorResponse("بيانات الدخول غير صحيحة", 401);
     }
+
+    resetRateLimit(ip);
 
     await recordAuthAudit({
       userId: result.user.id,

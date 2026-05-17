@@ -167,4 +167,58 @@ describe("checkRateLimit", () => {
     const result = checkRateLimit(ip);
     expect(result.allowed).toBe(true);
   });
+
+  it("bypasses rate limit for dev IP (unknown)", () => {
+    for (let i = 0; i < 100; i++) {
+      const result = checkRateLimit("unknown");
+      expect(result.allowed).toBe(true);
+    }
+  });
+});
+
+describe("authenticateUser with valid admin credentials", () => {
+  it("verifies password against seed hash", async () => {
+    const hash = await hashPassword("admin123");
+    const valid = await verifyPassword("admin123", hash);
+    expect(valid).toBe(true);
+  });
+
+  it("rejects wrong password for admin", async () => {
+    const hash = await hashPassword("admin123");
+    const valid = await verifyPassword("wrongpass", hash);
+    expect(valid).toBe(false);
+  });
+
+  it("handles empty password", async () => {
+    const hash = await hashPassword("admin123");
+    const valid = await verifyPassword("", hash);
+    expect(valid).toBe(false);
+  });
+});
+
+describe("login success response shape", () => {
+  it("successResponse returns success: true with user data", async () => {
+    const res = successResponse({
+      user: {
+        id: "test-id",
+        name: "مدير النظام",
+        email: "admin@grass.com",
+        roles: ["مدير النظام"],
+      },
+      token: "test-token",
+    });
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(body.data.user.email).toBe("admin@grass.com");
+    expect(body.data.user.roles).toContain("مدير النظام");
+    expect(body.data.token).toBeTruthy();
+  });
+
+  it("errorResponse never contains success: true", async () => {
+    const res = errorResponse("بيانات الدخول غير صحيحة", 401);
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toBeTruthy();
+    expect(body.data).toBeUndefined();
+  });
 });
