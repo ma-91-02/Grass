@@ -55,6 +55,7 @@ export const PERMISSIONS = {
   STOCK_ADJUSTMENTS_EDIT: "stockAdjustments.edit",
   STOCK_ADJUSTMENTS_DELETE: "stockAdjustments.delete",
   STOCK_ADJUSTMENTS_POST: "stockAdjustments.post",
+  INVENTORY_VALUATION_VIEW: "inventoryValuation.view",
   STOCK_BALANCES_VIEW: "stockBalances.view",
   EXCHANGE_RATES_VIEW: "exchangeRates.view",
   EXCHANGE_RATES_MANAGE: "exchangeRates.manage",

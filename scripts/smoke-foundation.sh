@@ -221,6 +221,28 @@ else
   FAIL=$((FAIL+1))
 fi
 
+# ---- INVENTORY VALUATION (with companyId) ----
+echo "--- INVENTORY VALUATION ---"
+if [ -n "$COMPANY_ID" ]; then
+  IV_CODE=$(curl -s -o "$OUT" -w "%{http_code}" "$BASE_URL/api/inventory/valuation?companyId=$COMPANY_ID" -b "$COOKIE_JAR")
+  if [ "$IV_CODE" = "200" ]; then
+    IV_SUCCESS=$(python3 -c "import json; d=json.load(open('$OUT')); print(d.get('success',False))" 2>/dev/null)
+    if [ "$IV_SUCCESS" = "True" ]; then
+      green "GET /api/inventory/valuation?companyId=... -> 200 + success:true"
+      PASS=$((PASS+1))
+    else
+      red "GET /api/inventory/valuation body missing success:true"
+      FAIL=$((FAIL+1))
+    fi
+  else
+    red "GET /api/inventory/valuation?companyId=... -> $IV_CODE (expected 200)"
+    FAIL=$((FAIL+1))
+  fi
+else
+  red "GET /api/inventory/valuation (no companyId available)"
+  FAIL=$((FAIL+1))
+fi
+
 # ---- FISCAL PERIODS (with companyId) ----
 echo "--- FISCAL PERIODS ---"
 if [ -n "$COMPANY_ID" ]; then
