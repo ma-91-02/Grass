@@ -5,6 +5,7 @@ import {
   successResponse,
   errorResponse,
   unauthorizedError,
+  forbiddenError,
   serverError,
 } from "@/lib/api-response";
 import { accountFormSchema } from "@/lib/schemas";
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.ACCOUNTS_VIEW))
-    return unauthorizedError();
+    return forbiddenError();
 
   const { searchParams } = new URL(request.url);
   const companyId = searchParams.get("companyId");
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.ACCOUNTS_CREATE))
-    return unauthorizedError();
+    return forbiddenError();
 
   try {
     const body = await request.json();
@@ -69,6 +70,10 @@ export async function POST(request: NextRequest) {
       if (!parent) return errorResponse("الحساب الأب غير موجود");
       if (parent.companyId !== parsed.companyId)
         return errorResponse("الحساب الأب لا ينتمي لنفس الشركة");
+      if (parent.isPosting)
+        return errorResponse("لا يمكن إنشاء حساب تابع تحت حساب مرحّل");
+      if (parent.currency !== parsed.currency)
+        return errorResponse("عملة الحساب لا تطابق عملة الحساب الأب");
       level = parent.level + 1;
     }
 

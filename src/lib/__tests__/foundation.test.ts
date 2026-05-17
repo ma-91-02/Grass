@@ -3,6 +3,7 @@ import {
   companyFormSchema,
   branchFormSchema,
   fiscalPeriodFormSchema,
+  accountFormSchema,
 } from "@/lib/schemas";
 import { checkPermission, checkRole } from "@/lib/auth";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -453,5 +454,292 @@ describe("shared permission helpers", () => {
     expect(checkPermission(mockUser, PERMISSIONS.FISCAL_PERIODS_MANAGE)).toBe(
       false,
     );
+  });
+});
+
+describe("accountFormSchema", () => {
+  it("accepts valid account", () => {
+    const result = accountFormSchema.safeParse({
+      companyId: "c1",
+      code: "1.1.1",
+      name: "صندوق",
+      type: "ASSET",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts account with all fields", () => {
+    const result = accountFormSchema.safeParse({
+      companyId: "c1",
+      code: "1.1.2",
+      name: "صندوق الدولار",
+      type: "ASSET",
+      parentId: "parent-id",
+      subtype: "CASH",
+      normalBalance: "DEBIT",
+      currency: "USD",
+      isPosting: true,
+      isSystem: true,
+      isProtected: true,
+      allowManualJournal: false,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects empty companyId", () => {
+    const result = accountFormSchema.safeParse({
+      companyId: "",
+      code: "1",
+      name: "أصول",
+      type: "ASSET",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects empty code", () => {
+    const result = accountFormSchema.safeParse({
+      companyId: "c1",
+      code: "",
+      name: "أصول",
+      type: "ASSET",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects empty name", () => {
+    const result = accountFormSchema.safeParse({
+      companyId: "c1",
+      code: "1",
+      name: "",
+      type: "ASSET",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects invalid type", () => {
+    const result = accountFormSchema.safeParse({
+      companyId: "c1",
+      code: "1",
+      name: "Test",
+      type: "INVALID",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("defaults normalBalance to DEBIT", () => {
+    const result = accountFormSchema.safeParse({
+      companyId: "c1",
+      code: "1",
+      name: "أصول",
+      type: "ASSET",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.normalBalance).toBe("DEBIT");
+    }
+  });
+
+  it("defaults currency to IQD", () => {
+    const result = accountFormSchema.safeParse({
+      companyId: "c1",
+      code: "1",
+      name: "أصول",
+      type: "ASSET",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.currency).toBe("IQD");
+    }
+  });
+
+  it("defaults isPosting to true", () => {
+    const result = accountFormSchema.safeParse({
+      companyId: "c1",
+      code: "1",
+      name: "أصول",
+      type: "ASSET",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.isPosting).toBe(true);
+    }
+  });
+});
+
+describe("account permissions", () => {
+  const admin: TokenPayload = {
+    userId: "admin-id",
+    email: "admin@test.com",
+    name: "Admin",
+    roles: ["مدير النظام"],
+    permissions: [
+      PERMISSIONS.ACCOUNTS_VIEW,
+      PERMISSIONS.ACCOUNTS_CREATE,
+      PERMISSIONS.ACCOUNTS_EDIT,
+      PERMISSIONS.ACCOUNTS_DELETE,
+      PERMISSIONS.ACCOUNTS_TREE,
+      PERMISSIONS.ACCOUNTS_STATEMENT,
+    ],
+  } as TokenPayload;
+
+  const viewer: TokenPayload = {
+    userId: "viewer-id",
+    email: "viewer@test.com",
+    name: "Viewer",
+    roles: ["مراقب"],
+    permissions: [PERMISSIONS.ACCOUNTS_VIEW, PERMISSIONS.ACCOUNTS_TREE],
+  } as TokenPayload;
+
+  it("admin has ACCOUNTS_VIEW", () => {
+    expect(checkPermission(admin, PERMISSIONS.ACCOUNTS_VIEW)).toBe(true);
+  });
+
+  it("admin has ACCOUNTS_CREATE", () => {
+    expect(checkPermission(admin, PERMISSIONS.ACCOUNTS_CREATE)).toBe(true);
+  });
+
+  it("admin has ACCOUNTS_DELETE", () => {
+    expect(checkPermission(admin, PERMISSIONS.ACCOUNTS_DELETE)).toBe(true);
+  });
+
+  it("viewer has ACCOUNTS_VIEW", () => {
+    expect(checkPermission(viewer, PERMISSIONS.ACCOUNTS_VIEW)).toBe(true);
+  });
+
+  it("viewer lacks ACCOUNTS_CREATE", () => {
+    expect(checkPermission(viewer, PERMISSIONS.ACCOUNTS_CREATE)).toBe(false);
+  });
+
+  it("viewer lacks ACCOUNTS_DELETE", () => {
+    expect(checkPermission(viewer, PERMISSIONS.ACCOUNTS_DELETE)).toBe(false);
+  });
+
+  it("null user lacks all account perms", () => {
+    expect(checkPermission(null, PERMISSIONS.ACCOUNTS_VIEW)).toBe(false);
+    expect(checkPermission(null, PERMISSIONS.ACCOUNTS_DELETE)).toBe(false);
+  });
+});
+
+describe("user delete permission enforcement", () => {
+  const admin: TokenPayload = {
+    userId: "admin-id",
+    email: "admin@test.com",
+    name: "Admin",
+    roles: ["مدير النظام"],
+    permissions: [
+      PERMISSIONS.USERS_VIEW,
+      PERMISSIONS.USERS_CREATE,
+      PERMISSIONS.USERS_EDIT,
+      PERMISSIONS.USERS_DELETE,
+    ],
+  } as TokenPayload;
+
+  const viewer: TokenPayload = {
+    userId: "viewer-id",
+    email: "viewer@test.com",
+    name: "Viewer",
+    roles: ["مراقب"],
+    permissions: [PERMISSIONS.USERS_VIEW],
+  } as TokenPayload;
+
+  it("admin has USERS_DELETE", () => {
+    expect(checkPermission(admin, PERMISSIONS.USERS_DELETE)).toBe(true);
+  });
+
+  it("viewer lacks USERS_DELETE", () => {
+    expect(checkPermission(viewer, PERMISSIONS.USERS_DELETE)).toBe(false);
+  });
+
+  it("null user cannot delete", () => {
+    expect(checkPermission(null, PERMISSIONS.USERS_DELETE)).toBe(false);
+  });
+
+  it("forbiddenError returns 403 for user delete denial", () => {
+    const res = forbiddenError("لا تملك صلاحية حذف المستخدمين");
+    expect(res.status).toBe(403);
+  });
+});
+
+describe("account delete rules", () => {
+  const admin: TokenPayload = {
+    userId: "admin-id",
+    email: "admin@test.com",
+    name: "Admin",
+    roles: ["مدير النظام"],
+    permissions: [PERMISSIONS.ACCOUNTS_DELETE],
+  } as TokenPayload;
+
+  it("admin has ACCOUNTS_DELETE", () => {
+    expect(checkPermission(admin, PERMISSIONS.ACCOUNTS_DELETE)).toBe(true);
+  });
+
+  it("viewer lacks ACCOUNTS_DELETE", () => {
+    const viewer: TokenPayload = {
+      userId: "v-id",
+      email: "v@test.com",
+      name: "V",
+      roles: ["مراقب"],
+      permissions: [],
+    } as TokenPayload;
+    expect(checkPermission(viewer, PERMISSIONS.ACCOUNTS_DELETE)).toBe(false);
+  });
+
+  it("delete blocked returns 403 when no permission", () => {
+    const res = forbiddenError("لا تملك صلاحية حذف الحسابات");
+    expect(res.status).toBe(403);
+  });
+});
+
+describe("account validation rules", () => {
+  const baseAccount = {
+    companyId: "c1",
+    code: "1.1.1",
+    name: "صندوق",
+    type: "ASSET",
+    normalBalance: "DEBIT",
+    currency: "IQD",
+    parentId: null,
+  } as const;
+
+  it("rejects currency mismatch with parent (IQD vs USD)", () => {
+    const result = accountFormSchema.safeParse({
+      ...baseAccount,
+      currency: "USD",
+      parentId: "parent-iqd-account",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid type enum", () => {
+    const result = accountFormSchema.safeParse({
+      ...baseAccount,
+      type: "BALANCE_SHEET",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects invalid currency", () => {
+    const result = accountFormSchema.safeParse({
+      ...baseAccount,
+      currency: "EUR",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts both IQD and USD", () => {
+    expect(
+      accountFormSchema.safeParse({ ...baseAccount, currency: "IQD" }).success,
+    ).toBe(true);
+    expect(
+      accountFormSchema.safeParse({ ...baseAccount, currency: "USD" }).success,
+    ).toBe(true);
+  });
+
+  it("accepts all account types", () => {
+    for (const t of ["ASSET", "LIABILITY", "EQUITY", "INCOME", "EXPENSE"]) {
+      expect(
+        accountFormSchema.safeParse({ ...baseAccount, type: t }).success,
+      ).toBe(true);
+    }
   });
 });

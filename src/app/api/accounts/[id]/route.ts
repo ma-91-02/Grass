@@ -5,6 +5,7 @@ import {
   successResponse,
   errorResponse,
   unauthorizedError,
+  forbiddenError,
   notFoundError,
   serverError,
 } from "@/lib/api-response";
@@ -28,7 +29,7 @@ export async function GET(
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.ACCOUNTS_VIEW))
-    return unauthorizedError();
+    return forbiddenError();
 
   const { id } = await params;
 
@@ -49,6 +50,26 @@ export async function GET(
   return successResponse(data);
 }
 
+async function isDescendant(
+  ancestorId: string,
+  candidateId: string,
+): Promise<boolean> {
+  let current: string | null = candidateId;
+  const visited = new Set<string>();
+  while (current) {
+    if (current === ancestorId) return true;
+    if (visited.has(current)) return false;
+    visited.add(current);
+    const acct: { parentId: string | null } | null =
+      await prisma.account.findUnique({
+        where: { id: current },
+        select: { parentId: true },
+      });
+    current = acct?.parentId ?? null;
+  }
+  return false;
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -56,7 +77,7 @@ export async function PATCH(
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.ACCOUNTS_EDIT))
-    return unauthorizedError();
+    return forbiddenError();
 
   const { id } = await params;
 
@@ -67,19 +88,62 @@ export async function PATCH(
     const body = await request.json();
     const parsed = updateAccountSchema.parse(body);
 
-    if (
-      body.type !== undefined ||
-      body.currency !== undefined ||
-      body.normalBalance !== undefined
-    ) {
+    if (body.code !== undefined) {
       if (existing.isProtected)
-        return errorResponse("لا يمكن تغيير هذا الحقل لحساب محمي");
-
+        return errorResponse("لا يمكن تغيير رقم الحساب لحساب محمي");
       const journalLinesCount = await prisma.journalLine.count({
         where: { accountId: id },
       });
       if (journalLinesCount > 0)
-        return errorResponse("لا يمكن تغيير هذا الحقل لحساب له حركات يومية");
+        return errorResponse("لا يمكن تغيير رقم الحساب لحساب له حركات يومية");
+    }
+
+    if (body.currency !== undefined) {
+      if (existing.isProtected)
+        return errorResponse("لا يمكن تغيير العملة لحساب محمي");
+      const journalLinesCount = await prisma.journalLine.count({
+        where: { accountId: id },
+      });
+      if (journalLinesCount > 0)
+        return errorResponse("لا يمكن تغيير العملة لحساب له حركات يومية");
+    }
+
+    if (body.normalBalance !== undefined) {
+      if (existing.isProtected)
+        return errorResponse("لا يمكن تغيير طبيعة الرصيد لحساب محمي");
+      const journalLinesCount = await prisma.journalLine.count({
+        where: { accountId: id },
+      });
+      if (journalLinesCount > 0)
+        return errorResponse("لا يمكن تغيير طبيعة الرصيد لحساب له حركات يومية");
+    }
+
+    if (body.type !== undefined) {
+      if (existing.isProtected)
+        return errorResponse("لا يمكن تغيير نوع الحساب لحساب محمي");
+      const journalLinesCount = await prisma.journalLine.count({
+        where: { accountId: id },
+      });
+      if (journalLinesCount > 0)
+        return errorResponse("لا يمكن تغيير نوع الحساب لحساب له حركات يومية");
+    }
+
+    if (body.isPosting === false && existing.isPosting === true) {
+      const childPostingCount = await prisma.account.count({
+        where: { parentId: id, isPosting: true },
+      });
+      if (childPostingCount > 0)
+        return errorResponse(
+          "لا يمكن إلغاء الترحيل لحساب له حسابات فرعية مرحّلة",
+        );
+    }
+
+    if (body.isPosting === true && existing.isPosting === false) {
+      const childrenCount = await prisma.account.count({
+        where: { parentId: id },
+      });
+      if (childrenCount > 0)
+        return errorResponse("لا يمكن ترحيل حساب أب له حسابات فرعية");
     }
 
     if (
@@ -94,9 +158,16 @@ export async function PATCH(
         return errorResponse("الحساب الأب غير موجود");
       if (newParent && newParent.companyId !== existing.companyId)
         return errorResponse("الحساب الأب لا ينتمي لنفس الشركة");
+      if (newParent && newParent.isPosting)
+        return errorResponse("لا يمكن نقل حساب تحت حساب أب مرحّل");
+      if (newParent && newParent.currency !== existing.currency)
+        return errorResponse("عملة الحساب الأب لا تطابق عملة الحساب");
+      if (newParent && (await isDescendant(id, newParent.id)))
+        return errorResponse("لا يمكن جعل الحساب التابع أباً للحساب الحالي");
     }
 
     const data: Record<string, unknown> = { ...parsed };
+
     if (parsed.parentId !== undefined) {
       if (parsed.parentId) {
         const parent = await prisma.account.findUnique({
@@ -135,12 +206,15 @@ export async function DELETE(
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.ACCOUNTS_DELETE))
-    return unauthorizedError();
+    return forbiddenError();
 
   const { id } = await params;
 
   const existing = await prisma.account.findUnique({ where: { id } });
   if (!existing) return notFoundError();
+
+  if (existing.isSystem || existing.isProtected)
+    return errorResponse("لا يمكن حذف حساب نظامي أو محمي");
 
   const childrenCount = await prisma.account.count({
     where: { parentId: id },
@@ -154,15 +228,13 @@ export async function DELETE(
   if (journalLinesCount > 0)
     return errorResponse("لا يمكن حذف حساب له حركات يومية");
 
-  await prisma.account.update({
-    where: { id },
-    data: { isActive: false },
-  });
+  await prisma.account.delete({ where: { id } });
 
   await logAudit(user.userId, "DELETE", "Account", id, {
     code: existing.code,
     name: existing.name,
+    wasPermanent: true,
   });
 
-  return successResponse({ id, isActive: false });
+  return successResponse({ action: "deleted", accountId: id });
 }
