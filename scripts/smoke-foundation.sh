@@ -243,6 +243,28 @@ else
   FAIL=$((FAIL+1))
 fi
 
+# ---- INVENTORY AUDIT (with companyId) ----
+echo "--- INVENTORY AUDIT ---"
+if [ -n "$COMPANY_ID" ]; then
+  IA_CODE=$(curl -s -o "$OUT" -w "%{http_code}" "$BASE_URL/api/inventory/audit/issues?companyId=$COMPANY_ID" -b "$COOKIE_JAR")
+  if [ "$IA_CODE" = "200" ]; then
+    IA_SUCCESS=$(python3 -c "import json; d=json.load(open('$OUT')); print(d.get('success',False))" 2>/dev/null)
+    if [ "$IA_SUCCESS" = "True" ]; then
+      green "GET /api/inventory/audit/issues?companyId=... -> 200 + success:true"
+      PASS=$((PASS+1))
+    else
+      red "GET /api/inventory/audit/issues body missing success:true"
+      FAIL=$((FAIL+1))
+    fi
+  else
+    red "GET /api/inventory/audit/issues?companyId=... -> $IA_CODE (expected 200)"
+    FAIL=$((FAIL+1))
+  fi
+else
+  red "GET /api/inventory/audit/issues (no companyId available)"
+  FAIL=$((FAIL+1))
+fi
+
 # ---- FISCAL PERIODS (with companyId) ----
 echo "--- FISCAL PERIODS ---"
 if [ -n "$COMPANY_ID" ]; then

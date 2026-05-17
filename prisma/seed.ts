@@ -137,6 +137,11 @@ const PERMISSIONS = [
     module: "inventory",
   },
   {
+    key: "inventoryAudit.view",
+    name: "عرض تدقيق المخزون",
+    module: "inventory",
+  },
+  {
     key: "stockBalances.view",
     name: "عرض أرصدة المخزون",
     module: "inventory",
@@ -279,6 +284,7 @@ const ROLES = [
       "stockAdjustments.delete",
       "stockAdjustments.post",
       "inventoryValuation.view",
+      "inventoryAudit.view",
       "stockBalances.view",
     ],
   },
