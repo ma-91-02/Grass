@@ -13,7 +13,7 @@
 
 - Detailed coding without reading the phase-specific files.
 
-## Phase 1: Foundation Core
+## Phase 1: Foundation Core — ✅ Complete (10a735a, phase1/foundation-core)
 
 ### Goal
 
@@ -42,6 +42,26 @@ Build the safe foundation for auth, permissions, company/branch scope, fiscal pe
 - JournalEntry and JournalLine.
 - PostingService foundation.
 - Audit logs.
+
+### Delivered
+
+- **Schema additions**: `Company`, `Branch`, `FiscalPeriod`, `Account` (with parent/child tree), `JournalEntry`, `JournalLine`, `PostingOperation`. Enhanced `AuditLog` (requestId, userAgent, beforeJson, afterJson, metadataJson, companyId, branchId). New enums: `NormalBalance`, `PeriodStatus`, `PostingOperationStatus`, `JournalEntryStatus`.
+- **Services**: 
+  - `PostingService` — full journal posting pipeline with idempotency, validation, transaction safety, rollback.
+  - `LedgerValidator` — balance/currency/line validation.
+  - `PeriodGuard` — fiscal period status checks (OPEN, SOFT_CLOSED, HARD_CLOSED, etc.).
+  - `CurrencyGuard` — currency isolation enforcement.
+- **API routes** (13 total):
+  - `GET/POST /api/companies`, `GET/PATCH/DELETE /api/companies/[id]`
+  - `GET/POST /api/branches`, `GET/PATCH/DELETE /api/branches/[id]`
+  - `GET/POST /api/fiscal-periods`, `GET/PATCH/DELETE /api/fiscal-periods/[id]`
+  - `GET/POST /api/accounts`, `GET/PATCH/DELETE /api/accounts/[id]`, `GET /api/accounts/tree`
+  - `GET/POST /api/journal-entries`, `GET/PATCH/DELETE /api/journal-entries/[id]`, `POST .../post`, `POST .../reverse`
+- **Permissions**: 17 new permission keys (`ACCOUNTS_CREATE/EDIT/DELETE/STATEMENT/TREE`, `COMPANIES_VIEW/CREATE/EDIT`, `BRANCHES_VIEW/CREATE/EDIT`, `FISCAL_PERIODS_VIEW/MANAGE`, `JOURNALS_CREATE/POST/REVERSE`)
+- **Types/Schemas**: Complete TypeScript types and Zod schemas for all new entities.
+- **Seed**: Default company "شركة GRASS للتوزيع", branch "الفرع الرئيسي", fiscal period, full chart of accounts (30+ accounts with tree structure, system accounts, protected flagging).
+- **Sidebar**: Added "القيود اليومية" and "الشركة والفروع" navigation items.
+- **Foundation rules enforced**: No direct balance/stock updates, no business logic in routes, services own transactions, permissions checked server-side, audit logged on every mutation.
 
 ### Forbidden
 

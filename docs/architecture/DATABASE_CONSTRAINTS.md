@@ -105,6 +105,9 @@
 
 | Table               | Constraints                                                                    | Reason                        |
 | ------------------- | ------------------------------------------------------------------------------ | ----------------------------- |
+| `companies`         | unique code, isActive guard                                                    | Protect company identity       |
+| `branches`          | unique code per company, isActive guard                                        | Protect branch identity        |
+| `fiscal_periods`    | non-overlapping dates, status machine, no posting when HARD_CLOSED             | Protect period close           |
 | `accounts`          | unique code per company, parent restrict, no currency change after activity    | Protect chart and ledger      |
 | `journal_entries`   | unique number, immutable after POSTED, source link                             | Prevent duplicate ledger      |
 | `journal_lines`     | debit/credit checks, account FK restrict, currency match by guard              | Protect double-entry          |
