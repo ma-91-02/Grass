@@ -59,9 +59,10 @@
 ## Test Status
 
 - The project previously had no `test` script, causing `npm test` to fail with "Missing script".
-- `npm test` now runs a safe placeholder that explicitly states automated tests are not configured yet.
-- This is not a fake test suite.
-- Real tests must be added according to `docs/implementation/TESTING_STRATEGY.md`.
+- `npm test` now runs Vitest (`vitest run`) — a real test framework for Next.js/TypeScript.
+- 28 unit tests exist for pure utility functions in `src/lib/__tests__/utils.test.ts`.
+- All tests pass on `main`.
+- Additional tests must be added according to `docs/implementation/TESTING_STRATEGY.md`.
 
 ## Build and Typecheck Status
 
@@ -70,8 +71,6 @@
 - Build validates Next.js route compilation and TypeScript integration.
 
 ## Known Technical Debt
-
-- No real test framework is configured yet.
 - Several lint warnings exist in legacy or in-progress code.
 - There are many uncommitted non-documentation changes that need separate review.
 - Some client pages use effect-based data loading patterns that React Compiler warns about.
