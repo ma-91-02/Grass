@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   getCurrentUser,
-  logAudit,
   requireDbPermission,
   canAccessCompany,
 } from "@/lib/auth";
@@ -16,6 +15,7 @@ import {
 import { PERMISSIONS } from "@/lib/permissions";
 import { StockBalanceService } from "@/lib/services/stock-balance-service";
 import { PeriodGuard } from "@/lib/services/period-guard";
+import { LedgerValidator } from "@/lib/services/ledger-validator";
 
 /**
  * Sales Invoice Posting Engine
@@ -206,6 +206,11 @@ export async function POST(
         throw new Error("الفاتورة تم تعديلها قبل الترحيل");
       }
 
+      // Idempotency guard: postedAt must be null (blocks duplicate posting even if status somehow skipped)
+      if (lockedInvoice.postedAt) {
+        throw new Error("الفاتورة تم ترحيلها مسبقاً");
+      }
+
       const companyId = lockedInvoice.companyId!;
       const warehouseId = lockedInvoice.warehouseId!;
       const invoiceDate = lockedInvoice.invoiceDate;
@@ -250,7 +255,10 @@ export async function POST(
           throw new Error(applyResult.error || "فشل خصم المخزون");
         }
 
-        // Get average cost from updated balance
+        // Get average cost from updated balance.
+        // Note: applyPostedMovement for OUT movements does NOT change averageCost
+        // (see StockBalanceService: average cost is preserved on decrease).
+        // Reading after apply is deterministic and matches the cost used for COGS.
         const balance = await tx.stockBalance.findUnique({
           where: {
             companyId_productId_warehouseId: {
@@ -340,6 +348,14 @@ export async function POST(
         description: `إيراد مبيعات - فاتورة ${lockedInvoice.invoiceNumber}`,
       });
 
+      // Validate revenue journal balance before creation
+      const revenueValidation = LedgerValidator.validateLines(revenueLines);
+      if (!revenueValidation.valid) {
+        throw new Error(
+          `قيد الإيراد غير متوازن: ${revenueValidation.errors.join(" | ")}`,
+        );
+      }
+
       const revenueJournal = await tx.journalEntry.create({
         data: {
           companyId,
@@ -373,6 +389,29 @@ export async function POST(
       // --- COGS Journal Entry ---
       let cogsJournal = null;
       if (totalCogs > 0) {
+        const cogsLines = [
+          {
+            accountId: cogsAccount.id,
+            debit: totalCogs,
+            credit: 0,
+            description: `COGS - فاتورة ${lockedInvoice.invoiceNumber}`,
+          },
+          {
+            accountId: inventoryAccount.id,
+            debit: 0,
+            credit: totalCogs,
+            description: `مخزون - فاتورة ${lockedInvoice.invoiceNumber}`,
+          },
+        ];
+
+        // Validate COGS journal balance before creation
+        const cogsValidation = LedgerValidator.validateLines(cogsLines);
+        if (!cogsValidation.valid) {
+          throw new Error(
+            `قيد COGS غير متوازن: ${cogsValidation.errors.join(" | ")}`,
+          );
+        }
+
         cogsJournal = await tx.journalEntry.create({
           data: {
             companyId,
@@ -392,20 +431,12 @@ export async function POST(
             postedAt: new Date(),
             createdById: currentUser.userId,
             lines: {
-              create: [
-                {
-                  accountId: cogsAccount.id,
-                  debit: totalCogs,
-                  credit: 0,
-                  description: `COGS - فاتورة ${lockedInvoice.invoiceNumber}`,
-                },
-                {
-                  accountId: inventoryAccount.id,
-                  debit: 0,
-                  credit: totalCogs,
-                  description: `مخزون - فاتورة ${lockedInvoice.invoiceNumber}`,
-                },
-              ],
+              create: cogsLines.map((l) => ({
+                accountId: l.accountId,
+                debit: l.debit,
+                credit: l.credit,
+                description: l.description,
+              })),
             },
           },
           include: { lines: true },
@@ -434,16 +465,25 @@ export async function POST(
         include: { items: true },
       });
 
-      // --- Audit log inside transaction ---
-      await logAudit(currentUser.userId, "POST", "Invoice", id, {
-        invoiceNumber: lockedInvoice.invoiceNumber,
-        companyId,
-        totalAfterTax,
-        totalCogs,
-        paymentType: lockedInvoice.paymentType,
-        revenueJournalId: revenueJournal.id,
-        cogsJournalId: cogsJournal?.id,
-        stockMovements: lineCogsMap.map((m) => m.movementId),
+      // --- Audit log inside transaction (must use tx, not external prisma) ---
+      // Per AI_GLOBAL_RULES.md: Financial audit failure must fail the transaction.
+      await tx.auditLog.create({
+        data: {
+          userId: currentUser.userId,
+          action: "POST",
+          entity: "Invoice",
+          entityId: id,
+          details: {
+            invoiceNumber: lockedInvoice.invoiceNumber,
+            companyId,
+            totalAfterTax,
+            totalCogs,
+            paymentType: lockedInvoice.paymentType,
+            revenueJournalId: revenueJournal.id,
+            cogsJournalId: cogsJournal?.id,
+            stockMovements: lineCogsMap.map((m) => m.movementId),
+          } as never,
+        },
       });
 
       return {
