@@ -68,6 +68,7 @@ export const PERMISSIONS = {
   SALES_CREATE: "sales.create",
   SALES_EDIT: "sales.edit",
   SALES_DELETE: "sales.delete",
+  SALES_POST: "sales.post",
   AUDIT_LOGS_VIEW: "auditLogs.view",
   REPORTS_VIEW: "reports.view",
   SETTINGS_VIEW: "settings.view",

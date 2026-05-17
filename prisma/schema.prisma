@@ -399,6 +399,9 @@ model Invoice {
   remaining             Decimal          @default(0)
   invoiceDate           DateTime         @default(now())
   status                String           @default("DRAFT")
+  postedAt              DateTime?
+  postedById            String?
+  journalEntryId        String?
   notes                 String?
   createdById           String?
   createdAt             DateTime         @default(now())

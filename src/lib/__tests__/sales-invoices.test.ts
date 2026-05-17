@@ -5,6 +5,8 @@ import {
   requireDbPermission,
   getCurrentUser,
 } from "@/lib/auth";
+import { StockBalanceService } from "@/lib/services/stock-balance-service";
+import { PeriodGuard } from "@/lib/services/period-guard";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -43,6 +45,22 @@ vi.mock("@/lib/prisma", () => ({
     auditLog: {
       create: vi.fn(),
     },
+    account: {
+      findFirst: vi.fn(),
+    },
+    stockMovement: {
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    stockBalance: {
+      findUnique: vi.fn(),
+    },
+    journalEntry: {
+      create: vi.fn(),
+      count: vi.fn(),
+    },
+    $transaction: vi.fn(),
+    $queryRaw: vi.fn(),
   },
 }));
 
@@ -51,6 +69,19 @@ vi.mock("@/lib/auth", () => ({
   logAudit: vi.fn(),
   requireDbPermission: vi.fn(),
   canAccessCompany: vi.fn(),
+}));
+
+vi.mock("@/lib/services/stock-balance-service", () => ({
+  StockBalanceService: {
+    ensureSufficientStock: vi.fn(),
+    applyPostedMovement: vi.fn(),
+  },
+}));
+
+vi.mock("@/lib/services/period-guard", () => ({
+  PeriodGuard: {
+    checkPeriodOpen: vi.fn(),
+  },
 }));
 
 vi.mock("@/lib/api-response", () => ({
@@ -998,5 +1029,607 @@ describe("sales-invoices route", () => {
       params: Promise.resolve({ id: "inv1" }),
     });
     expect(res.status).toBe(403);
+  });
+
+  // POSTING TESTS
+  describe("posting", () => {
+    const mockInvoice = {
+      id: "inv1",
+      companyId: "c1",
+      invoiceNumber: "INV-001",
+      invoiceDate: new Date(),
+      currency: "IQD" as const,
+      exchangeRateValue: 0,
+      exchangeRateSnapshot: 1,
+      paymentType: "CASH",
+      paymentAccountId: "pa1",
+      totalBeforeTax: 100,
+      taxAmount: 0,
+      discountAmount: 0,
+      discountPercent: 0,
+      totalAfterTax: 100,
+      totalInUsd: 0,
+      paid: 100,
+      remaining: 0,
+      status: "DRAFT",
+      notes: null,
+      createdById: "u1",
+      items: [
+        {
+          id: "item1",
+          productId: "p1",
+          product: {
+            id: "p1",
+            name: "Product A",
+            code: "PA001",
+            isActive: true,
+          },
+          quantity: 2,
+          unitPrice: 50,
+          discountPercent: 0,
+          discountAmount: 0,
+          totalPrice: 100,
+          lineTotal: 100,
+          productNameSnapshot: "Product A",
+          productCodeSnapshot: "PA001",
+          averageCostSnapshot: null,
+          stockMovementId: null,
+        },
+      ],
+      customerId: "cus1",
+      customer: { id: "cus1", name: "Customer A", isActive: true },
+      warehouseId: "wh1",
+      warehouse: { id: "wh1", name: "Main", isActive: true, branchId: null },
+      company: { id: "c1", name: "Company A" },
+      paymentAccount: { id: "pa1", name: "Cash IQD" },
+    };
+
+    const mockAccounts = {
+      cash: {
+        id: "acc-cash",
+        code: "1.1.1",
+        name: "Cash",
+        currency: "IQD",
+        isActive: true,
+        isPosting: true,
+      },
+      ar: {
+        id: "acc-ar",
+        code: "1.1.6",
+        name: "AR",
+        currency: "IQD",
+        isActive: true,
+        isPosting: true,
+      },
+      inventory: {
+        id: "acc-inv",
+        code: "1.1.5",
+        name: "Inventory",
+        currency: "IQD",
+        isActive: true,
+        isPosting: true,
+      },
+      revenue: {
+        id: "acc-rev",
+        code: "4.1",
+        name: "Revenue",
+        currency: "IQD",
+        isActive: true,
+        isPosting: true,
+      },
+      cogs: {
+        id: "acc-cogs",
+        code: "5.1",
+        name: "COGS",
+        currency: "IQD",
+        isActive: true,
+        isPosting: true,
+      },
+    };
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it("POST requires sales.post permission", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(
+        false,
+      );
+
+      const { POST } = await import("@/app/api/sales-invoices/[id]/post/route");
+      const req = new Request("http://localhost/api/sales-invoices/inv1/post", {
+        method: "POST",
+      });
+      const res = await POST(req as never, {
+        params: Promise.resolve({ id: "inv1" }),
+      });
+      expect(res.status).toBe(403);
+    });
+
+    it("rejects posting non-DRAFT invoice", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (prisma.invoice.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+        {
+          ...mockInvoice,
+          status: "POSTED",
+          postedAt: new Date(),
+        },
+      );
+
+      const { POST } = await import("@/app/api/sales-invoices/[id]/post/route");
+      const req = new Request("http://localhost/api/sales-invoices/inv1/post", {
+        method: "POST",
+      });
+      const res = await POST(req as never, {
+        params: Promise.resolve({ id: "inv1" }),
+      });
+      expect(res.status).toBe(403);
+      const json = await res.json();
+      expect(json.error).toContain("تم ترحيلها مسبقاً");
+    });
+
+    it("CASH invoice posts successfully", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (prisma.invoice.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockInvoice,
+      );
+      (
+        StockBalanceService.ensureSufficientStock as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({
+        sufficient: true,
+        available: 10,
+      });
+      (
+        PeriodGuard.checkPeriodOpen as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({ allowed: true });
+
+      (prisma.account.findFirst as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce(mockAccounts.cash)
+        .mockResolvedValueOnce(mockAccounts.ar)
+        .mockResolvedValueOnce(mockAccounts.inventory)
+        .mockResolvedValueOnce(mockAccounts.revenue)
+        .mockResolvedValueOnce(mockAccounts.cogs);
+
+      const mockTx = {
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        invoice: {
+          findUnique: vi.fn().mockResolvedValue(mockInvoice),
+          update: vi
+            .fn()
+            .mockResolvedValue({
+              ...mockInvoice,
+              status: "POSTED",
+              postedAt: new Date(),
+            }),
+        },
+        stockMovement: {
+          create: vi.fn().mockResolvedValue({ id: "sm1", status: "DRAFT" }),
+          update: vi.fn().mockResolvedValue({ id: "sm1" }),
+        },
+        stockBalance: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "sb1",
+            quantityOnHand: 8,
+            averageCost: 30,
+            totalValue: 240,
+          }),
+        },
+        invoiceItem: {
+          update: vi.fn().mockResolvedValue({ id: "item1" }),
+        },
+        journalEntry: {
+          create: vi
+            .fn()
+            .mockImplementation(
+              (args: { data: { lines?: { create: unknown[] } } }) => ({
+                id: "je1",
+                entryNumber: "JE-00001",
+                lines: args.data.lines?.create || [],
+              }),
+            ),
+          count: vi.fn().mockResolvedValue(0),
+        },
+      };
+
+      (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
+        async (callback: (tx: typeof mockTx) => Promise<unknown>) => {
+          return callback(mockTx as unknown as typeof mockTx);
+        },
+      );
+
+      (
+        StockBalanceService.applyPostedMovement as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({
+        success: true,
+        balance: {
+          id: "sb1",
+          quantityOnHand: 8,
+          averageCost: 30,
+          totalValue: 240,
+          reservedQuantity: 0,
+        },
+        movement: { id: "sm1", status: "POSTED" },
+      });
+
+      const { POST } = await import("@/app/api/sales-invoices/[id]/post/route");
+      const req = new Request("http://localhost/api/sales-invoices/inv1/post", {
+        method: "POST",
+      });
+      const res = await POST(req as never, {
+        params: Promise.resolve({ id: "inv1" }),
+      });
+      if (res.status !== 200) {
+        const debugJson = await res.json();
+        console.log("DEBUG CASH POST:", res.status, debugJson);
+      }
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.data.status).toBe("POSTED");
+      expect(json.data.revenueJournalId).toBeTruthy();
+    });
+
+    it("insufficient stock rejected before transaction", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (prisma.invoice.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockInvoice,
+      );
+      (
+        StockBalanceService.ensureSufficientStock as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({
+        sufficient: false,
+        available: 1,
+      });
+      (
+        PeriodGuard.checkPeriodOpen as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({ allowed: true });
+      (prisma.account.findFirst as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce(mockAccounts.cash)
+        .mockResolvedValueOnce(mockAccounts.ar)
+        .mockResolvedValueOnce(mockAccounts.inventory)
+        .mockResolvedValueOnce(mockAccounts.revenue)
+        .mockResolvedValueOnce(mockAccounts.cogs);
+
+      const { POST } = await import("@/app/api/sales-invoices/[id]/post/route");
+      const req = new Request("http://localhost/api/sales-invoices/inv1/post", {
+        method: "POST",
+      });
+      const res = await POST(req as never, {
+        params: Promise.resolve({ id: "inv1" }),
+      });
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toContain("رصيد المخزون لا يكفي");
+    });
+
+    it("CREDIT invoice updates customer balance", async () => {
+      const creditInvoice = {
+        ...mockInvoice,
+        paymentType: "CREDIT",
+        paid: 0,
+        remaining: 100,
+      };
+
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (prisma.invoice.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+        creditInvoice,
+      );
+      (
+        StockBalanceService.ensureSufficientStock as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({
+        sufficient: true,
+        available: 10,
+      });
+      (
+        PeriodGuard.checkPeriodOpen as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({ allowed: true });
+      (prisma.account.findFirst as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce(mockAccounts.cash)
+        .mockResolvedValueOnce(mockAccounts.ar)
+        .mockResolvedValueOnce(mockAccounts.inventory)
+        .mockResolvedValueOnce(mockAccounts.revenue)
+        .mockResolvedValueOnce(mockAccounts.cogs);
+
+      const mockTx = {
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        invoice: {
+          findUnique: vi.fn().mockResolvedValue(creditInvoice),
+          update: vi
+            .fn()
+            .mockResolvedValue({
+              ...creditInvoice,
+              status: "POSTED",
+              postedAt: new Date(),
+            }),
+        },
+        stockMovement: {
+          create: vi.fn().mockResolvedValue({ id: "sm1", status: "DRAFT" }),
+          update: vi.fn().mockResolvedValue({ id: "sm1" }),
+        },
+        stockBalance: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "sb1",
+            quantityOnHand: 8,
+            averageCost: 30,
+            totalValue: 240,
+          }),
+        },
+        invoiceItem: {
+          update: vi.fn().mockResolvedValue({ id: "item1" }),
+        },
+        journalEntry: {
+          create: vi
+            .fn()
+            .mockImplementation(
+              (args: { data: { lines?: { create: unknown[] } } }) => ({
+                id: "je1",
+                entryNumber: "JE-00001",
+                lines: args.data.lines?.create || [],
+              }),
+            ),
+          count: vi.fn().mockResolvedValue(0),
+        },
+        customer: {
+          update: vi
+            .fn()
+            .mockResolvedValue({ id: "cus1", currentBalance: 100 }),
+        },
+      };
+
+      (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
+        async (callback: (tx: typeof mockTx) => Promise<unknown>) => {
+          return callback(mockTx as unknown as typeof mockTx);
+        },
+      );
+
+      (
+        StockBalanceService.applyPostedMovement as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({
+        success: true,
+        balance: {
+          id: "sb1",
+          quantityOnHand: 8,
+          averageCost: 30,
+          totalValue: 240,
+          reservedQuantity: 0,
+        },
+        movement: { id: "sm1", status: "POSTED" },
+      });
+
+      const { POST } = await import("@/app/api/sales-invoices/[id]/post/route");
+      const req = new Request("http://localhost/api/sales-invoices/inv1/post", {
+        method: "POST",
+      });
+      const res = await POST(req as never, {
+        params: Promise.resolve({ id: "inv1" }),
+      });
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.data.status).toBe("POSTED");
+
+      // Verify customer update was called with increment
+      expect(mockTx.customer.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "cus1" },
+          data: expect.objectContaining({
+            currentBalance: { increment: 100 },
+          }),
+        }),
+      );
+    });
+
+    it("MIXED invoice creates both cash and AR debits", async () => {
+      const mixedInvoice = {
+        ...mockInvoice,
+        paymentType: "MIXED",
+        paid: 30,
+        remaining: 70,
+      };
+
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (prisma.invoice.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mixedInvoice,
+      );
+      (
+        StockBalanceService.ensureSufficientStock as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({
+        sufficient: true,
+        available: 10,
+      });
+      (
+        PeriodGuard.checkPeriodOpen as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({ allowed: true });
+      (prisma.account.findFirst as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce(mockAccounts.cash)
+        .mockResolvedValueOnce(mockAccounts.ar)
+        .mockResolvedValueOnce(mockAccounts.inventory)
+        .mockResolvedValueOnce(mockAccounts.revenue)
+        .mockResolvedValueOnce(mockAccounts.cogs);
+
+      let capturedRevenueLines: unknown[] = [];
+
+      const mockTx = {
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        invoice: {
+          findUnique: vi.fn().mockResolvedValue(mixedInvoice),
+          update: vi
+            .fn()
+            .mockResolvedValue({
+              ...mixedInvoice,
+              status: "POSTED",
+              postedAt: new Date(),
+            }),
+        },
+        stockMovement: {
+          create: vi.fn().mockResolvedValue({ id: "sm1", status: "DRAFT" }),
+          update: vi.fn().mockResolvedValue({ id: "sm1" }),
+        },
+        stockBalance: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "sb1",
+            quantityOnHand: 8,
+            averageCost: 30,
+            totalValue: 240,
+          }),
+        },
+        invoiceItem: {
+          update: vi.fn().mockResolvedValue({ id: "item1" }),
+        },
+        journalEntry: {
+          create: vi
+            .fn()
+            .mockImplementation((args: { data: Record<string, unknown> }) => {
+              const desc = (args.data.description as string) || "";
+              const lines =
+                (args.data.lines as { create: unknown[] } | undefined)
+                  ?.create || [];
+              if (desc.includes("إيراد")) {
+                capturedRevenueLines = lines;
+              }
+              return {
+                id: "je1",
+                entryNumber: "JE-00001",
+                lines,
+              };
+            }),
+          count: vi.fn().mockResolvedValue(0),
+        },
+        customer: {
+          update: vi.fn().mockResolvedValue({ id: "cus1", currentBalance: 70 }),
+        },
+      };
+
+      (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
+        async (callback: (tx: typeof mockTx) => Promise<unknown>) => {
+          return callback(mockTx as unknown as typeof mockTx);
+        },
+      );
+
+      (
+        StockBalanceService.applyPostedMovement as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({
+        success: true,
+        balance: {
+          id: "sb1",
+          quantityOnHand: 8,
+          averageCost: 30,
+          totalValue: 240,
+          reservedQuantity: 0,
+        },
+        movement: { id: "sm1", status: "POSTED" },
+      });
+
+      const { POST } = await import("@/app/api/sales-invoices/[id]/post/route");
+      const req = new Request("http://localhost/api/sales-invoices/inv1/post", {
+        method: "POST",
+      });
+      const res = await POST(req as never, {
+        params: Promise.resolve({ id: "inv1" }),
+      });
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.data.status).toBe("POSTED");
+
+      // Verify revenue journal has cash + AR + revenue lines
+      const revenueLines = capturedRevenueLines as Array<
+        Record<string, unknown>
+      >;
+      expect(revenueLines.length).toBe(3);
+      const cashLine = revenueLines.find(
+        (l: Record<string, unknown>) =>
+          (l as { accountId: string }).accountId === "acc-cash",
+      );
+      const arLine = revenueLines.find(
+        (l: Record<string, unknown>) =>
+          (l as { accountId: string }).accountId === "acc-ar",
+      );
+      expect(cashLine).toBeTruthy();
+      expect((cashLine as { debit: number }).debit).toBe(30);
+      expect(arLine).toBeTruthy();
+      expect((arLine as { debit: number }).debit).toBe(70);
+    });
+
+    it("rejects posting without permission", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+
+      const { POST } = await import("@/app/api/sales-invoices/[id]/post/route");
+      const req = new Request("http://localhost/api/sales-invoices/inv1/post", {
+        method: "POST",
+      });
+      const res = await POST(req as never, {
+        params: Promise.resolve({ id: "inv1" }),
+      });
+      expect(res.status).toBe(401);
+    });
+
+    it("rejects posting without company access", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+      (prisma.invoice.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockInvoice,
+      );
+
+      const { POST } = await import("@/app/api/sales-invoices/[id]/post/route");
+      const req = new Request("http://localhost/api/sales-invoices/inv1/post", {
+        method: "POST",
+      });
+      const res = await POST(req as never, {
+        params: Promise.resolve({ id: "inv1" }),
+      });
+      expect(res.status).toBe(403);
+    });
   });
 });
