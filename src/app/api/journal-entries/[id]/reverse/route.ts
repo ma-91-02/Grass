@@ -5,6 +5,7 @@ import {
   successResponse,
   errorResponse,
   unauthorizedError,
+  forbiddenError,
   notFoundError,
   serverError,
 } from "@/lib/api-response";
@@ -17,7 +18,7 @@ export async function POST(
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.JOURNALS_REVERSE))
-    return unauthorizedError();
+    return forbiddenError();
 
   const { id } = await params;
 

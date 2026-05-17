@@ -7,7 +7,15 @@ import {
 } from "@/lib/schemas";
 import { checkPermission, checkRole } from "@/lib/auth";
 import { PERMISSIONS } from "@/lib/permissions";
-import { forbiddenError } from "@/lib/api-response";
+import {
+  successResponse,
+  errorResponse,
+  unauthorizedError,
+  forbiddenError,
+  notFoundError,
+  conflictError,
+  serverError,
+} from "@/lib/api-response";
 import type { TokenPayload } from "@/lib/auth";
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -373,6 +381,102 @@ describe("forbiddenError for permission-denied responses", () => {
     const res = forbiddenError("لا تملك صلاحية إدارة الفترات المالية");
     const body = await res.json();
     expect(body.error).toBe("لا تملك صلاحية إدارة الفترات المالية");
+  });
+});
+
+describe("API response helper consistency", () => {
+  it("successResponse returns 200 with success:true and data", async () => {
+    const res = successResponse({ id: "1" });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(body.data).toEqual({ id: "1" });
+  });
+
+  it("successResponse returns custom status code", async () => {
+    const res = successResponse({ id: "1" }, 201);
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.success).toBe(true);
+  });
+
+  it("errorResponse returns 400 with success:false and error message", async () => {
+    const res = errorResponse("خطأ في البيانات");
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toBe("خطأ في البيانات");
+  });
+
+  it("errorResponse returns custom status code", async () => {
+    const res = errorResponse("غير مصرح", 401);
+    expect(res.status).toBe(401);
+  });
+
+  it("unauthorizedError returns 401 with success:false", async () => {
+    const res = unauthorizedError();
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toBe("غير مصرح");
+  });
+
+  it("forbiddenError returns 403 with success:false", async () => {
+    const res = forbiddenError();
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toBe("لا تملك الصلاحية");
+  });
+
+  it("notFoundError returns 404 with success:false", async () => {
+    const res = notFoundError();
+    expect(res.status).toBe(404);
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toBe("غير موجود");
+  });
+
+  it("conflictError returns 409 with success:false", async () => {
+    const res = conflictError();
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toBe("موجود مسبقاً");
+  });
+
+  it("serverError returns 500 with success:false", async () => {
+    const res = serverError(new Error("test error"));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toBe("خطأ داخلي في الخادم");
+  });
+
+  it("all error responses have uniform shape { success: false, error: string }", async () => {
+    const helpers = [
+      { fn: () => errorResponse("msg", 400), expectedStatus: 400 },
+      { fn: () => unauthorizedError(), expectedStatus: 401 },
+      { fn: () => forbiddenError(), expectedStatus: 403 },
+      { fn: () => notFoundError(), expectedStatus: 404 },
+      { fn: () => conflictError(), expectedStatus: 409 },
+    ];
+    for (const h of helpers) {
+      const res = h.fn();
+      expect(res.status).toBe(h.expectedStatus);
+      const body = await res.json();
+      expect(Object.keys(body).sort()).toEqual(["error", "success"]);
+      expect(body.success).toBe(false);
+      expect(typeof body.error).toBe("string");
+    }
+  });
+
+  it("successResponse has uniform shape { success: true, data }", async () => {
+    const res = successResponse(["a", "b"]);
+    const body = await res.json();
+    expect(Object.keys(body).sort()).toEqual(["data", "success"]);
+    expect(body.success).toBe(true);
+    expect(Array.isArray(body.data)).toBe(true);
   });
 });
 

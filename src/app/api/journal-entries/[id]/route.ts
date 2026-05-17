@@ -23,7 +23,7 @@ export async function GET(
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.JOURNALS_CREATE))
-    return unauthorizedError();
+    return forbiddenError();
 
   const { id } = await params;
 
@@ -62,7 +62,7 @@ export async function PATCH(
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.JOURNALS_CREATE))
-    return unauthorizedError();
+    return forbiddenError();
 
   const { id } = await params;
 
@@ -201,7 +201,7 @@ export async function DELETE(
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.JOURNALS_CREATE))
-    return unauthorizedError();
+    return forbiddenError();
 
   const { id } = await params;
 

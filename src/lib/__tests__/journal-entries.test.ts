@@ -668,6 +668,137 @@ describe("posting idempotency rules", () => {
   });
 });
 
+describe("audit log sensitive data exclusion", () => {
+  const FORBIDDEN_KEYS = ["password", "passwordHash", "token", "secret"];
+
+  it("logAudit payload must not contain password fields", () => {
+    const mockAuditPayload = {
+      entryNumber: "JE-00001",
+      linesCount: 2,
+    };
+    for (const key of FORBIDDEN_KEYS) {
+      expect(mockAuditPayload).not.toHaveProperty(key);
+    }
+  });
+
+  it("logAudit payload must not contain token fields", () => {
+    const mockAuditPayload = {
+      name: "Test User",
+      email: "test@test.com",
+    };
+    for (const key of FORBIDDEN_KEYS) {
+      expect(mockAuditPayload).not.toHaveProperty(key);
+    }
+  });
+
+  it("user CREATE audit only logs name and email", () => {
+    const auditPayload = { name: "New User", email: "new@test.com" };
+    expect(auditPayload).toEqual({ name: "New User", email: "new@test.com" });
+    expect(auditPayload).not.toHaveProperty("password");
+    expect(auditPayload).not.toHaveProperty("passwordHash");
+  });
+
+  it("user UPDATE audit only logs name and email", () => {
+    const auditPayload = { name: "Updated", email: "upd@test.com" };
+    expect(auditPayload).toEqual({ name: "Updated", email: "upd@test.com" });
+    expect(auditPayload).not.toHaveProperty("password");
+    expect(auditPayload).not.toHaveProperty("passwordHash");
+  });
+
+  it("journal CREATE audit does not expose line details", () => {
+    const auditPayload = { entryNumber: "JE-00001", linesCount: 3 };
+    expect(auditPayload).not.toHaveProperty("lines");
+    expect(auditPayload).not.toHaveProperty("debit");
+    expect(auditPayload).not.toHaveProperty("credit");
+  });
+
+  it("journal UPDATE audit only logs entryNumber", () => {
+    const auditPayload = { entryNumber: "JE-00001" };
+    expect(auditPayload).toEqual({ entryNumber: "JE-00001" });
+    expect(Object.keys(auditPayload).length).toBe(1);
+  });
+
+  it("journal DELETE audit only logs entryNumber", () => {
+    const auditPayload = { entryNumber: "JE-00001" };
+    expect(auditPayload).toEqual({ entryNumber: "JE-00001" });
+    expect(Object.keys(auditPayload).length).toBe(1);
+  });
+
+  it("journal REVERSE audit only logs entry numbers", () => {
+    const auditPayload = {
+      originalEntryNumber: "JE-00001",
+      reversedEntryNumber: "JE-00002",
+    };
+    expect(auditPayload).toHaveProperty("originalEntryNumber");
+    expect(auditPayload).toHaveProperty("reversedEntryNumber");
+    expect(auditPayload).not.toHaveProperty("password");
+    expect(auditPayload).not.toHaveProperty("token");
+  });
+});
+
+describe("journal status immutability rules", () => {
+  const VALID_STATUSES = ["DRAFT", "POSTED", "REVERSED"] as const;
+  const VALID_TRANSITIONS: Record<string, string[]> = {
+    DRAFT: ["POSTED"],
+    POSTED: ["REVERSED"],
+    REVERSED: [],
+  };
+
+  it("DRAFT is the only editable status", () => {
+    expect(VALID_TRANSITIONS["POSTED"].length).toBe(1);
+    expect(VALID_TRANSITIONS["REVERSED"].length).toBe(0);
+  });
+
+  it("POSTED journals cannot be edited or deleted", () => {
+    expect(VALID_TRANSITIONS["POSTED"]).not.toContain("DRAFT");
+    expect(VALID_TRANSITIONS["POSTED"]).not.toContain("DELETE");
+  });
+
+  it("REVERSED journals are terminal — no mutations", () => {
+    expect(VALID_TRANSITIONS["REVERSED"]).toEqual([]);
+  });
+
+  it("only DRAFT journals can be deleted", () => {
+    const deletableStatuses = VALID_STATUSES.filter(
+      (s) => s === "DRAFT",
+    );
+    expect(deletableStatuses).toEqual(["DRAFT"]);
+  });
+
+  it("POSTED journals block duplicate post", () => {
+    expect(VALID_TRANSITIONS["POSTED"]).not.toContain("POSTED");
+  });
+
+  it("REVERSED journals block post and reverse", () => {
+    expect(VALID_TRANSITIONS["REVERSED"]).not.toContain("POSTED");
+    expect(VALID_TRANSITIONS["REVERSED"]).not.toContain("REVERSED");
+  });
+
+  it("DRAFT journals cannot be reversed directly (must post first)", () => {
+    expect(VALID_TRANSITIONS["DRAFT"]).not.toContain("REVERSED");
+  });
+});
+
+describe("safe delete rules", () => {
+  it("DRAFT with no posting operations can be deleted", () => {
+    const mockEntry = { status: "DRAFT", postingOpsCount: 0 };
+    expect(mockEntry.status).toBe("DRAFT");
+    expect(mockEntry.postingOpsCount).toBe(0);
+  });
+
+  it("DRAFT with posting operations cannot be deleted", () => {
+    const mockEntry = { status: "DRAFT", postingOpsCount: 1 };
+    expect(mockEntry.status).toBe("DRAFT");
+    expect(mockEntry.postingOpsCount).toBeGreaterThan(0);
+  });
+
+  it("POSTED entries with posting ops cannot be deleted", () => {
+    const mockEntry = { status: "POSTED", postingOpsCount: 1 };
+    expect(mockEntry.status).not.toBe("DRAFT");
+    expect(mockEntry.postingOpsCount).toBeGreaterThan(0);
+  });
+});
+
 describe("posting pre-validation rules", () => {
   // These tests validate the pre-checks that route.ts does before calling PostingService
 

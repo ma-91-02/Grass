@@ -1,7 +1,6 @@
-import { NextResponse } from "next/server";
 import { validateSessionWithDb } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { unauthorizedError } from "@/lib/api-response";
+import { successResponse, unauthorizedError } from "@/lib/api-response";
 
 export async function GET() {
   const session = await validateSessionWithDb();
@@ -30,14 +29,11 @@ export async function GET() {
     ur.role.permissions.map((rp) => rp.permission.key),
   );
 
-  return NextResponse.json({
-    success: true,
-    data: {
-      userId: session.user.userId,
-      email: session.user.email,
-      name: session.user.name,
-      roles: session.user.roles,
-      permissions,
-    },
+  return successResponse({
+    userId: session.user.userId,
+    email: session.user.email,
+    name: session.user.name,
+    roles: session.user.roles,
+    permissions,
   });
 }

@@ -5,6 +5,7 @@ import {
   successResponse,
   errorResponse,
   unauthorizedError,
+  forbiddenError,
 } from "@/lib/api-response";
 import { PERMISSIONS } from "@/lib/permissions";
 
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.ACCOUNTS_TREE))
-    return unauthorizedError();
+    return forbiddenError();
 
   const { searchParams } = new URL(request.url);
   const companyId = searchParams.get("companyId");
