@@ -1,9 +1,12 @@
 import { z } from "zod";
 
 export const customerFormSchema = z.object({
+  companyId: z.string().min(1, "الشركة مطلوبة"),
+  code: z.string().min(1, "كود العميل مطلوب"),
   name: z.string().min(1, "الاسم مطلوب"),
   phone: z.string().optional().nullable(),
   whatsapp: z.string().optional().nullable(),
+  email: z.string().email("البريد الإلكتروني غير صحيح").optional().nullable(),
   address: z.string().optional().nullable(),
   governorate: z.string().optional().nullable(),
   customerType: z.enum([
@@ -15,6 +18,7 @@ export const customerFormSchema = z.object({
   ]),
   customerCategoryId: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
+  creditLimit: z.coerce.number().min(0, "حد الائتمان يجب أن يكون 0 أو أكثر").default(0),
   openingBalanceIqd: z.coerce.number().default(0),
   openingBalanceUsd: z.coerce.number().default(0),
 });

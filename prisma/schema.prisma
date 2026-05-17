@@ -169,10 +169,13 @@ model CustomerCategory {
 
 model Customer {
   id                  String           @id @default(cuid())
+  companyId           String?
+  company             Company?         @relation(fields: [companyId], references: [id], onDelete: SetNull)
   name                String
-  code                String           @unique
+  code                String
   phone               String?
   whatsapp            String?
+  email               String?
   address             String?
   governorate         String?
   customerType        CustomerTypeEnum @default(INDIVIDUAL)
@@ -180,6 +183,9 @@ model Customer {
   customerCategory    CustomerCategory? @relation(fields: [customerCategoryId], references: [id])
   isActive            Boolean          @default(true)
   notes               String?
+  creditLimit         Decimal?         @default(0)
+  currentBalance      Decimal?         @default(0)
+  currency            Currency         @default(IQD)
   createdById         String?
   createdBy           User?            @relation("CustomerCreatedBy", fields: [createdById], references: [id])
   createdAt           DateTime         @default(now())
@@ -187,6 +193,9 @@ model Customer {
 
   accounts            CustomerAccount[]
   invoices            Invoice[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
 }
 
 model CustomerAccount {
@@ -651,6 +660,7 @@ model Company {
   products      Product[]
   units         Unit[]
   warehouses    Warehouse[]
+  customers     Customer[]
   stockMovements StockMovement[]
   stockTransfers StockTransfer[]
   stockAdjustments StockAdjustment[]
