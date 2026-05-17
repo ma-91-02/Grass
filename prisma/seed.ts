@@ -81,6 +81,11 @@ const PERMISSIONS = [
     name: "ترحيل حركة مخزون",
     module: "inventory",
   },
+  {
+    key: "stockBalances.view",
+    name: "عرض أرصدة المخزون",
+    module: "inventory",
+  },
   { key: "exchangeRates.view", name: "عرض سعر الصرف", module: "exchangeRates" },
   {
     key: "exchangeRates.manage",
@@ -165,6 +170,7 @@ const ROLES = [
       "stockMovements.view",
       "stockMovements.create",
       "stockMovements.edit",
+      "stockBalances.view",
       "exchangeRates.view",
       "exchangeRates.manage",
       "invoices.view",
@@ -207,6 +213,7 @@ const ROLES = [
       "stockMovements.edit",
       "stockMovements.delete",
       "stockMovements.post",
+      "stockBalances.view",
     ],
   },
   {

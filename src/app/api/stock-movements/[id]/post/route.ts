@@ -15,6 +15,7 @@ import {
   notFoundError,
   conflictError,
 } from "@/lib/api-response";
+import { StockBalanceService } from "@/lib/services/stock-balance-service";
 
 export async function POST(
   _request: NextRequest,
@@ -31,8 +32,8 @@ export async function POST(
   const movement = await prisma.stockMovement.findUnique({
     where: { id },
     include: {
-      product: { select: { name: true, code: true } },
-      warehouse: { select: { name: true, code: true } },
+      product: { select: { name: true, code: true, isActive: true } },
+      warehouse: { select: { name: true, code: true, isActive: true } },
     },
   });
 
@@ -50,27 +51,42 @@ export async function POST(
     return conflictError("لا يمكن ترحيل حركة مخزون غير مسودة");
   }
 
-  // Foundation only: change status to POSTED without balance calculation
-  // Phase 2.4 will implement actual stock balance updates
-  const updated = await prisma.stockMovement.update({
-    where: { id },
-    data: { status: "POSTED" },
-  });
+  // Validate product/warehouse still active
+  if (!movement.product?.isActive) {
+    return conflictError("المادة غير نشطة");
+  }
+  if (!movement.warehouse?.isActive) {
+    return conflictError("المخزن غير نشط");
+  }
 
-  await logAudit(user.userId, "POST", "StockMovement", id, {
-    productId: movement.productId,
-    warehouseId: movement.warehouseId,
-    movementType: movement.movementType,
-    quantity: movement.quantity,
-    previousStatus: "DRAFT",
-    newStatus: "POSTED",
-    note: "Posted without balance calculation (Phase 2.3 foundation)",
-  });
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      return StockBalanceService.applyPostedMovement(tx, id);
+    });
 
-  return successResponse({
-    id,
-    action: "posted",
-    status: "POSTED",
-    movement: updated,
-  });
+    if (!result.success) {
+      return conflictError(result.error || "فشل ترحيل حركة المخزون");
+    }
+
+    await logAudit(user.userId, "POST", "StockMovement", id, {
+      productId: movement.productId,
+      warehouseId: movement.warehouseId,
+      movementType: movement.movementType,
+      quantity: movement.quantity,
+      previousStatus: "DRAFT",
+      newStatus: "POSTED",
+      newBalance: result.balance?.quantityOnHand,
+    });
+
+    return successResponse({
+      id,
+      action: "posted",
+      status: "POSTED",
+      movement: result.movement,
+      balance: result.balance,
+    });
+  } catch (error) {
+    console.error("Post stock movement error:", error);
+    return errorResponse("فشل ترحيل حركة المخزون", 500);
+  }
 }

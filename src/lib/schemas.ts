@@ -115,6 +115,12 @@ export const stockMovementFormSchema = z.object({
   notes: z.string().optional().nullable(),
 });
 
+export const stockBalanceQuerySchema = z.object({
+  companyId: z.string().min(1, "الشركة مطلوبة").optional(),
+  productId: z.string().optional(),
+  warehouseId: z.string().optional(),
+});
+
 export const exchangeRateFormSchema = z.object({
   usdToIqd: z.coerce.number().min(1, "سعر الصرف مطلوب"),
   note: z.string().optional().nullable(),

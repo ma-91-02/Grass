@@ -299,6 +299,7 @@ model Product {
   invoiceItems         InvoiceItem[]
   purchaseInvoiceItems PurchaseInvoiceItem[]
   stockMovements       StockMovement[]
+  stockBalances        StockBalance[]
 
   @@unique([companyId, code])
   @@unique([companyId, barcode])
@@ -336,6 +337,7 @@ model Warehouse {
   invoices    Invoice[]
   purchaseInvoices PurchaseInvoice[]
   stockMovements   StockMovement[]
+  stockBalances    StockBalance[]
 
   @@unique([companyId, code])
   @@index([companyId])
@@ -507,6 +509,24 @@ model StockMovement {
   @@index([referenceType, referenceId])
   @@index([status])
   @@index([movementDate])
+}
+
+model StockBalance {
+  id               String   @id @default(cuid())
+  companyId        String
+  productId        String
+  product          Product  @relation(fields: [productId], references: [id])
+  warehouseId      String
+  warehouse        Warehouse @relation(fields: [warehouseId], references: [id])
+  quantityOnHand   Int      @default(0)
+  reservedQuantity Int      @default(0)
+  lastMovementId   String?
+  updatedAt        DateTime @updatedAt
+
+  @@unique([companyId, productId, warehouseId])
+  @@index([companyId])
+  @@index([productId])
+  @@index([warehouseId])
 }
 
 model Company {
