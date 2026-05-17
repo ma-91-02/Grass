@@ -372,41 +372,66 @@ model ExchangeRate {
 }
 
 model Invoice {
-  id                 String           @id @default(cuid())
-  invoiceNumber      String           @unique
-  customerId         String?
-  customer           Customer?        @relation(fields: [customerId], references: [id])
-  customerType       CustomerTypeEnum @default(INDIVIDUAL)
-  warehouseId        String?
-  warehouse          Warehouse?       @relation(fields: [warehouseId], references: [id])
-  exchangeRateId     String?
-  exchangeRate       ExchangeRate?    @relation(fields: [exchangeRateId], references: [id])
-  exchangeRateValue  Decimal          @default(0)
-  totalBeforeTax     Decimal          @default(0)
-  taxAmount          Decimal          @default(0)
-  discountAmount     Decimal          @default(0)
-  totalAfterTax      Decimal          @default(0)
-  totalInUsd         Decimal?         @default(0)
-  status             String           @default("DRAFT")
-  notes              String?
-  createdById        String?
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
+  id                    String           @id @default(cuid())
+  companyId             String?
+  company               Company?         @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  invoiceNumber         String
+  customerId            String?
+  customer              Customer?        @relation(fields: [customerId], references: [id])
+  customerType          CustomerTypeEnum @default(INDIVIDUAL)
+  warehouseId           String?
+  warehouse             Warehouse?       @relation(fields: [warehouseId], references: [id])
+  exchangeRateId        String?
+  exchangeRate          ExchangeRate?    @relation(fields: [exchangeRateId], references: [id])
+  currency              Currency         @default(IQD)
+  exchangeRateValue     Decimal          @default(0)
+  exchangeRateSnapshot  Decimal?
+  paymentType           String           @default("CASH")
+  paymentAccountId      String?
+  paymentAccount        PaymentAccount?  @relation(fields: [paymentAccountId], references: [id])
+  totalBeforeTax        Decimal          @default(0)
+  taxAmount             Decimal          @default(0)
+  discountAmount        Decimal          @default(0)
+  discountPercent       Decimal?         @default(0)
+  totalAfterTax         Decimal          @default(0)
+  totalInUsd            Decimal?         @default(0)
+  paid                  Decimal          @default(0)
+  remaining             Decimal          @default(0)
+  invoiceDate           DateTime         @default(now())
+  status                String           @default("DRAFT")
+  notes                 String?
+  createdById           String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 
-  items              InvoiceItem[]
-  payments           Payment[]
+  items                 InvoiceItem[]
+  payments              Payment[]
+
+  @@unique([companyId, invoiceNumber])
+  @@index([companyId])
+  @@index([warehouseId])
+  @@index([customerId])
+  @@index([status])
 }
 
 model InvoiceItem {
-  id          String  @id @default(cuid())
-  invoiceId   String
-  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  productId   String
-  product     Product @relation(fields: [productId], references: [id])
-  quantity    Int     @default(1)
-  unitPrice   Decimal @default(0)
-  totalPrice  Decimal @default(0)
-  createdAt   DateTime @default(now())
+  id                   String   @id @default(cuid())
+  invoiceId            String
+  invoice              Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productId            String
+  product              Product  @relation(fields: [productId], references: [id])
+  quantity             Int      @default(1)
+  unitPrice            Decimal  @default(0)
+  discountPercent      Decimal? @default(0)
+  discountAmount       Decimal? @default(0)
+  totalPrice           Decimal  @default(0)
+  lineTotal            Decimal  @default(0)
+  productNameSnapshot  String?
+  productCodeSnapshot  String?
+  averageCostSnapshot  Decimal?
+  stockMovementId      String?
+  notes                String?
+  createdAt            DateTime @default(now())
 }
 
 model Payment {
@@ -497,6 +522,7 @@ model PaymentAccount {
   updatedAt DateTime @updatedAt
 
   purchaseInvoices PurchaseInvoice[]
+  invoices Invoice[]
 }
 
 model StockMovement {
@@ -656,6 +682,7 @@ model Company {
   journalEntries JournalEntry[]
   users         User[]
   purchaseInvoices PurchaseInvoice[]
+  invoices      Invoice[]
   productCategories ProductCategory[]
   products      Product[]
   units         Unit[]

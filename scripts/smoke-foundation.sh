@@ -348,6 +348,28 @@ else
   FAIL=$((FAIL+1))
 fi
 
+# ---- SALES INVOICES (with companyId) ----
+echo "--- SALES INVOICES ---"
+if [ -n "$COMPANY_ID" ]; then
+  SI_CODE=$(curl -s -o "$OUT" -w "%{http_code}" "$BASE_URL/api/sales-invoices?companyId=$COMPANY_ID" -b "$COOKIE_JAR")
+  if [ "$SI_CODE" = "200" ]; then
+    SI_SUCCESS=$(python3 -c "import json; d=json.load(open('$OUT')); print(d.get('success',False))" 2>/dev/null)
+    if [ "$SI_SUCCESS" = "True" ]; then
+      green "GET /api/sales-invoices?companyId=... -> 200 + success:true"
+      PASS=$((PASS+1))
+    else
+      red "GET /api/sales-invoices body missing success:true"
+      FAIL=$((FAIL+1))
+    fi
+  else
+    red "GET /api/sales-invoices?companyId=... -> $SI_CODE (expected 200)"
+    FAIL=$((FAIL+1))
+  fi
+else
+  red "GET /api/sales-invoices (no companyId available)"
+  FAIL=$((FAIL+1))
+fi
+
 # ---- UNAUTHENTICATED ACCESS REJECTION ----
 echo "--- UNAUTHENTICATED ---"
 for path in /api/companies /api/accounts /api/branches /api/fiscal-periods /api/journal-entries /api/users; do

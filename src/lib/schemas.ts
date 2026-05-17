@@ -18,7 +18,10 @@ export const customerFormSchema = z.object({
   ]),
   customerCategoryId: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
-  creditLimit: z.coerce.number().min(0, "حد الائتمان يجب أن يكون 0 أو أكثر").default(0),
+  creditLimit: z.coerce
+    .number()
+    .min(0, "حد الائتمان يجب أن يكون 0 أو أكثر")
+    .default(0),
   openingBalanceIqd: z.coerce.number().default(0),
   openingBalanceUsd: z.coerce.number().default(0),
 });
@@ -274,4 +277,33 @@ export type StockTransferLineData = z.infer<typeof stockTransferLineSchema>;
 export type StockAdjustmentFormData = z.infer<typeof stockAdjustmentFormSchema>;
 export type StockAdjustmentLineData = z.infer<typeof stockAdjustmentLineSchema>;
 export type ExchangeRateFormData = z.infer<typeof exchangeRateFormSchema>;
+export const salesInvoiceLineSchema = z.object({
+  productId: z.string().min(1, "المادة مطلوبة"),
+  quantity: z.coerce.number().int().min(1, "الكمية يجب أن تكون أكبر من 0"),
+  unitPrice: z.coerce.number().min(0, "السعر يجب أن يكون 0 أو أكثر"),
+  discountPercent: z.coerce.number().min(0).max(100).default(0),
+  discountAmount: z.coerce.number().min(0).default(0),
+  notes: z.string().optional().nullable(),
+});
+
+export const salesInvoiceFormSchema = z.object({
+  companyId: z.string().min(1, "الشركة مطلوبة"),
+  customerId: z.string().optional().nullable(),
+  warehouseId: z.string().optional().nullable(),
+  invoiceDate: z.string().optional().nullable(),
+  currency: z.enum(["USD", "IQD"] as const).default("IQD"),
+  exchangeRateValue: z.coerce.number().min(0).default(0),
+  paymentType: z.enum(["CASH", "CREDIT", "MIXED"] as const).default("CASH"),
+  paymentAccountId: z.string().optional().nullable(),
+  paid: z.coerce.number().min(0).default(0),
+  discountPercent: z.coerce.number().min(0).max(100).default(0),
+  discountAmount: z.coerce.number().min(0).default(0),
+  notes: z.string().optional().nullable(),
+  lines: z
+    .array(salesInvoiceLineSchema)
+    .min(1, "يجب إضافة مادة واحدة على الأقل"),
+});
+
 export type PurchaseInvoiceFormData = z.infer<typeof purchaseInvoiceFormSchema>;
+export type SalesInvoiceFormData = z.infer<typeof salesInvoiceFormSchema>;
+export type SalesInvoiceLineData = z.infer<typeof salesInvoiceLineSchema>;
