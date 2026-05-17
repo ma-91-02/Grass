@@ -231,6 +231,12 @@ async function main() {
   })
   console.log(`Company created: ${company.name}`)
 
+  // Bind admin user to company for company access enforcement
+  await prisma.user.update({
+    where: { id: admin.id },
+    data: { companyId: company.id },
+  })
+
   const branch = await prisma.branch.upsert({
     where: { companyId_code: { companyId: company.id, code: "MAIN" } },
     update: { name: "الفرع الرئيسي", address: "بغداد" },

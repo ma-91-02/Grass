@@ -1,6 +1,12 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, checkPermission, logAudit } from "@/lib/auth";
+import {
+  getCurrentUser,
+  checkPermission,
+  logAudit,
+  canAccessCompany,
+  requireDbPermission,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -42,6 +48,10 @@ export async function GET(
 
   if (!entry) return notFoundError();
 
+  if (!(await canAccessCompany(user, entry.companyId))) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
+
   const data = {
     ...entry,
     lines: entry.lines.map((l) => ({
@@ -61,7 +71,7 @@ export async function PATCH(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.JOURNALS_CREATE))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.JOURNALS_CREATE)))
     return forbiddenError();
 
   const { id } = await params;
@@ -72,6 +82,11 @@ export async function PATCH(
   });
 
   if (!existing) return notFoundError();
+
+  if (!(await canAccessCompany(user, existing.companyId))) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
+
   if (existing.status !== "DRAFT")
     return errorResponse("لا يمكن تعديل قيد غير مسودة");
 
@@ -200,7 +215,7 @@ export async function DELETE(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.JOURNALS_CREATE))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.JOURNALS_CREATE)))
     return forbiddenError();
 
   const { id } = await params;
@@ -210,6 +225,10 @@ export async function DELETE(
     include: { _count: { select: { postingOperations: true } } },
   });
   if (!existing) return notFoundError();
+
+  if (!(await canAccessCompany(user, existing.companyId))) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
   if (existing.status !== "DRAFT")
     return errorResponse("لا يمكن حذف قيد غير مسودة");
   if (existing._count.postingOperations > 0)

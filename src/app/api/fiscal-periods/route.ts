@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, checkPermission, logAudit } from "@/lib/auth";
+import {
+  getCurrentUser,
+  checkPermission,
+  logAudit,
+  canAccessCompany,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -23,6 +28,10 @@ export async function GET(request: NextRequest) {
 
   if (!companyId) return errorResponse("companyId مطلوب");
 
+  if (!(await canAccessCompany(user, companyId))) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
+
   const periods = await prisma.fiscalPeriod.findMany({
     where: { companyId },
     orderBy: { startDate: "desc" },
@@ -40,6 +49,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const parsed = fiscalPeriodFormSchema.parse(body);
+
+    if (!(await canAccessCompany(user, parsed.companyId))) {
+      return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+    }
 
     const startDate = new Date(parsed.startDate);
     const endDate = new Date(parsed.endDate);

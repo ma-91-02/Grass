@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, checkPermission, logAudit } from "@/lib/auth";
+import {
+  getCurrentUser,
+  checkPermission,
+  canAccessCompany,
+  logAudit,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -49,6 +54,8 @@ export async function GET(
 
   const period = await prisma.fiscalPeriod.findUnique({ where: { id } });
   if (!period) return notFoundError();
+  if (!canAccessCompany(user, period.companyId))
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
 
   return successResponse(period);
 }
@@ -66,6 +73,8 @@ export async function PATCH(
 
   const existing = await prisma.fiscalPeriod.findUnique({ where: { id } });
   if (!existing) return notFoundError();
+  if (!canAccessCompany(user, existing.companyId))
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
 
   try {
     const body = await request.json();
@@ -157,6 +166,8 @@ export async function DELETE(
 
   const existing = await prisma.fiscalPeriod.findUnique({ where: { id } });
   if (!existing) return notFoundError();
+  if (!canAccessCompany(user, existing.companyId))
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
 
   if (existing.status !== "FUTURE")
     return errorResponse("يمكن حذف الفترات المستقبلية فقط");

@@ -1,6 +1,12 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, checkPermission, logAudit } from "@/lib/auth";
+import {
+  getCurrentUser,
+  checkPermission,
+  logAudit,
+  canAccessCompany,
+  requireDbPermission,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -31,6 +37,10 @@ export async function GET(request: NextRequest) {
   const pageSize = parseInt(searchParams.get("pageSize") || "50", 10);
 
   if (!companyId) return errorResponse("companyId مطلوب");
+
+  if (!(await canAccessCompany(user, companyId))) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
 
   const where: Record<string, unknown> = { companyId };
 
@@ -76,12 +86,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.JOURNALS_CREATE))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.JOURNALS_CREATE)))
     return forbiddenError();
 
   try {
     const body = await request.json();
     const parsed = journalEntryFormSchema.parse(body);
+
+    if (!(await canAccessCompany(user, parsed.companyId))) {
+      return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+    }
 
     const entryDate = parsed.entryDate
       ? new Date(parsed.entryDate)

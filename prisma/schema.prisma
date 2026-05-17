@@ -27,6 +27,8 @@ model User {
   passwordHash  String
   isActive      Boolean      @default(true)
   phone         String?
+  companyId     String?
+  company       Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   createdBy     String?
@@ -35,6 +37,8 @@ model User {
   auditLogs     AuditLog[]
   createdCustomers Customer[] @relation("CustomerCreatedBy")
   createdSuppliers Supplier[] @relation("SupplierCreatedBy")
+
+  @@index([companyId])
 }
 
 model Role {
@@ -447,6 +451,7 @@ model Company {
   accounts      Account[]
   fiscalPeriods FiscalPeriod[]
   journalEntries JournalEntry[]
+  users         User[]
 
   @@index([code])
 }

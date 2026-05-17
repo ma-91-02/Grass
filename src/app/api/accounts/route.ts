@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, checkPermission, logAudit } from "@/lib/auth";
+import {
+  getCurrentUser,
+  checkPermission,
+  logAudit,
+  canAccessCompany,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -23,6 +28,10 @@ export async function GET(request: NextRequest) {
   const parentId = searchParams.get("parentId");
 
   if (!companyId) return errorResponse("companyId مطلوب");
+
+  if (!(await canAccessCompany(user, companyId))) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
 
   const where: Record<string, unknown> = { companyId };
   if (parentId === "null") where.parentId = null;
@@ -54,6 +63,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const parsed = accountFormSchema.parse(body);
+
+    if (!(await canAccessCompany(user, parsed.companyId))) {
+      return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+    }
 
     const existing = await prisma.account.findUnique({
       where: {

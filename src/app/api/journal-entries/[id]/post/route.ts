@@ -1,5 +1,9 @@
 import { NextRequest } from "next/server";
-import { getCurrentUser, checkPermission } from "@/lib/auth";
+import {
+  getCurrentUser,
+  requireDbPermission,
+  canAccessCompany,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -19,7 +23,7 @@ export async function POST(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.JOURNALS_POST))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.JOURNALS_POST)))
     return forbiddenError();
 
   const { id } = await params;
@@ -29,6 +33,10 @@ export async function POST(
     include: { lines: true },
   });
   if (!entry) return notFoundError();
+
+  if (!(await canAccessCompany(user, entry.companyId))) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
 
   // Pre-validation before posting
   if (entry.status !== "DRAFT") {

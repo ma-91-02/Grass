@@ -16,6 +16,7 @@ import {
 import { loginSchema } from "./auth/validation";
 import { recordAuthAudit } from "./auth/audit";
 import { checkRateLimit, resetRateLimit } from "./auth/rate-limit";
+import { PERMISSIONS } from "./permissions";
 
 export {
   hashPassword,
@@ -157,4 +158,44 @@ export async function logAudit(
       ipAddress,
     },
   });
+}
+
+/**
+ * Checks if a user can access a specific company.
+ * - Users with `SETTINGS_MANAGE` permission (global admins) can access any company.
+ * - Users with a `companyId` set can only access that company.
+ * - Users without `companyId` and without global admin permission are denied.
+ */
+export async function canAccessCompany(
+  user: TokenPayload,
+  companyId: string,
+): Promise<boolean> {
+  // Global admins (with SETTINGS_MANAGE) bypass company restriction
+  const isGlobalAdmin = await checkDbPermission(
+    user.userId,
+    PERMISSIONS.SETTINGS_MANAGE,
+  );
+  if (isGlobalAdmin) return true;
+
+  // Load user from DB to get current companyId (not stale JWT)
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.userId },
+    select: { companyId: true },
+  });
+
+  if (!dbUser) return false;
+  if (!dbUser.companyId) return false; // No company = no access unless global admin
+  return dbUser.companyId === companyId;
+}
+
+/**
+ * Server-side permission check using the database.
+ * Use this for sensitive operations instead of JWT-based checkPermission
+ * to avoid stale permission risks.
+ */
+export async function requireDbPermission(
+  userId: string,
+  permissionKey: string,
+): Promise<boolean> {
+  return checkDbPermission(userId, permissionKey);
 }

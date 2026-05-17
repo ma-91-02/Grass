@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, checkPermission, logAudit } from "@/lib/auth";
+import {
+  getCurrentUser,
+  checkPermission,
+  logAudit,
+  requireDbPermission,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -18,7 +23,23 @@ export async function GET() {
   if (!checkPermission(user, PERMISSIONS.COMPANIES_VIEW))
     return forbiddenError();
 
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.userId },
+    select: { companyId: true },
+  });
+
+  const isGlobalAdmin = await requireDbPermission(
+    user.userId,
+    PERMISSIONS.SETTINGS_MANAGE,
+  );
+
+  if (!isGlobalAdmin && !dbUser?.companyId) {
+    return successResponse([]);
+  }
+
+  const companyId = dbUser?.companyId;
   const companies = await prisma.company.findMany({
+    where: isGlobalAdmin ? undefined : { id: companyId! },
     orderBy: { name: "asc" },
   });
 

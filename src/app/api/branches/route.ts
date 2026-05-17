@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, checkPermission, logAudit } from "@/lib/auth";
+import {
+  getCurrentUser,
+  checkPermission,
+  logAudit,
+  canAccessCompany,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -21,10 +26,23 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const companyId = searchParams.get("companyId");
 
-  const where = companyId ? { companyId } : {};
+  // Load user's company scope from DB (not stale JWT)
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.userId },
+    select: { companyId: true },
+  });
+  const effectiveCompanyId = companyId || dbUser?.companyId;
+
+  if (!effectiveCompanyId) {
+    return successResponse([]);
+  }
+
+  if (!(await canAccessCompany(user, effectiveCompanyId))) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
 
   const branches = await prisma.branch.findMany({
-    where,
+    where: { companyId: effectiveCompanyId },
     orderBy: { name: "asc" },
   });
 
@@ -40,6 +58,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const parsed = branchFormSchema.parse(body);
+
+    if (!(await canAccessCompany(user, parsed.companyId))) {
+      return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+    }
 
     const company = await prisma.company.findUnique({
       where: { id: parsed.companyId },

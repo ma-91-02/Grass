@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, checkPermission, logAudit } from "@/lib/auth";
+import {
+  getCurrentUser,
+  checkPermission,
+  canAccessCompany,
+  logAudit,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -41,6 +46,8 @@ export async function GET(
   });
 
   if (!account) return notFoundError();
+  if (!canAccessCompany(user, account.companyId))
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
 
   const data = {
     ...account,
@@ -83,6 +90,8 @@ export async function PATCH(
 
   const existing = await prisma.account.findUnique({ where: { id } });
   if (!existing) return notFoundError();
+  if (!canAccessCompany(user, existing.companyId))
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
 
   try {
     const body = await request.json();
@@ -212,6 +221,8 @@ export async function DELETE(
 
   const existing = await prisma.account.findUnique({ where: { id } });
   if (!existing) return notFoundError();
+  if (!canAccessCompany(user, existing.companyId))
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
 
   if (existing.isSystem || existing.isProtected)
     return errorResponse("لا يمكن حذف حساب نظامي أو محمي");

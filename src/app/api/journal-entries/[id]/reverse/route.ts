@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, checkPermission, logAudit } from "@/lib/auth";
+import {
+  getCurrentUser,
+  requireDbPermission,
+  logAudit,
+  canAccessCompany,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -10,6 +15,7 @@ import {
   serverError,
 } from "@/lib/api-response";
 import { PERMISSIONS } from "@/lib/permissions";
+import { PeriodGuard } from "@/lib/services/period-guard";
 
 export async function POST(
   _request: NextRequest,
@@ -17,7 +23,7 @@ export async function POST(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.JOURNALS_REVERSE))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.JOURNALS_REVERSE)))
     return forbiddenError();
 
   const { id } = await params;
@@ -28,8 +34,22 @@ export async function POST(
   });
 
   if (!original) return notFoundError();
+
+  if (!(await canAccessCompany(user, original.companyId))) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
   if (original.status !== "POSTED")
     return errorResponse("يمكن عكس القيود المرحلة فقط");
+
+  // Verify current period is open before creating reversal
+  const periodCheck = await PeriodGuard.checkPeriodOpen(
+    original.companyId,
+    new Date(),
+    original.branchId || undefined,
+  );
+  if (!periodCheck.allowed) {
+    return errorResponse(periodCheck.error || "الفترة المالية مغلقة");
+  }
 
   const entryCount = await prisma.journalEntry.count({
     where: { companyId: original.companyId },

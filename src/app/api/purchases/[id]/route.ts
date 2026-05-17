@@ -114,6 +114,9 @@ export async function GET(
   try {
     const user = await getCurrentUser();
     if (!user) return unauthorizedError();
+    if (!(await checkDbPermission(user.userId, PERMISSIONS.PURCHASES_VIEW))) {
+      return forbiddenError("لا تملك صلاحية عرض فواتير المشتريات");
+    }
 
     const { id } = await params;
     const invoice = await prisma.purchaseInvoice.findUnique({

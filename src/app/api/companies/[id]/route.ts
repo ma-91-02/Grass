@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, checkPermission, logAudit } from "@/lib/auth";
+import {
+  getCurrentUser,
+  checkPermission,
+  canAccessCompany,
+  logAudit,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -35,6 +40,8 @@ export async function GET(
 
   const company = await prisma.company.findUnique({ where: { id } });
   if (!company) return notFoundError();
+  if (!canAccessCompany(user, company.id))
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
 
   return successResponse(company);
 }
@@ -52,6 +59,8 @@ export async function PATCH(
 
   const existing = await prisma.company.findUnique({ where: { id } });
   if (!existing) return notFoundError();
+  if (!canAccessCompany(user, existing.id))
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
 
   try {
     const body = await request.json();
@@ -97,6 +106,8 @@ export async function DELETE(
 
   const existing = await prisma.company.findUnique({ where: { id } });
   if (!existing) return notFoundError();
+  if (!canAccessCompany(user, existing.id))
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
 
   const [branchCount, accountCount, fiscalPeriodCount, journalEntryCount] =
     await Promise.all([
