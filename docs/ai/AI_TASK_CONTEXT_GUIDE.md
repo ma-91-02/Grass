@@ -51,6 +51,7 @@
 | Settings             | `AI_GLOBAL_RULES.md`, `SETTINGS_MODULE.md`, `CHART_OF_ACCOUNTS.md`, `SECURITY_ARCHITECTURE.md`                                           |
 | Performance          | `AI_GLOBAL_RULES.md`, `PERFORMANCE_SCALABILITY.md`, `DATABASE_CONSTRAINTS.md`, `REPORTING_BI.md`                                         |
 | Testing              | `AI_GLOBAL_RULES.md`, `TESTING_STRATEGY.md`, relevant module files                                                                       |
+| Repository Cleanup   | `AI_GLOBAL_RULES.md`, `REPOSITORY_HEALTH.md`, `TESTING_STRATEGY.md`, `ACCEPTANCE_CRITERIA.md`                                            |
 | Phase Planning       | `AI_GLOBAL_RULES.md`, `PHASES.md`, `ACCEPTANCE_CRITERIA.md`                                                                              |
 
 ## If Unsure
