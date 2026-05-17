@@ -116,8 +116,8 @@ const mockInvoice = {
 };
 
 const mockAccounts = {
-  cash: { id: "acc-cash", code: "1.1.1", name: "Cash IQD" },
-  ar: { id: "acc-ar", code: "1.1.6", name: "AR IQD" },
+  cash: { id: "acc-cash", code: "1.1.1", name: "Cash IQD", isActive: true, isPosting: true, currency: "IQD" },
+  ar: { id: "acc-ar", code: "1.1.6", name: "AR IQD", isActive: true, isPosting: true, currency: "IQD" },
 };
 
 const mockPaymentAccount = {
@@ -533,6 +533,312 @@ describe("customer-collections route", () => {
     expect(json.data.invoiceRemaining).toBeNull();
   });
 
+  it("POST rejects amount exceeding customer currentBalance", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.customer.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ...mockCustomer,
+      currentBalance: 30,
+    });
+
+    const { POST } = await import("@/app/api/customer-collections/route");
+    const req = new Request("http://localhost/api/customer-collections", {
+      method: "POST",
+      body: JSON.stringify({
+        customerId: "cus1",
+        amount: 50,
+        currency: "IQD",
+      }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain("يتجاوز رصيد العميل");
+  });
+
+  it("POST rejects invoice company mismatch with customer", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.customer.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockCustomer,
+    );
+    (prisma.invoice.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ...mockInvoice,
+      companyId: "c2",
+    });
+
+    const { POST } = await import("@/app/api/customer-collections/route");
+    const req = new Request("http://localhost/api/customer-collections", {
+      method: "POST",
+      body: JSON.stringify({
+        customerId: "cus1",
+        invoiceId: "inv1",
+        amount: 50,
+        currency: "IQD",
+      }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(409);
+    const json = await res.json();
+    expect(json.error).toContain("نفس شركة العميل");
+  });
+
+  it("POST rejects inactive cash account", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.customer.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockCustomer,
+    );
+    (PeriodGuard.checkPeriodOpen as ReturnType<typeof vi.fn>).mockResolvedValue(
+      { allowed: true },
+    );
+    (prisma.account.findFirst as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({
+        ...mockAccounts.cash,
+        isActive: false,
+        isPosting: true,
+        currency: "IQD",
+      })
+      .mockResolvedValueOnce({
+        ...mockAccounts.ar,
+        isActive: true,
+        isPosting: true,
+        currency: "IQD",
+      });
+
+    const { POST } = await import("@/app/api/customer-collections/route");
+    const req = new Request("http://localhost/api/customer-collections", {
+      method: "POST",
+      body: JSON.stringify({
+        customerId: "cus1",
+        amount: 50,
+        currency: "IQD",
+      }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain("الصندوق غير نشط");
+  });
+
+  it("POST rejects non-posting AR account", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.customer.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockCustomer,
+    );
+    (PeriodGuard.checkPeriodOpen as ReturnType<typeof vi.fn>).mockResolvedValue(
+      { allowed: true },
+    );
+    (prisma.account.findFirst as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({
+        ...mockAccounts.cash,
+        isActive: true,
+        isPosting: true,
+        currency: "IQD",
+      })
+      .mockResolvedValueOnce({
+        ...mockAccounts.ar,
+        isActive: true,
+        isPosting: false,
+        currency: "IQD",
+      });
+
+    const { POST } = await import("@/app/api/customer-collections/route");
+    const req = new Request("http://localhost/api/customer-collections", {
+      method: "POST",
+      body: JSON.stringify({
+        customerId: "cus1",
+        amount: 50,
+        currency: "IQD",
+      }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain("ليس حساب ترحيل");
+  });
+
+  it("POST rejects cash account with mismatched currency", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.customer.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockCustomer,
+    );
+    (PeriodGuard.checkPeriodOpen as ReturnType<typeof vi.fn>).mockResolvedValue(
+      { allowed: true },
+    );
+    (prisma.account.findFirst as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({
+        ...mockAccounts.cash,
+        isActive: true,
+        isPosting: true,
+        currency: "USD",
+      })
+      .mockResolvedValueOnce({
+        ...mockAccounts.ar,
+        isActive: true,
+        isPosting: true,
+        currency: "IQD",
+      });
+
+    const { POST } = await import("@/app/api/customer-collections/route");
+    const req = new Request("http://localhost/api/customer-collections", {
+      method: "POST",
+      body: JSON.stringify({
+        customerId: "cus1",
+        amount: 50,
+        currency: "IQD",
+      }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(409);
+    const json = await res.json();
+    expect(json.error).toContain("عملة حساب الصندوق");
+  });
+
+  it("POST rolls back transaction if audit fails", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.customer.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockCustomer,
+    );
+    (prisma.invoice.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockInvoice,
+    );
+    (
+      prisma.paymentAccount.findUnique as ReturnType<typeof vi.fn>
+    ).mockResolvedValue(mockPaymentAccount);
+    (PeriodGuard.checkPeriodOpen as ReturnType<typeof vi.fn>).mockResolvedValue(
+      { allowed: true },
+    );
+    (prisma.account.findFirst as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({
+        ...mockAccounts.cash,
+        isActive: true,
+        isPosting: true,
+        currency: "IQD",
+      })
+      .mockResolvedValueOnce({
+        ...mockAccounts.ar,
+        isActive: true,
+        isPosting: true,
+        currency: "IQD",
+      });
+    (LedgerValidator.validateLines as ReturnType<typeof vi.fn>).mockReturnValue(
+      {
+        valid: true,
+        errors: [],
+      },
+    );
+
+    const mockTx = {
+      $queryRaw: vi.fn().mockResolvedValue([]),
+      auditLog: {
+        create: vi.fn().mockRejectedValue(new Error("audit failed")),
+      },
+      customer: {
+        findUnique: vi.fn().mockResolvedValue(mockCustomer),
+        update: vi
+          .fn()
+          .mockResolvedValue({ ...mockCustomer, currentBalance: 50 }),
+      },
+      invoice: {
+        findUnique: vi.fn().mockResolvedValue(mockInvoice),
+        update: vi
+          .fn()
+          .mockResolvedValue({ ...mockInvoice, paid: 50, remaining: 50 }),
+      },
+      journalEntry: {
+        create: vi.fn().mockResolvedValue({
+          id: "je1",
+          entryNumber: "JE-00001",
+          lines: [],
+        }),
+        count: vi.fn().mockResolvedValue(0),
+        update: vi.fn().mockResolvedValue({ id: "je1" }),
+      },
+      customerCollection: {
+        create: vi.fn().mockResolvedValue({
+          id: "col1",
+          customerId: "cus1",
+          invoiceId: "inv1",
+          amount: 50,
+          currency: "IQD",
+          collectionDate: new Date(),
+          journalEntryId: "je1",
+          notes: "test",
+          createdAt: new Date(),
+        }),
+      },
+    };
+
+    (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
+      async (callback: (tx: typeof mockTx) => Promise<unknown>) => {
+        return callback(mockTx as unknown as typeof mockTx);
+      },
+    );
+
+    const { POST } = await import("@/app/api/customer-collections/route");
+    const req = new Request("http://localhost/api/customer-collections", {
+      method: "POST",
+      body: JSON.stringify({
+        customerId: "cus1",
+        invoiceId: "inv1",
+        paymentAccountId: "pa1",
+        amount: 50,
+        currency: "IQD",
+        notes: "test",
+      }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(500);
+    const json = await res.json();
+    expect(json.error).toContain("audit failed");
+  });
+
   it("POST rejects payment account with mismatched currency", async () => {
     (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
       userId: "u1",
@@ -639,6 +945,42 @@ describe("customers/[id]/statement route", () => {
       params: Promise.resolve({ id: "cus1" }),
     });
     expect(res.status).toBe(401);
+  });
+
+  it("GET statement passes currency filter to prisma queries", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.customer.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ...mockCustomer,
+      currency: "IQD",
+      company: { id: "c1", name: "شركة" },
+    });
+    (prisma.invoice.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (
+      prisma.customerCollection.findMany as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([]);
+
+    const { GET } = await import("@/app/api/customers/[id]/statement/route");
+    const req = new Request("http://localhost/api/customers/cus1/statement");
+    const res = await GET(req as never, {
+      params: Promise.resolve({ id: "cus1" }),
+    });
+    expect(res.status).toBe(200);
+
+    const invoiceCalls = (prisma.invoice.findMany as ReturnType<typeof vi.fn>).mock.calls;
+    expect(invoiceCalls.length).toBe(1);
+    expect(invoiceCalls[0][0].where.currency).toBe("IQD");
+
+    const collectionCalls = (prisma.customerCollection.findMany as ReturnType<typeof vi.fn>).mock.calls;
+    expect(collectionCalls.length).toBe(1);
+    expect(collectionCalls[0][0].where.currency).toBe("IQD");
   });
 
   it("GET statement returns invoices and collections merged", async () => {

@@ -51,11 +51,12 @@ export async function GET(
     return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
   }
 
-  // Fetch posted invoices and collections for the period
+  // Fetch posted invoices and collections for the period, scoped to customer currency
   const invoices = await prisma.invoice.findMany({
     where: {
       customerId: id,
       status: "POSTED",
+      currency: customer.currency,
       ...(fromDate && { invoiceDate: { gte: fromDate } }),
       ...(toDate && { invoiceDate: { lte: toDate } }),
     },
@@ -75,6 +76,7 @@ export async function GET(
   const collections = await prisma.customerCollection.findMany({
     where: {
       customerId: id,
+      currency: customer.currency,
       ...(fromDate && { collectionDate: { gte: fromDate } }),
       ...(toDate && { collectionDate: { lte: toDate } }),
     },

@@ -182,6 +182,17 @@ export async function POST(request: NextRequest) {
           400,
         );
       }
+      if (invoice.companyId && invoice.companyId !== customer.companyId) {
+        return conflictError("الفاتورة لا تنتمي لنفس شركة العميل");
+      }
+    }
+
+    // Guard: collection amount must not exceed customer's current balance
+    if (amount > Number(customer.currentBalance ?? 0)) {
+      return errorResponse(
+        `مبلغ التحصيل (${amount}) يتجاوز رصيد العميل (${Number(customer.currentBalance ?? 0)})`,
+        400,
+      );
     }
 
     if (!customer.companyId) {
@@ -223,6 +234,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate account statuses and posting eligibility
+    if (!cashAccount.isActive) {
+      return errorResponse("حساب الصندوق غير نشط", 400);
+    }
+    if (!arAccount.isActive) {
+      return errorResponse("حساب الذمم المدينة غير نشط", 400);
+    }
+    if (!cashAccount.isPosting) {
+      return errorResponse("حساب الصندوق ليس حساب ترحيل", 400);
+    }
+    if (!arAccount.isPosting) {
+      return errorResponse("حساب الذمم المدينة ليس حساب ترحيل", 400);
+    }
+    if (cashAccount.currency !== currency) {
+      return conflictError("عملة حساب الصندوق لا تطابق عملة التحصيل");
+    }
+    if (arAccount.currency !== currency) {
+      return conflictError("عملة حساب الذمم المدينة لا تطابق عملة التحصيل");
+    }
+
     // Atomic transaction
     const result = await prisma.$transaction(async (tx) => {
       // Lock customer row
@@ -233,6 +264,14 @@ export async function POST(request: NextRequest) {
         where: { id: customerId },
       });
       if (!lockedCustomer) throw new Error("العميل غير موجود");
+
+      // Guard: balance must not go negative
+      const currentBalance = Number(lockedCustomer.currentBalance ?? 0);
+      if (amount > currentBalance) {
+        throw new Error(
+          `مبلغ التحصيل (${amount}) يتجاوز رصيد العميل (${currentBalance})`,
+        );
+      }
 
       // If invoice specified, re-read and validate remaining
       let lockedInvoice = null;
@@ -316,6 +355,17 @@ export async function POST(request: NextRequest) {
       if (lockedInvoice) {
         const newPaid = Number(lockedInvoice.paid) + amount;
         const newRemaining = Number(lockedInvoice.remaining) - amount;
+        const totalAfterTax = Number(lockedInvoice.totalAfterTax);
+
+        if (newRemaining < 0) {
+          throw new Error("المتبقي لا يمكن أن يصبح سالباً");
+        }
+        if (newPaid > totalAfterTax) {
+          throw new Error(
+            `المبلغ المدفوع (${newPaid}) يتجاوز إجمالي الفاتورة (${totalAfterTax})`,
+          );
+        }
+
         updatedInvoice = await tx.invoice.update({
           where: { id: invoiceId! },
           data: {
