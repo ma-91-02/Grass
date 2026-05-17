@@ -37,6 +37,7 @@ model User {
   auditLogs     AuditLog[]
   createdCustomers Customer[] @relation("CustomerCreatedBy")
   createdSuppliers Supplier[] @relation("SupplierCreatedBy")
+  createdStockTransfers StockTransfer[]
 
   @@index([companyId])
 }
@@ -300,6 +301,7 @@ model Product {
   purchaseInvoiceItems PurchaseInvoiceItem[]
   stockMovements       StockMovement[]
   stockBalances        StockBalance[]
+  stockTransferLines   StockTransferLine[]
 
   @@unique([companyId, code])
   @@unique([companyId, barcode])
@@ -338,6 +340,8 @@ model Warehouse {
   purchaseInvoices PurchaseInvoice[]
   stockMovements   StockMovement[]
   stockBalances    StockBalance[]
+  transfersFrom    StockTransfer[] @relation("TransferFrom")
+  transfersTo      StockTransfer[] @relation("TransferTo")
 
   @@unique([companyId, code])
   @@index([companyId])
@@ -535,6 +539,50 @@ model StockBalance {
   @@index([warehouseId])
 }
 
+model StockTransfer {
+  id               String              @id @default(cuid())
+  companyId        String
+  company          Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  fromWarehouseId  String
+  fromWarehouse    Warehouse           @relation("TransferFrom", fields: [fromWarehouseId], references: [id])
+  toWarehouseId    String
+  toWarehouse      Warehouse           @relation("TransferTo", fields: [toWarehouseId], references: [id])
+  transferNumber   String
+  status           MovementStatus      @default(DRAFT)
+  transferDate     DateTime            @default(now())
+  notes            String?
+  createdById      String?
+  createdBy        User?               @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  lines            StockTransferLine[]
+
+  @@unique([companyId, transferNumber])
+  @@index([companyId])
+  @@index([fromWarehouseId])
+  @@index([toWarehouseId])
+  @@index([status])
+  @@index([transferDate])
+}
+
+model StockTransferLine {
+  id          String        @id @default(cuid())
+  transferId  String
+  transfer    StockTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product       @relation(fields: [productId], references: [id])
+  quantity    Int
+  unitCost    Decimal       @default(0)
+  currency    Currency      @default(IQD)
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([transferId])
+  @@index([productId])
+}
+
 model Company {
   id        String   @id @default(cuid())
   name      String
@@ -558,6 +606,7 @@ model Company {
   units         Unit[]
   warehouses    Warehouse[]
   stockMovements StockMovement[]
+  stockTransfers StockTransfer[]
 
   @@index([code])
 }
