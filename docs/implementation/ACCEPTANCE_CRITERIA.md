@@ -24,6 +24,12 @@
 - Permissions enforced server-side.
 - Audit created for sensitive writes.
 - Tests added for success and failure paths.
+- Relevant documentation updated when APIs, workflows, schema, posting logic, permissions, architecture, module behavior, or business rules change.
+- Checks are run: format, lint, typecheck, tests, build, and relevant health checks where available.
+- Changes are committed with a clear commit message after checks pass.
+- Changes are pushed to GitHub after checks pass.
+- Arabic final report is provided.
+- Secrets, `.env` files, tokens, API keys, credentials, and sensitive production data are never committed.
 
 ## Financial Acceptance
 
@@ -70,3 +76,4 @@
 
 - This file is used during task review.
 - Any violation blocks completion.
+- A task is not DONE unless code, tests, documentation, checks, GitHub push, and Arabic final report are complete or blockers are explicitly reported.
