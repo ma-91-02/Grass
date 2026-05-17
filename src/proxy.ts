@@ -6,8 +6,14 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "grass-erp-jwt-secret-key-change-in-production",
 );
 
-const protectedPaths = ["/dashboard"];
-const publicPaths = ["/auth/login"];
+const publicPaths = ["/auth/login", "/api/auth/login"];
+
+interface JwtUserPayload {
+  userId?: string;
+  sub?: string;
+  roles?: string[];
+  [key: string]: unknown;
+}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -16,17 +22,41 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (protectedPaths.some((p) => pathname.startsWith(p))) {
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/api/")) {
     const token = request.cookies.get("grass_auth_token")?.value;
 
     if (!token) {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json(
+          { success: false, error: "غير مصرح" },
+          { status: 401 },
+        );
+      }
       return NextResponse.redirect(new URL("/auth/login", request.url));
     }
 
     try {
-      await jwtVerify(token, JWT_SECRET);
-      return NextResponse.next();
+      const { payload } = await jwtVerify(token, JWT_SECRET);
+      const userPayload = payload as unknown as JwtUserPayload;
+      const requestHeaders = new Headers(request.headers);
+      requestHeaders.set(
+        "x-user-id",
+        userPayload.userId || userPayload.sub || "",
+      );
+      requestHeaders.set(
+        "x-user-roles",
+        JSON.stringify(userPayload.roles || []),
+      );
+      return NextResponse.next({
+        request: { headers: requestHeaders },
+      });
     } catch {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json(
+          { success: false, error: "غير مصرح" },
+          { status: 401 },
+        );
+      }
       return NextResponse.redirect(new URL("/auth/login", request.url));
     }
   }
@@ -37,5 +67,5 @@ export async function proxy(request: NextRequest) {
 export default proxy;
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/api/:path*"],
 };

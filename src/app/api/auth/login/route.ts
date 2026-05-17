@@ -1,21 +1,61 @@
 import { NextRequest } from "next/server";
-import { authenticateUser } from "@/lib/auth";
-import { successResponse, errorResponse } from "@/lib/api-response";
+import {
+  authenticateUser,
+  recordAuthAudit,
+  checkRateLimit,
+  loginSchema,
+} from "@/lib/auth";
+import { successResponse } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { email, password } = body;
+    const ip = request.headers.get("x-forwarded-for") || "unknown";
+    const userAgent = request.headers.get("user-agent") || undefined;
 
-    if (!email || !password) {
-      return errorResponse("البريد الإلكتروني وكلمة المرور مطلوبان");
+    const rateCheck = checkRateLimit(ip);
+    if (!rateCheck.allowed) {
+      return successResponse(
+        { error: "محاولات تسجيل دخول كثيرة. حاول لاحقاً." },
+        429,
+      );
     }
+
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return successResponse({ error: "بيانات الطلب غير صحيحة" }, 400);
+    }
+
+    const parsed = loginSchema.safeParse(body);
+    if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors;
+      const firstError =
+        Object.values(fieldErrors).flat()[0] || "بيانات غير صحيحة";
+      return successResponse({ error: firstError }, 400);
+    }
+
+    const { email, password } = parsed.data;
 
     const result = await authenticateUser(email, password);
 
     if (!result) {
-      return errorResponse("بيانات الدخول غير صحيحة", 401);
+      await recordAuthAudit({
+        email,
+        action: "LOGIN_FAILED",
+        ipAddress: ip === "unknown" ? undefined : ip,
+        userAgent,
+      });
+      return successResponse({ error: "بيانات الدخول غير صحيحة" }, 401);
     }
+
+    await recordAuthAudit({
+      userId: result.user.id,
+      email: result.user.email,
+      action: "LOGIN_SUCCESS",
+      ipAddress: ip === "unknown" ? undefined : ip,
+      userAgent,
+    });
 
     return successResponse({
       user: {
@@ -26,8 +66,7 @@ export async function POST(request: NextRequest) {
       },
       token: result.token,
     });
-  } catch (error) {
-    console.error("Login error:", error);
-    return errorResponse("خطأ في تسجيل الدخول", 500);
+  } catch {
+    return successResponse({ error: "خطأ في تسجيل الدخول" }, 500);
   }
 }
