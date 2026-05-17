@@ -34,6 +34,10 @@ export const PERMISSIONS = {
   UNITS_EDIT: "units.edit",
   UNITS_DELETE: "units.delete",
   WAREHOUSES_VIEW: "warehouses.view",
+  WAREHOUSES_CREATE: "warehouses.create",
+  WAREHOUSES_EDIT: "warehouses.edit",
+  WAREHOUSES_DELETE: "warehouses.delete",
+  // Legacy alias for backward compatibility
   WAREHOUSES_MANAGE: "warehouses.manage",
   EXCHANGE_RATES_VIEW: "exchangeRates.view",
   EXCHANGE_RATES_MANAGE: "exchangeRates.manage",

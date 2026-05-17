@@ -45,7 +45,9 @@ export const unitSchema = z.object({
   name: z.string().min(1, "الاسم مطلوب"),
   code: z.string().min(1, "كود الوحدة مطلوب"),
   symbol: z.string().optional().nullable(),
-  type: z.enum(["PIECE", "BOX", "LITER", "KG", "OTHER"] as const).default("PIECE"),
+  type: z
+    .enum(["PIECE", "BOX", "LITER", "KG", "OTHER"] as const)
+    .default("PIECE"),
 });
 
 export const productFormSchema = z.object({
@@ -84,8 +86,12 @@ export const productFormSchema = z.object({
 });
 
 export const warehouseFormSchema = z.object({
+  companyId: z.string().min(1, "الشركة مطلوبة"),
+  code: z.string().min(1, "كود المخزن مطلوب"),
   name: z.string().min(1, "الاسم مطلوب"),
+  branchId: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
+  isActive: z.boolean().default(true),
 });
 
 export const exchangeRateFormSchema = z.object({

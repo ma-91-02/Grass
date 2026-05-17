@@ -111,6 +111,28 @@ else
   FAIL=$((FAIL+1))
 fi
 
+# ---- WAREHOUSES (with companyId) ----
+echo "--- WAREHOUSES ---"
+if [ -n "$COMPANY_ID" ]; then
+  WH_CODE=$(curl -s -o "$OUT" -w "%{http_code}" "$BASE_URL/api/warehouses?companyId=$COMPANY_ID" -b "$COOKIE_JAR")
+  if [ "$WH_CODE" = "200" ]; then
+    WH_SUCCESS=$(python3 -c "import json; d=json.load(open('$OUT')); print(d.get('success',False))" 2>/dev/null)
+    if [ "$WH_SUCCESS" = "True" ]; then
+      green "GET /api/warehouses?companyId=... -> 200 + success:true"
+      PASS=$((PASS+1))
+    else
+      red "GET /api/warehouses body missing success:true"
+      FAIL=$((FAIL+1))
+    fi
+  else
+    red "GET /api/warehouses?companyId=... -> $WH_CODE (expected 200)"
+    FAIL=$((FAIL+1))
+  fi
+else
+  red "GET /api/warehouses (no companyId available)"
+  FAIL=$((FAIL+1))
+fi
+
 # ---- FISCAL PERIODS (with companyId) ----
 echo "--- FISCAL PERIODS ---"
 if [ -n "$COMPANY_ID" ]; then

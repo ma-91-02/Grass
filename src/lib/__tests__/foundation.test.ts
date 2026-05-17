@@ -7,6 +7,7 @@ import {
   productCategoryFormSchema,
   unitSchema,
   productFormSchema,
+  warehouseFormSchema,
 } from "@/lib/schemas";
 import { checkPermission, checkRole } from "@/lib/auth";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -948,5 +949,50 @@ describe("productFormSchema", () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { unitId, ...rest } = base;
     expect(productFormSchema.safeParse(rest).success).toBe(false);
+  });
+});
+
+describe("warehouseFormSchema", () => {
+  const base = {
+    companyId: "c1",
+    code: "WH-01",
+    name: "المخزن الرئيسي",
+    branchId: "b1",
+    address: "بغداد",
+    isActive: true,
+  } as const;
+
+  it("accepts valid warehouse", () => {
+    expect(warehouseFormSchema.safeParse(base).success).toBe(true);
+  });
+
+  it("rejects empty companyId", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { companyId, ...rest } = base;
+    expect(warehouseFormSchema.safeParse(rest).success).toBe(false);
+  });
+
+  it("rejects empty code", () => {
+    expect(warehouseFormSchema.safeParse({ ...base, code: "" }).success).toBe(
+      false,
+    );
+  });
+
+  it("rejects empty name", () => {
+    expect(warehouseFormSchema.safeParse({ ...base, name: "" }).success).toBe(
+      false,
+    );
+  });
+
+  it("allows optional branchId", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { branchId, ...rest } = base;
+    expect(warehouseFormSchema.safeParse(rest).success).toBe(true);
+  });
+
+  it("allows optional address", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { address, ...rest } = base;
+    expect(warehouseFormSchema.safeParse(rest).success).toBe(true);
   });
 });

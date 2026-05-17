@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, logAudit, checkPermission } from "@/lib/auth";
+import {
+  getCurrentUser,
+  logAudit,
+  requireDbPermission,
+  canAccessCompany,
+} from "@/lib/auth";
 import { PERMISSIONS } from "@/lib/permissions";
 import {
   successResponse,
@@ -9,73 +14,139 @@ import {
   forbiddenError,
   notFoundError,
   conflictError,
-  serverError,
 } from "@/lib/api-response";
 import { z } from "zod";
 
-const warehouseSchema = z.object({
+const warehouseUpdateSchema = z.object({
   name: z.string().min(1, "الاسم مطلوب").optional(),
+  code: z.string().min(1, "كود المخزن مطلوب").optional(),
+  branchId: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   isActive: z.boolean().optional(),
 });
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.WAREHOUSES_VIEW))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.WAREHOUSES_VIEW)))
     return forbiddenError();
 
   const { id } = await params;
   const warehouse = await prisma.warehouse.findUnique({
     where: { id },
+    include: { branch: { select: { name: true, code: true } } },
   });
 
   if (!warehouse) return notFoundError();
 
-  const invoiceCount = await prisma.invoice.count({
-    where: { warehouseId: id },
-  });
+  if (
+    warehouse.companyId &&
+    !(await canAccessCompany(user, warehouse.companyId))
+  ) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
 
-  return successResponse({ ...warehouse, inUse: invoiceCount > 0 });
+  return successResponse(warehouse);
 }
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const currentUser = await getCurrentUser();
-  if (!currentUser) return unauthorizedError();
-  if (!checkPermission(currentUser, PERMISSIONS.WAREHOUSES_MANAGE))
+  const user = await getCurrentUser();
+  if (!user) return unauthorizedError();
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.WAREHOUSES_EDIT)))
     return forbiddenError();
 
   const { id } = await params;
   const existing = await prisma.warehouse.findUnique({ where: { id } });
   if (!existing) return notFoundError();
 
+  if (
+    existing.companyId &&
+    !(await canAccessCompany(user, existing.companyId))
+  ) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
+
   try {
     const body = await request.json();
-    const parsed = warehouseSchema.parse(body);
+    const parsed = warehouseUpdateSchema.parse(body);
 
-    if (parsed.isActive === false) {
-      const invoiceCount = await prisma.invoice.count({
-        where: { warehouseId: id },
+    // Prevent changing companyId
+    // (companyId is not in update schema, so this is enforced by schema design)
+
+    // Per-company duplicate code check
+    if (parsed.code && parsed.code !== existing.code && existing.companyId) {
+      const duplicateCode = await prisma.warehouse.findFirst({
+        where: {
+          companyId: existing.companyId,
+          code: parsed.code,
+          id: { not: id },
+        },
       });
-      if (invoiceCount > 0) {
-        return conflictError(
-          "لا يمكن تعطيل أو حذف هذا المخزن لأنه يحتوي على مواد أو حركات مخزنية",
-        );
+      if (duplicateCode) {
+        return conflictError("كود المخزن مستخدم مسبقاً في هذه الشركة");
       }
     }
 
-    if (parsed.name) {
-      const duplicate = await prisma.warehouse.findUnique({
-        where: { name: parsed.name },
+    // Per-company duplicate name check
+    if (parsed.name && parsed.name !== existing.name && existing.companyId) {
+      const duplicateName = await prisma.warehouse.findFirst({
+        where: {
+          companyId: existing.companyId,
+          name: parsed.name,
+          id: { not: id },
+        },
       });
-      if (duplicate && duplicate.id !== id) {
-        return errorResponse("مخزن آخر بنفس الاسم موجود مسبقاً", 409);
+      if (duplicateName) {
+        return conflictError("اسم المخزن مستخدم مسبقاً في هذه الشركة");
+      }
+    }
+
+    // Branch validation: if branchId provided or changed, must belong to same company and be active
+    if (
+      parsed.branchId !== undefined &&
+      parsed.branchId !== existing.branchId
+    ) {
+      if (parsed.branchId === null) {
+        // Allow clearing branchId
+      } else if (existing.companyId) {
+        const branch = await prisma.branch.findUnique({
+          where: { id: parsed.branchId },
+          select: { companyId: true, isActive: true },
+        });
+        if (!branch) {
+          return errorResponse("الفرع غير موجود", 404);
+        }
+        if (branch.companyId !== existing.companyId) {
+          return conflictError("الفرع لا ينتمي لنفس الشركة");
+        }
+        if (!branch.isActive) {
+          return conflictError("الفرع غير نشط");
+        }
+      }
+    }
+
+    // Safe deactivate: if setting isActive=false, only allow if no business activity
+    if (parsed.isActive === false) {
+      const [invoiceCount, purchaseInvoiceCount, stockMovementCount] =
+        await Promise.all([
+          prisma.invoice.count({ where: { warehouseId: id } }),
+          prisma.purchaseInvoice.count({ where: { warehouseId: id } }),
+          prisma.stockMovement.count({ where: { warehouseId: id } }),
+        ]);
+
+      const totalRelated =
+        invoiceCount + purchaseInvoiceCount + stockMovementCount;
+
+      if (totalRelated > 0) {
+        return conflictError(
+          "لا يمكن تعطيل هذا المخزن لأنه يحتوي على عمليات أو بيانات مرتبطة",
+        );
       }
     }
 
@@ -84,8 +155,9 @@ export async function PATCH(
       data: parsed,
     });
 
-    await logAudit(currentUser.userId, "UPDATE", "Warehouse", id, {
+    await logAudit(user.userId, "UPDATE", "Warehouse", id, {
       name: warehouse.name,
+      code: warehouse.code,
     });
 
     return successResponse(warehouse);
@@ -98,36 +170,69 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const currentUser = await getCurrentUser();
-  if (!currentUser) return unauthorizedError();
-  if (!checkPermission(currentUser, PERMISSIONS.WAREHOUSES_MANAGE))
+  const user = await getCurrentUser();
+  if (!user) return unauthorizedError();
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.WAREHOUSES_DELETE)))
     return forbiddenError();
 
   const { id } = await params;
-  const existing = await prisma.warehouse.findUnique({ where: { id } });
-  if (!existing) return notFoundError();
+  const warehouse = await prisma.warehouse.findUnique({ where: { id } });
+  if (!warehouse) return notFoundError();
+
+  if (
+    warehouse.companyId &&
+    !(await canAccessCompany(user, warehouse.companyId))
+  ) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
 
   try {
-    const invoiceCount = await prisma.invoice.count({
-      where: { warehouseId: id },
-    });
-    if (invoiceCount > 0) {
-      return conflictError(
-        "لا يمكن حذف هذا المخزن نهائياً لأنه يحتوي على عمليات أو بيانات مرتبطة",
-      );
+    const [invoiceCount, purchaseInvoiceCount, stockMovementCount] =
+      await Promise.all([
+        prisma.invoice.count({ where: { warehouseId: id } }),
+        prisma.purchaseInvoice.count({ where: { warehouseId: id } }),
+        prisma.stockMovement.count({ where: { warehouseId: id } }),
+      ]);
+
+    const totalRelated =
+      invoiceCount + purchaseInvoiceCount + stockMovementCount;
+
+    if (totalRelated > 0) {
+      // Safe deactivate
+      await prisma.warehouse.update({
+        where: { id },
+        data: { isActive: false },
+      });
+
+      await logAudit(user.userId, "DEACTIVATE", "Warehouse", id, {
+        name: warehouse.name,
+        reason: "has_activity",
+        invoices: invoiceCount,
+        purchaseInvoices: purchaseInvoiceCount,
+        stockMovements: stockMovementCount,
+      });
+
+      return successResponse({
+        id,
+        action: "deactivated",
+        isActive: false,
+      });
     }
 
+    // Hard delete allowed if no activity
     await prisma.warehouse.delete({ where: { id } });
 
-    await logAudit(currentUser.userId, "DELETE", "Warehouse", id, {
-      name: existing.name,
+    await logAudit(user.userId, "DELETE", "Warehouse", id, {
+      name: warehouse.name,
+      wasPermanent: true,
     });
 
-    return successResponse({ deleted: true });
+    return successResponse({ id, action: "deleted" });
   } catch (error) {
-    return serverError(error);
+    console.error("Delete warehouse error:", error);
+    return errorResponse("فشل حذف المخزن", 500);
   }
 }

@@ -1,105 +1,115 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, logAudit, checkPermission } from "@/lib/auth";
+import {
+  getCurrentUser,
+  logAudit,
+  requireDbPermission,
+  canAccessCompany,
+} from "@/lib/auth";
 import { PERMISSIONS } from "@/lib/permissions";
 import {
   successResponse,
   errorResponse,
   unauthorizedError,
   forbiddenError,
+  conflictError,
 } from "@/lib/api-response";
+import { warehouseFormSchema } from "@/lib/schemas";
 import { z } from "zod";
 
-const warehouseSchema = z.object({
-  name: z.string().min(1, "الاسم مطلوب"),
-  address: z.string().optional().nullable(),
-});
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.WAREHOUSES_VIEW))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.WAREHOUSES_VIEW)))
     return forbiddenError();
 
+  const { searchParams } = new URL(request.url);
+  const companyId = searchParams.get("companyId");
+
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.userId },
+    select: { companyId: true },
+  });
+
+  const isGlobalAdmin = await canAccessCompany(user, "any");
+
+  // Build company-scoped filter
+  let whereClause: Record<string, unknown> = {};
+
+  if (companyId) {
+    if (!(await canAccessCompany(user, companyId))) {
+      return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+    }
+    whereClause = { companyId };
+  } else if (!isGlobalAdmin && dbUser?.companyId) {
+    whereClause = { companyId: dbUser.companyId };
+  }
+
   const warehouses = await prisma.warehouse.findMany({
+    where: whereClause,
+    include: { branch: { select: { name: true, code: true } } },
     orderBy: { name: "asc" },
   });
 
-  const invoiceCounts = await prisma.invoice.groupBy({
-    by: ["warehouseId"],
-    _count: { id: true },
-  });
-  const inUseMap = new Map(
-    invoiceCounts.map((ic) => [ic.warehouseId, ic._count.id > 0]),
-  );
-
-  const data = warehouses.map((w) => ({
-    ...w,
-    inUse: inUseMap.get(w.id) || false,
-  }));
-
-  return successResponse(data);
+  return successResponse(warehouses);
 }
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.WAREHOUSES_MANAGE))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.WAREHOUSES_CREATE)))
     return forbiddenError();
 
   try {
     const body = await request.json();
-    const parsed = warehouseSchema.parse(body);
+    const parsed = warehouseFormSchema.parse(body);
 
-    const existingName = await prisma.warehouse.findUnique({
-      where: { name: parsed.name },
+    if (!(await canAccessCompany(user, parsed.companyId))) {
+      return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+    }
+
+    // Per-company duplicate code check
+    const existingCode = await prisma.warehouse.findFirst({
+      where: { companyId: parsed.companyId, code: parsed.code },
+    });
+    if (existingCode) {
+      return conflictError("كود المخزن مستخدم مسبقاً في هذه الشركة");
+    }
+
+    // Per-company duplicate name check (optional but recommended)
+    const existingName = await prisma.warehouse.findFirst({
+      where: { companyId: parsed.companyId, name: parsed.name },
     });
     if (existingName) {
-      return errorResponse("يوجد مخزن بهذا الاسم مسبقاً", 409);
+      return conflictError("اسم المخزن مستخدم مسبقاً في هذه الشركة");
     }
 
-    const allCodes = await prisma.warehouse.findMany({
-      where: { code: { startsWith: "WH-" } },
-      select: { code: true },
-    });
-    let maxNum = 0;
-    for (const { code } of allCodes) {
-      const num = parseInt(code.replace("WH-", ""), 10);
-      if (!isNaN(num) && num > maxNum) maxNum = num;
-    }
-    const code = `WH-${String(maxNum + 1).padStart(4, "0")}`;
-
-    let warehouse;
-    try {
-      warehouse = await prisma.warehouse.create({
-        data: { ...parsed, code },
+    // Branch validation: if branchId provided, must belong to same company and be active
+    if (parsed.branchId) {
+      const branch = await prisma.branch.findUnique({
+        where: { id: parsed.branchId },
+        select: { companyId: true, isActive: true },
       });
-    } catch (createError: unknown) {
-      if (
-        createError &&
-        typeof createError === "object" &&
-        "code" in createError &&
-        (createError as Record<string, unknown>).code === "P2002"
-      ) {
-        const fallbackCodes = await prisma.warehouse.findMany({
-          where: { code: { startsWith: "WH-" } },
-          select: { code: true },
-        });
-        let fbMax = 0;
-        for (const { code } of fallbackCodes) {
-          const num = parseInt(code.replace("WH-", ""), 10);
-          if (!isNaN(num) && num > fbMax) fbMax = num;
-        }
-        warehouse = await prisma.warehouse.create({
-          data: { ...parsed, code: `WH-${String(fbMax + 1).padStart(4, "0")}` },
-        });
-      } else {
-        throw createError;
+      if (!branch) {
+        return errorResponse("الفرع غير موجود", 404);
+      }
+      if (branch.companyId !== parsed.companyId) {
+        return conflictError("الفرع لا ينتمي لنفس الشركة");
+      }
+      if (!branch.isActive) {
+        return conflictError("الفرع غير نشط");
       }
     }
 
+    const warehouse = await prisma.warehouse.create({
+      data: parsed,
+    });
+
     await logAudit(user.userId, "CREATE", "Warehouse", warehouse.id, {
       name: warehouse.name,
+      code: warehouse.code,
+      companyId: warehouse.companyId,
+      branchId: warehouse.branchId,
     });
 
     return successResponse(warehouse, 201);
