@@ -5,6 +5,7 @@ import {
   successResponse,
   errorResponse,
   unauthorizedError,
+  forbiddenError,
   notFoundError,
   serverError,
 } from "@/lib/api-response";
@@ -90,22 +91,57 @@ export async function DELETE(
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.COMPANIES_EDIT))
-    return unauthorizedError();
+    return forbiddenError();
 
   const { id } = await params;
 
   const existing = await prisma.company.findUnique({ where: { id } });
   if (!existing) return notFoundError();
 
-  await prisma.company.update({
-    where: { id },
-    data: { isActive: false },
-  });
+  const [branchCount, accountCount, fiscalPeriodCount, journalEntryCount] =
+    await Promise.all([
+      prisma.branch.count({ where: { companyId: id } }),
+      prisma.account.count({ where: { companyId: id } }),
+      prisma.fiscalPeriod.count({ where: { companyId: id } }),
+      prisma.journalEntry.count({ where: { companyId: id } }),
+    ]);
+
+  const totalRelated =
+    branchCount + accountCount + fiscalPeriodCount + journalEntryCount;
+
+  if (totalRelated > 0) {
+    await prisma.company.update({
+      where: { id },
+      data: { isActive: false },
+    });
+
+    await logAudit(user.userId, "DEACTIVATE", "Company", id, {
+      reason: "entity_has_related_records",
+      relatedRecords: {
+        branches: branchCount,
+        accounts: accountCount,
+        fiscalPeriods: fiscalPeriodCount,
+        journalEntries: journalEntryCount,
+      },
+    });
+
+    return successResponse({
+      action: "deactivated",
+      companyId: id,
+      isActive: false,
+    });
+  }
+
+  await prisma.company.delete({ where: { id } });
 
   await logAudit(user.userId, "DELETE", "Company", id, {
     code: existing.code,
     name: existing.name,
+    wasPermanent: true,
   });
 
-  return successResponse({ id, isActive: false });
+  return successResponse({
+    action: "deleted",
+    companyId: id,
+  });
 }

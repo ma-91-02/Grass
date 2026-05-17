@@ -5,6 +5,7 @@ import {
   successResponse,
   errorResponse,
   unauthorizedError,
+  forbiddenError,
   notFoundError,
   serverError,
 } from "@/lib/api-response";
@@ -150,7 +151,7 @@ export async function DELETE(
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
   if (!checkPermission(user, PERMISSIONS.FISCAL_PERIODS_MANAGE))
-    return unauthorizedError();
+    return forbiddenError();
 
   const { id } = await params;
 
@@ -160,11 +161,26 @@ export async function DELETE(
   if (existing.status !== "FUTURE")
     return errorResponse("يمكن حذف الفترات المستقبلية فقط");
 
+  const journalCount = await prisma.journalEntry.count({
+    where: { fiscalPeriodId: id },
+  });
+
+  if (journalCount > 0) {
+    return errorResponse(
+      "لا يمكن حذف الفترة المالية لوجود قيود يومية مرتبطة بها",
+      409,
+    );
+  }
+
   await prisma.fiscalPeriod.delete({ where: { id } });
 
   await logAudit(user.userId, "DELETE", "FiscalPeriod", id, {
     name: existing.name,
+    wasPermanent: true,
   });
 
-  return successResponse({ deleted: true });
+  return successResponse({
+    action: "deleted",
+    fiscalPeriodId: id,
+  });
 }
