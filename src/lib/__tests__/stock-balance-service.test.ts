@@ -446,6 +446,66 @@ describe("StockBalanceService", () => {
     expect(result.balance?.averageCost).toBe(0);
   });
 
+  it("rejects second OPENING_BALANCE when balance already exists", async () => {
+    const tx = createMockTx();
+    tx.stockMovement.findUnique.mockResolvedValue({
+      id: "m13",
+      companyId: "c1",
+      productId: "p1",
+      warehouseId: "w1",
+      movementType: "OPENING_BALANCE",
+      quantity: 20,
+      unitCost: 5,
+      currency: "IQD",
+      status: "DRAFT",
+    });
+    // Existing balance means an opening balance was already posted
+    tx.stockBalance.findUnique.mockResolvedValue({
+      id: "b1",
+      quantityOnHand: 50,
+      reservedQuantity: 0,
+      averageCost: 2,
+      totalValue: 100,
+    });
+
+    const result = await StockBalanceService.applyPostedMovement(
+      tx as never,
+      "m13",
+    );
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("يوجد رصيد افتتاحي مسجل مسبقاً");
+  });
+
+  it("rejects OPENING_BALANCE after any posted movement exists", async () => {
+    const tx = createMockTx();
+    tx.stockMovement.findUnique.mockResolvedValue({
+      id: "m14",
+      companyId: "c1",
+      productId: "p1",
+      warehouseId: "w1",
+      movementType: "OPENING_BALANCE",
+      quantity: 10,
+      unitCost: 3,
+      currency: "IQD",
+      status: "DRAFT",
+    });
+    // Any existing balance (from IN, ADJUSTMENT_IN, etc.) blocks opening balance
+    tx.stockBalance.findUnique.mockResolvedValue({
+      id: "b1",
+      quantityOnHand: 30,
+      reservedQuantity: 0,
+      averageCost: 8,
+      totalValue: 240,
+    });
+
+    const result = await StockBalanceService.applyPostedMovement(
+      tx as never,
+      "m14",
+    );
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("يوجد رصيد افتتاحي مسجل مسبقاً");
+  });
+
   it("getBalance returns balance with cost data", async () => {
     (
       prisma.stockBalance.findUnique as ReturnType<typeof vi.fn>

@@ -136,6 +136,24 @@ export async function POST(request: NextRequest) {
       return conflictError("المخزن لا ينتمي لنفس الشركة");
     }
 
+    // Opening balance can only be created when no prior posted balance exists
+    if (parsed.movementType === "OPENING_BALANCE") {
+      const existingBalance = await prisma.stockBalance.findUnique({
+        where: {
+          companyId_productId_warehouseId: {
+            companyId: parsed.companyId,
+            productId: parsed.productId,
+            warehouseId: parsed.warehouseId,
+          },
+        },
+      });
+      if (existingBalance) {
+        return conflictError(
+          "يوجد رصيد افتتاحي مسجل مسبقاً لهذه المادة في هذا المخزن",
+        );
+      }
+    }
+
     const movementDate = parsed.movementDate
       ? new Date(parsed.movementDate)
       : new Date();

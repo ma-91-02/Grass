@@ -187,7 +187,10 @@ describe("requireDbPermission", () => {
     });
 
     // requireDbPermission should query DB, not trust JWT
-    const result = await requireDbPermission(staleJwtUser.userId, "journals.post");
+    const result = await requireDbPermission(
+      staleJwtUser.userId,
+      "journals.post",
+    );
     expect(result).toBe(false);
   });
 });

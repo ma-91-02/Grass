@@ -91,7 +91,12 @@ export async function POST(request: NextRequest) {
   const currentUser = await getCurrentUser();
   if (!currentUser) return unauthorizedError();
 
-  if (!(await requireDbPermission(currentUser.userId, PERMISSIONS.PRODUCTS_CREATE))) {
+  if (
+    !(await requireDbPermission(
+      currentUser.userId,
+      PERMISSIONS.PRODUCTS_CREATE,
+    ))
+  ) {
     return forbiddenError("لا تملك صلاحية إنشاء مادة");
   }
 

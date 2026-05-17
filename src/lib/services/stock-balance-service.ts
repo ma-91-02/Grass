@@ -74,6 +74,25 @@ export class StockBalanceService {
     const companyId = movement.companyId;
     const movementUnitCost = Number(movement.unitCost ?? 0);
 
+    // Opening balance can only be applied when no prior balance exists
+    if (movementType === "OPENING_BALANCE") {
+      const existingBalance = await tx.stockBalance.findUnique({
+        where: {
+          companyId_productId_warehouseId: {
+            companyId,
+            productId: movement.productId,
+            warehouseId: movement.warehouseId,
+          },
+        },
+      });
+      if (existingBalance) {
+        return {
+          success: false,
+          error: "يوجد رصيد افتتاحي مسجل مسبقاً لهذه المادة في هذا المخزن",
+        };
+      }
+    }
+
     // Get or create balance
     const balance = await tx.stockBalance.findUnique({
       where: {

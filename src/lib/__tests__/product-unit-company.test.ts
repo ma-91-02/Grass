@@ -68,7 +68,9 @@ vi.mock("@/lib/api-response", () => ({
   successResponse: (data: unknown, status = 200) =>
     new Response(JSON.stringify({ success: true, data }), { status }),
   errorResponse: (message: string, status = 400) =>
-    new Response(JSON.stringify({ success: false, error: message }), { status }),
+    new Response(JSON.stringify({ success: false, error: message }), {
+      status,
+    }),
   unauthorizedError: () =>
     new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
       status: 401,
@@ -110,7 +112,9 @@ describe("products route company isolation", () => {
 
     const { GET } = await import("@/app/api/products/[id]/route");
     const req = new Request("http://localhost/api/products/p1");
-    const res = await GET(req as never, { params: Promise.resolve({ id: "p1" }) });
+    const res = await GET(req as never, {
+      params: Promise.resolve({ id: "p1" }),
+    });
     expect(res.status).toBe(403);
   });
 
@@ -130,12 +134,18 @@ describe("products route company isolation", () => {
       companyId: "c1",
     });
     (prisma.invoiceItem.count as ReturnType<typeof vi.fn>).mockResolvedValue(1);
-    (prisma.purchaseInvoiceItem.count as ReturnType<typeof vi.fn>).mockResolvedValue(0);
-    (prisma.stockMovement.count as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+    (
+      prisma.purchaseInvoiceItem.count as ReturnType<typeof vi.fn>
+    ).mockResolvedValue(0);
+    (prisma.stockMovement.count as ReturnType<typeof vi.fn>).mockResolvedValue(
+      0,
+    );
 
     const { DELETE } = await import("@/app/api/products/[id]/route");
     const req = new Request("http://localhost/api/products/p1");
-    const res = await DELETE(req as never, { params: Promise.resolve({ id: "p1" }) });
+    const res = await DELETE(req as never, {
+      params: Promise.resolve({ id: "p1" }),
+    });
     const json = await res.json();
     expect(res.status).toBe(200);
     expect(json.data.action).toBe("deactivated");
@@ -167,7 +177,9 @@ describe("categories route company isolation", () => {
 
     const { GET } = await import("@/app/api/categories/[id]/route");
     const req = new Request("http://localhost/api/categories/cat1");
-    const res = await GET(req as never, { params: Promise.resolve({ id: "cat1" }) });
+    const res = await GET(req as never, {
+      params: Promise.resolve({ id: "cat1" }),
+    });
     expect(res.status).toBe(403);
   });
 
@@ -181,7 +193,9 @@ describe("categories route company isolation", () => {
     });
     (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
     (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
-    (prisma.productCategory.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+    (
+      prisma.productCategory.findFirst as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({
       id: "existing",
       code: "FOOD",
     });
@@ -219,7 +233,9 @@ describe("units route company isolation", () => {
 
     const { GET } = await import("@/app/api/units/[id]/route");
     const req = new Request("http://localhost/api/units/u1");
-    const res = await GET(req as never, { params: Promise.resolve({ id: "u1" }) });
+    const res = await GET(req as never, {
+      params: Promise.resolve({ id: "u1" }),
+    });
     expect(res.status).toBe(403);
   });
 
@@ -241,7 +257,12 @@ describe("units route company isolation", () => {
     const { POST } = await import("@/app/api/units/route");
     const req = new Request("http://localhost/api/units", {
       method: "POST",
-      body: JSON.stringify({ companyId: "c1", name: "Box", code: "BOX", type: "BOX" }),
+      body: JSON.stringify({
+        companyId: "c1",
+        name: "Box",
+        code: "BOX",
+        type: "BOX",
+      }),
     });
     const res = await POST(req as never);
     expect(res.status).toBe(409);
@@ -266,7 +287,9 @@ describe("units route company isolation", () => {
 
     const { DELETE } = await import("@/app/api/units/[id]/route");
     const req = new Request("http://localhost/api/units/u1");
-    const res = await DELETE(req as never, { params: Promise.resolve({ id: "u1" }) });
+    const res = await DELETE(req as never, {
+      params: Promise.resolve({ id: "u1" }),
+    });
     const json = await res.json();
     expect(res.status).toBe(200);
     expect(json.data.action).toBe("deactivated");

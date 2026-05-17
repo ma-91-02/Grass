@@ -21,7 +21,12 @@ import { z } from "zod";
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!(await requireDbPermission(user.userId, PERMISSIONS.PRODUCT_CATEGORIES_VIEW)))
+  if (
+    !(await requireDbPermission(
+      user.userId,
+      PERMISSIONS.PRODUCT_CATEGORIES_VIEW,
+    ))
+  )
     return forbiddenError();
 
   // Load user's company scope
@@ -46,7 +51,12 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!(await requireDbPermission(user.userId, PERMISSIONS.PRODUCT_CATEGORIES_CREATE)))
+  if (
+    !(await requireDbPermission(
+      user.userId,
+      PERMISSIONS.PRODUCT_CATEGORIES_CREATE,
+    ))
+  )
     return forbiddenError();
 
   try {

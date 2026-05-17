@@ -30,14 +30,22 @@ export async function GET(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!(await requireDbPermission(user.userId, PERMISSIONS.PRODUCT_CATEGORIES_VIEW)))
+  if (
+    !(await requireDbPermission(
+      user.userId,
+      PERMISSIONS.PRODUCT_CATEGORIES_VIEW,
+    ))
+  )
     return forbiddenError();
 
   const { id } = await params;
   const category = await prisma.productCategory.findUnique({ where: { id } });
   if (!category) return notFoundError();
 
-  if (category.companyId && !(await canAccessCompany(user, category.companyId))) {
+  if (
+    category.companyId &&
+    !(await canAccessCompany(user, category.companyId))
+  ) {
     return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
   }
 
@@ -50,14 +58,22 @@ export async function PATCH(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!(await requireDbPermission(user.userId, PERMISSIONS.PRODUCT_CATEGORIES_EDIT)))
+  if (
+    !(await requireDbPermission(
+      user.userId,
+      PERMISSIONS.PRODUCT_CATEGORIES_EDIT,
+    ))
+  )
     return forbiddenError();
 
   const { id } = await params;
   const existing = await prisma.productCategory.findUnique({ where: { id } });
   if (!existing) return notFoundError();
 
-  if (existing.companyId && !(await canAccessCompany(user, existing.companyId))) {
+  if (
+    existing.companyId &&
+    !(await canAccessCompany(user, existing.companyId))
+  ) {
     return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
   }
 
@@ -103,14 +119,22 @@ export async function DELETE(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!(await requireDbPermission(user.userId, PERMISSIONS.PRODUCT_CATEGORIES_DELETE)))
+  if (
+    !(await requireDbPermission(
+      user.userId,
+      PERMISSIONS.PRODUCT_CATEGORIES_DELETE,
+    ))
+  )
     return forbiddenError();
 
   const { id } = await params;
   const category = await prisma.productCategory.findUnique({ where: { id } });
   if (!category) return notFoundError();
 
-  if (category.companyId && !(await canAccessCompany(user, category.companyId))) {
+  if (
+    category.companyId &&
+    !(await canAccessCompany(user, category.companyId))
+  ) {
     return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
   }
 
