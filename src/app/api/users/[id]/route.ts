@@ -1,12 +1,18 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, hashPassword, logAudit } from "@/lib/auth";
+import {
+  getCurrentUser,
+  hashPassword,
+  logAudit,
+  checkPermission,
+} from "@/lib/auth";
 import {
   successResponse,
-  errorResponse,
   unauthorizedError,
+  forbiddenError,
   notFoundError,
 } from "@/lib/api-response";
+import { PERMISSIONS } from "@/lib/permissions";
 
 export async function GET(
   request: NextRequest,
@@ -14,6 +20,7 @@ export async function GET(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
+  if (!checkPermission(user, PERMISSIONS.USERS_VIEW)) return forbiddenError();
 
   const { id } = await params;
   const found = await prisma.user.findUnique({
@@ -39,6 +46,8 @@ export async function PATCH(
 ) {
   const currentUser = await getCurrentUser();
   if (!currentUser) return unauthorizedError();
+  if (!checkPermission(currentUser, PERMISSIONS.USERS_EDIT))
+    return forbiddenError();
 
   const { id } = await params;
   const body = await request.json();
@@ -78,4 +87,24 @@ export async function PATCH(
     phone: updated.phone,
     roles: updated.roles.map((r) => r.role.name),
   });
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) return unauthorizedError();
+  if (!checkPermission(currentUser, PERMISSIONS.USERS_DELETE))
+    return forbiddenError();
+
+  const { id } = await params;
+
+  const existing = await prisma.user.findUnique({ where: { id } });
+  if (!existing) return notFoundError();
+
+  await prisma.user.delete({ where: { id } });
+  await logAudit(currentUser.userId, "DELETE", "User", id);
+
+  return successResponse({ deleted: true });
 }

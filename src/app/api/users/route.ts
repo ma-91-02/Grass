@@ -1,15 +1,23 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, hashPassword, logAudit } from "@/lib/auth";
+import {
+  getCurrentUser,
+  hashPassword,
+  logAudit,
+  checkPermission,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
   unauthorizedError,
+  forbiddenError,
 } from "@/lib/api-response";
+import { PERMISSIONS } from "@/lib/permissions";
 
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
+  if (!checkPermission(user, PERMISSIONS.USERS_VIEW)) return forbiddenError();
 
   const users = await prisma.user.findMany({
     include: {
@@ -34,6 +42,8 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const currentUser = await getCurrentUser();
   if (!currentUser) return unauthorizedError();
+  if (!checkPermission(currentUser, PERMISSIONS.USERS_CREATE))
+    return forbiddenError();
 
   try {
     const body = await request.json();

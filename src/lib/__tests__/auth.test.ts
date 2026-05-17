@@ -2,7 +2,14 @@ import { describe, it, expect } from "vitest";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { loginSchema } from "@/lib/auth/validation";
 import { checkRateLimit, resetRateLimit } from "@/lib/auth/rate-limit";
-import { successResponse, errorResponse } from "@/lib/api-response";
+import { checkPermission, checkRole } from "@/lib/auth";
+import {
+  successResponse,
+  errorResponse,
+  forbiddenError,
+} from "@/lib/api-response";
+import { PERMISSIONS } from "@/lib/permissions";
+import type { TokenPayload } from "@/lib/auth";
 
 describe("hashPassword and verifyPassword", () => {
   it("hashes and verifies a password correctly", async () => {
@@ -220,5 +227,80 @@ describe("login success response shape", () => {
     expect(body.success).toBe(false);
     expect(body.error).toBeTruthy();
     expect(body.data).toBeUndefined();
+  });
+});
+
+describe("checkPermission", () => {
+  const mockUser: TokenPayload = {
+    userId: "test-id",
+    email: "test@grass.com",
+    name: "Test",
+    roles: ["admin"],
+    permissions: ["users.view", "users.edit", "roles.view"],
+  } as TokenPayload;
+
+  it("returns true when user has permission", () => {
+    expect(checkPermission(mockUser, PERMISSIONS.USERS_VIEW)).toBe(true);
+    expect(checkPermission(mockUser, PERMISSIONS.USERS_EDIT)).toBe(true);
+    expect(checkPermission(mockUser, PERMISSIONS.ROLES_VIEW)).toBe(true);
+  });
+
+  it("returns false when user lacks permission", () => {
+    expect(checkPermission(mockUser, PERMISSIONS.USERS_DELETE)).toBe(false);
+    expect(checkPermission(mockUser, PERMISSIONS.USERS_CREATE)).toBe(false);
+    expect(checkPermission(mockUser, PERMISSIONS.ROLES_MANAGE)).toBe(false);
+  });
+
+  it("returns false when user is null", () => {
+    expect(checkPermission(null, PERMISSIONS.USERS_VIEW)).toBe(false);
+  });
+});
+
+describe("checkRole", () => {
+  const mockUser: TokenPayload = {
+    userId: "test-id",
+    email: "test@grass.com",
+    name: "Test",
+    roles: ["admin", "manager"],
+    permissions: [],
+  } as TokenPayload;
+
+  it("returns true when user has role", () => {
+    expect(checkRole(mockUser, "admin")).toBe(true);
+    expect(checkRole(mockUser, "manager")).toBe(true);
+  });
+
+  it("returns false when user lacks role", () => {
+    expect(checkRole(mockUser, "superadmin")).toBe(false);
+    expect(checkRole(mockUser, "viewer")).toBe(false);
+  });
+
+  it("returns false when user is null", () => {
+    expect(checkRole(null, "admin")).toBe(false);
+  });
+});
+
+describe("forbiddenError", () => {
+  it("returns 403 status", () => {
+    const res = forbiddenError();
+    expect(res.status).toBe(403);
+  });
+
+  it("returns success: false", async () => {
+    const res = forbiddenError();
+    const body = await res.json();
+    expect(body.success).toBe(false);
+  });
+
+  it("returns custom message", async () => {
+    const res = forbiddenError("ممنوع");
+    const body = await res.json();
+    expect(body.error).toBe("ممنوع");
+  });
+
+  it("returns default message when not specified", async () => {
+    const res = forbiddenError();
+    const body = await res.json();
+    expect(body.error).toBe("لا تملك الصلاحية");
   });
 });
