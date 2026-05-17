@@ -292,4 +292,140 @@ describe("stock-movements route company isolation", () => {
     expect(res.status).toBe(200);
     expect(json.data.action).toBe("deleted");
   });
+
+  it("PATCH movementDate updates the date correctly", async () => {
+    const mockUpdate = vi.fn().mockResolvedValue({
+      id: "m1",
+      productId: "p1",
+      warehouseId: "w1",
+      movementType: "IN",
+      quantity: 10,
+    });
+    (prisma.stockMovement as unknown as { update: typeof mockUpdate }).update =
+      mockUpdate;
+
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (
+      prisma.stockMovement.findUnique as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({
+      id: "m1",
+      companyId: "c1",
+      status: "DRAFT",
+      productId: "p1",
+      warehouseId: "w1",
+    });
+
+    const { PATCH } = await import("@/app/api/stock-movements/[id]/route");
+    const req = new Request("http://localhost/api/stock-movements/m1", {
+      method: "PATCH",
+      body: JSON.stringify({ movementDate: "2025-06-15" }),
+    });
+    const res = await PATCH(req as never, {
+      params: Promise.resolve({ id: "m1" }),
+    });
+    expect(res.status).toBe(200);
+
+    const updateCall = mockUpdate.mock.calls[0][0];
+    expect(updateCall.data.movementDate instanceof Date).toBe(true);
+    expect(
+      updateCall.data.movementDate.toISOString().startsWith("2025-06-15"),
+    ).toBe(true);
+  });
+
+  it("PATCH without movementDate does not change the date", async () => {
+    const mockUpdate = vi.fn().mockResolvedValue({
+      id: "m1",
+      productId: "p1",
+      warehouseId: "w1",
+      movementType: "IN",
+      quantity: 10,
+    });
+    (prisma.stockMovement as unknown as { update: typeof mockUpdate }).update =
+      mockUpdate;
+
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (
+      prisma.stockMovement.findUnique as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({
+      id: "m1",
+      companyId: "c1",
+      status: "DRAFT",
+      productId: "p1",
+      warehouseId: "w1",
+    });
+
+    const { PATCH } = await import("@/app/api/stock-movements/[id]/route");
+    const req = new Request("http://localhost/api/stock-movements/m1", {
+      method: "PATCH",
+      body: JSON.stringify({ quantity: 25 }),
+    });
+    const res = await PATCH(req as never, {
+      params: Promise.resolve({ id: "m1" }),
+    });
+    expect(res.status).toBe(200);
+
+    const updateCall = mockUpdate.mock.calls[0][0];
+    expect(updateCall.data).not.toHaveProperty("movementDate");
+  });
+
+  it("PATCH with null movementDate ignores the date", async () => {
+    const mockUpdate = vi.fn().mockResolvedValue({
+      id: "m1",
+      productId: "p1",
+      warehouseId: "w1",
+      movementType: "IN",
+      quantity: 10,
+    });
+    (prisma.stockMovement as unknown as { update: typeof mockUpdate }).update =
+      mockUpdate;
+
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (
+      prisma.stockMovement.findUnique as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({
+      id: "m1",
+      companyId: "c1",
+      status: "DRAFT",
+      productId: "p1",
+      warehouseId: "w1",
+    });
+
+    const { PATCH } = await import("@/app/api/stock-movements/[id]/route");
+    const req = new Request("http://localhost/api/stock-movements/m1", {
+      method: "PATCH",
+      body: JSON.stringify({ movementDate: null, quantity: 25 }),
+    });
+    const res = await PATCH(req as never, {
+      params: Promise.resolve({ id: "m1" }),
+    });
+    expect(res.status).toBe(200);
+
+    const updateCall = mockUpdate.mock.calls[0][0];
+    expect(updateCall.data).not.toHaveProperty("movementDate");
+    expect(updateCall.data.quantity).toBe(25);
+  });
 });

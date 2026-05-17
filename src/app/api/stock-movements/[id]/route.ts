@@ -130,14 +130,23 @@ export async function PATCH(
       }
     }
 
-    const movementDate = parsed.movementDate
-      ? new Date(parsed.movementDate)
-      : undefined;
-
     const updateData: Record<string, unknown> = { ...parsed };
-    if (movementDate) updateData.movementDate = movementDate;
-    delete updateData.movementDate; // handled above
-    if (parsed.movementDate === null) updateData.movementDate = new Date();
+
+    // Handle movementDate: if string → Date, if null → delete key, if absent → ignore
+    if (parsed.movementDate !== undefined) {
+      if (parsed.movementDate === null) {
+        delete updateData.movementDate;
+      } else {
+        updateData.movementDate = new Date(parsed.movementDate);
+      }
+    }
+
+    // Remove undefined/null keys that should not overwrite DB values
+    for (const key of Object.keys(updateData)) {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    }
 
     const movement = await prisma.stockMovement.update({
       where: { id },
