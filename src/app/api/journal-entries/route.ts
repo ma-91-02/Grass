@@ -8,6 +8,9 @@ import {
   serverError,
 } from "@/lib/api-response";
 import { journalEntryFormSchema } from "@/lib/schemas";
+import { LedgerValidator } from "@/lib/services/ledger-validator";
+import { PeriodGuard } from "@/lib/services/period-guard";
+import { CurrencyGuard } from "@/lib/services/currency-guard";
 import { PERMISSIONS } from "@/lib/permissions";
 import { z } from "zod";
 
@@ -79,29 +82,89 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = journalEntryFormSchema.parse(body);
 
+    const entryDate = parsed.entryDate
+      ? new Date(parsed.entryDate)
+      : new Date();
+
+    // Normalize lines for validation (strip null from description)
+    const linesForValidation = parsed.lines.map((l) => ({
+      accountId: l.accountId,
+      debit: l.debit,
+      credit: l.credit,
+      description: l.description ?? undefined,
+    }));
+
+    // 1. Validate line-level financial invariants
+    const lineValidation = LedgerValidator.validateLines(linesForValidation);
+    if (!lineValidation.valid) {
+      return errorResponse(lineValidation.errors.join(" | "));
+    }
+
+    // 2. Load and validate all accounts
+    const accountIds = [...new Set(parsed.lines.map((l) => l.accountId))];
+    const accounts = await prisma.account.findMany({
+      where: { id: { in: accountIds } },
+    });
+    const accountMap = new Map(accounts.map((a) => [a.id, a]));
+
+    for (const line of parsed.lines) {
+      const account = accountMap.get(line.accountId);
+      if (!account) return errorResponse("أحد الحسابات غير موجود");
+      if (!account.isActive)
+        return errorResponse(`الحساب "${account.name}" غير نشط`);
+      if (!account.isPosting)
+        return errorResponse(`الحساب "${account.name}" غير قابل للترحيل`);
+      if (!account.allowManualJournal)
+        return errorResponse(
+          `الحساب "${account.name}" لا يسمح بالقيد اليدوي`,
+        );
+      if (account.companyId !== parsed.companyId)
+        return errorResponse(
+          `الحساب "${account.name}" لا ينتمي لنفس الشركة`,
+        );
+    }
+
+    // 3. Validate currency isolation
+    const accountCurrencyMap = new Map(
+      accounts.map((a) => [a.id, a.currency]),
+    );
+    const currencyCheck = CurrencyGuard.validateJournalCurrency(
+      parsed.currency,
+      linesForValidation,
+      accountCurrencyMap,
+    );
+    if (!currencyCheck.allowed) {
+      return errorResponse(currencyCheck.errors.join(" | "));
+    }
+
+    // 4. Validate fiscal period is open
+    const periodCheck = await PeriodGuard.checkPeriodOpen(
+      parsed.companyId,
+      entryDate,
+      parsed.branchId || undefined,
+    );
+    if (!periodCheck.allowed) {
+      return errorResponse(periodCheck.error!);
+    }
+
+    // 5. Resolve or validate fiscal period
+    let fiscalPeriodId = parsed.fiscalPeriodId || null;
+    if (!fiscalPeriodId) {
+      const period = await PeriodGuard.getOpenPeriod(
+        parsed.companyId,
+        entryDate,
+        parsed.branchId || undefined,
+      );
+      if (period) fiscalPeriodId = period.id;
+    }
+
+    // 6. Generate entry number
     const entryCount = await prisma.journalEntry.count({
       where: { companyId: parsed.companyId },
     });
     const entryNumber = `JE-${String(entryCount + 1).padStart(5, "0")}`;
 
-    const entryDate = parsed.entryDate
-      ? new Date(parsed.entryDate)
-      : new Date();
-
-    let fiscalPeriodId = parsed.fiscalPeriodId || null;
-    if (!fiscalPeriodId) {
-      const period = await prisma.fiscalPeriod.findFirst({
-        where: {
-          companyId: parsed.companyId,
-          startDate: { lte: entryDate },
-          endDate: { gte: entryDate },
-          status: { not: "FUTURE" },
-        },
-        orderBy: { startDate: "desc" },
-      });
-      if (period) fiscalPeriodId = period.id;
-    }
-
+    // 7. Create journal entry with lines
     const journalEntry = await prisma.journalEntry.create({
       data: {
         companyId: parsed.companyId,
