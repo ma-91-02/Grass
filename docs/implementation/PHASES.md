@@ -230,3 +230,16 @@ Add approvals, closing, advanced security, reliability, queues, reconciliation, 
 - Period close is safe.
 - Approvals block posting when required.
 - Integrity jobs detect mismatches.
+
+## Implementation Checklist
+
+- [ ] Confirm the phase scope before coding.
+- [ ] Read every file listed in the phase `Must Read` section.
+- [ ] Implement phase outputs only; do not jump ahead into later phases.
+- [ ] Enforce `AI_GLOBAL_RULES.md` for every task.
+- [ ] Add or update tests required by `TESTING_STRATEGY.md`.
+- [ ] Update relevant docs when APIs, workflows, schema, permissions, posting logic, or business rules change.
+- [ ] Run format, lint, typecheck, tests when available, build, and relevant health checks.
+- [ ] Commit with a clear message after checks pass.
+- [ ] Push the branch to GitHub.
+- [ ] Provide Arabic final report with branch, commit, changed files, docs, checks, risks, and push status.

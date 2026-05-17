@@ -107,6 +107,36 @@
 - Ledger/stock invariants are preserved.
 - Tests cover success, failure, and forbidden paths.
 
+## GitHub + Documentation + Arabic Report Rule
+
+After every successful task, the AI Agent must:
+
+- Run the appropriate checks:
+  - format.
+  - lint.
+  - typecheck.
+  - tests.
+  - build.
+  - relevant health checks.
+- Update relevant documentation under `docs/` whenever APIs, workflows, database schema, posting logic, permissions, architecture, module behavior, or business rules change.
+- Never consider a task complete if documentation updates are required but missing.
+- Commit changes with a clear commit message.
+- Push changes to GitHub after checks pass.
+- Never commit secrets, `.env` files, tokens, API keys, credentials, or sensitive production data.
+- Provide a final report in Arabic including:
+  - branch name.
+  - commit hash.
+  - commit message.
+  - changed files.
+  - updated documentation files.
+  - checks results.
+  - tests added/updated.
+  - risks or notes.
+  - GitHub push status.
+  - commit or branch link if available.
+
+A task is not considered DONE unless code, tests, documentation, checks, GitHub push, and Arabic final report are completed successfully, or blockers are explicitly reported.
+
 ## Implementation Checklist
 
 - [ ] Confirm module boundary.
@@ -123,3 +153,6 @@
 - No business logic in routes.
 - No UI Prisma usage.
 - Financial and inventory invariants remain intact.
+- Required documentation is updated.
+- Checks are run and reported.
+- Changes are committed and pushed to GitHub when the task succeeds.

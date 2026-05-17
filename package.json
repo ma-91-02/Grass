@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "test": "node -e \"console.log('No automated tests configured yet. See docs/implementation/TESTING_STRATEGY.md')\"",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",

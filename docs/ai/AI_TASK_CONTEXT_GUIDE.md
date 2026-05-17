@@ -27,23 +27,32 @@
 
 ## Task Type Matrix
 
-| Task Type | Must Read |
-|---|---|
-| Accounting | `AI_GLOBAL_RULES.md`, `ACCOUNTING_ENGINE.md`, `POSTING_ENGINE.md`, `FINANCIAL_INVARIANTS.md`, `TRANSACTION_RULES.md`, `API_STANDARDS.md` |
-| Chart of Accounts | `AI_GLOBAL_RULES.md`, `CHART_OF_ACCOUNTS.md`, `FINANCIAL_INVARIANTS.md`, `DATABASE_CONSTRAINTS.md` |
-| Posting Engine | `AI_GLOBAL_RULES.md`, `POSTING_ENGINE.md`, `FINANCIAL_INVARIANTS.md`, `STATE_MACHINES.md`, `TRANSACTION_RULES.md`, `AUDIT_LOGS.md` |
-| Financial Closing | `AI_GLOBAL_RULES.md`, `FINANCIAL_CLOSING.md`, `FINANCIAL_INVARIANTS.md`, `POSTING_ENGINE.md`, `REPORTING_BI.md` |
-| Inventory | `AI_GLOBAL_RULES.md`, `INVENTORY_ENGINE.md`, `STOCK_MOVEMENTS.md`, `INVENTORY_VALUATION.md`, `TRANSACTION_RULES.md` |
-| Sales | `AI_GLOBAL_RULES.md`, `SALES_MODULE.md`, `SALES_POSTING.md`, `POSTING_ENGINE.md`, `INVENTORY_ENGINE.md`, `API_STANDARDS.md` |
-| Purchases | `AI_GLOBAL_RULES.md`, `PURCHASES_MODULE.md`, `PURCHASES_POSTING.md`, `POSTING_ENGINE.md`, `INVENTORY_VALUATION.md`, `API_STANDARDS.md` |
-| UI Only | `AI_GLOBAL_RULES.md`, `SYSTEM_OVERVIEW.md`, `MODULE_BOUNDARIES.md`, `API_STANDARDS.md` |
-| API | `AI_GLOBAL_RULES.md`, `API_STANDARDS.md`, relevant module file, `TRANSACTION_RULES.md` if mutation |
-| Database Schema | `AI_GLOBAL_RULES.md`, `DATABASE_CONSTRAINTS.md`, relevant module file, `FINANCIAL_INVARIANTS.md` if financial |
-| Auth/RBAC | `AI_GLOBAL_RULES.md`, `AUTH_RBAC.md`, `SECURITY_ARCHITECTURE.md`, `AUDIT_LOGS.md` |
-| Audit | `AI_GLOBAL_RULES.md`, `AUDIT_LOGS.md`, `SECURITY_ARCHITECTURE.md`, relevant module file |
-| Reports/BI | `AI_GLOBAL_RULES.md`, `REPORTING_BI.md`, `FINANCIAL_INVARIANTS.md`, related module files |
-| Testing | `AI_GLOBAL_RULES.md`, `TESTING_STRATEGY.md`, relevant module files |
-| Phase Planning | `AI_GLOBAL_RULES.md`, `PHASES.md`, `ACCEPTANCE_CRITERIA.md` |
+| Task Type            | Must Read                                                                                                                                |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Accounting           | `AI_GLOBAL_RULES.md`, `ACCOUNTING_ENGINE.md`, `POSTING_ENGINE.md`, `FINANCIAL_INVARIANTS.md`, `TRANSACTION_RULES.md`, `API_STANDARDS.md` |
+| Chart of Accounts    | `AI_GLOBAL_RULES.md`, `CHART_OF_ACCOUNTS.md`, `FINANCIAL_INVARIANTS.md`, `DATABASE_CONSTRAINTS.md`                                       |
+| Posting Engine       | `AI_GLOBAL_RULES.md`, `POSTING_ENGINE.md`, `FINANCIAL_INVARIANTS.md`, `STATE_MACHINES.md`, `TRANSACTION_RULES.md`, `AUDIT_LOGS.md`       |
+| Financial Closing    | `AI_GLOBAL_RULES.md`, `FINANCIAL_CLOSING.md`, `FINANCIAL_INVARIANTS.md`, `POSTING_ENGINE.md`, `REPORTING_BI.md`                          |
+| Inventory            | `AI_GLOBAL_RULES.md`, `INVENTORY_ENGINE.md`, `STOCK_MOVEMENTS.md`, `INVENTORY_VALUATION.md`, `TRANSACTION_RULES.md`                      |
+| Sales                | `AI_GLOBAL_RULES.md`, `SALES_MODULE.md`, `SALES_POSTING.md`, `POSTING_ENGINE.md`, `INVENTORY_ENGINE.md`, `API_STANDARDS.md`              |
+| Purchases            | `AI_GLOBAL_RULES.md`, `PURCHASES_MODULE.md`, `PURCHASES_POSTING.md`, `POSTING_ENGINE.md`, `INVENTORY_VALUATION.md`, `API_STANDARDS.md`   |
+| UI Only              | `AI_GLOBAL_RULES.md`, `SYSTEM_OVERVIEW.md`, `MODULE_BOUNDARIES.md`, `API_STANDARDS.md`                                                   |
+| API                  | `AI_GLOBAL_RULES.md`, `API_STANDARDS.md`, relevant module file, `TRANSACTION_RULES.md` if mutation                                       |
+| Database Schema      | `AI_GLOBAL_RULES.md`, `DATABASE_CONSTRAINTS.md`, relevant module file, `FINANCIAL_INVARIANTS.md` if financial                            |
+| Auth/RBAC            | `AI_GLOBAL_RULES.md`, `AUTH_RBAC.md`, `SECURITY_ARCHITECTURE.md`, `AUDIT_LOGS.md`                                                        |
+| Audit                | `AI_GLOBAL_RULES.md`, `AUDIT_LOGS.md`, `SECURITY_ARCHITECTURE.md`, relevant module file                                                  |
+| Reports/BI           | `AI_GLOBAL_RULES.md`, `REPORTING_BI.md`, `FINANCIAL_INVARIANTS.md`, related module files                                                 |
+| Multi-branch         | `AI_GLOBAL_RULES.md`, `MULTI_BRANCH_ACCOUNTING.md`, `MODULE_BOUNDARIES.md`, `TRANSACTION_RULES.md`, `FINANCIAL_INVARIANTS.md`            |
+| Approval Workflows   | `AI_GLOBAL_RULES.md`, `APPROVAL_WORKFLOWS.md`, `STATE_MACHINES.md`, `AUTH_RBAC.md`, `AUDIT_LOGS.md`                                      |
+| Reliability/Recovery | `AI_GLOBAL_RULES.md`, `RELIABILITY_RECOVERY.md`, `ERROR_HANDLING.md`, `TRANSACTION_RULES.md`, `AUDIT_LOGS.md`                            |
+| Customers            | `AI_GLOBAL_RULES.md`, `CUSTOMERS_MODULE.md`, `ACCOUNTING_ENGINE.md`, `SALES_MODULE.md`                                                   |
+| Suppliers            | `AI_GLOBAL_RULES.md`, `SUPPLIERS_MODULE.md`, `ACCOUNTING_ENGINE.md`, `PURCHASES_MODULE.md`                                               |
+| Employees            | `AI_GLOBAL_RULES.md`, `EMPLOYEES_MODULE.md`, `AUTH_RBAC.md`                                                                              |
+| Settings             | `AI_GLOBAL_RULES.md`, `SETTINGS_MODULE.md`, `CHART_OF_ACCOUNTS.md`, `SECURITY_ARCHITECTURE.md`                                           |
+| Performance          | `AI_GLOBAL_RULES.md`, `PERFORMANCE_SCALABILITY.md`, `DATABASE_CONSTRAINTS.md`, `REPORTING_BI.md`                                         |
+| Testing              | `AI_GLOBAL_RULES.md`, `TESTING_STRATEGY.md`, relevant module files                                                                       |
+| Repository Cleanup   | `AI_GLOBAL_RULES.md`, `REPOSITORY_HEALTH.md`, `TESTING_STRATEGY.md`, `ACCEPTANCE_CRITERIA.md`                                            |
+| Phase Planning       | `AI_GLOBAL_RULES.md`, `PHASES.md`, `ACCEPTANCE_CRITERIA.md`                                                                              |
 
 ## If Unsure
 
