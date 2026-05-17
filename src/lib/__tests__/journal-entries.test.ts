@@ -759,9 +759,7 @@ describe("journal status immutability rules", () => {
   });
 
   it("only DRAFT journals can be deleted", () => {
-    const deletableStatuses = VALID_STATUSES.filter(
-      (s) => s === "DRAFT",
-    );
+    const deletableStatuses = VALID_STATUSES.filter((s) => s === "DRAFT");
     expect(deletableStatuses).toEqual(["DRAFT"]);
   });
 
