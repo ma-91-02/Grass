@@ -39,6 +39,7 @@ model User {
   createdSuppliers Supplier[] @relation("SupplierCreatedBy")
   createdStockTransfers StockTransfer[]
   createdStockAdjustments StockAdjustment[]
+  collectionsCreated CustomerCollection[] @relation("CollectionCreatedBy")
 
   @@index([companyId])
 }
@@ -193,6 +194,7 @@ model Customer {
 
   accounts            CustomerAccount[]
   invoices            Invoice[]
+  collections         CustomerCollection[]
 
   @@unique([companyId, code])
   @@index([companyId])
@@ -409,6 +411,7 @@ model Invoice {
 
   items                 InvoiceItem[]
   payments              Payment[]
+  collections           CustomerCollection[]
 
   @@unique([companyId, invoiceNumber])
   @@index([companyId])
@@ -447,6 +450,31 @@ model Payment {
   note        String?
   createdById String?
   createdAt   DateTime @default(now())
+}
+
+model CustomerCollection {
+  id               String   @id @default(cuid())
+  companyId        String?
+  company          Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  customerId       String
+  customer         Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  invoiceId        String?
+  invoice          Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  paymentAccountId String?
+  paymentAccount   PaymentAccount? @relation(fields: [paymentAccountId], references: [id], onDelete: SetNull)
+  amount           Decimal
+  currency         Currency @default(IQD)
+  collectionDate   DateTime @default(now())
+  journalEntryId   String?
+  notes            String?
+  createdById      String?
+  createdBy        User?    @relation("CollectionCreatedBy", fields: [createdById], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([customerId])
+  @@index([invoiceId])
 }
 
 model PurchaseInvoice {
@@ -526,6 +554,7 @@ model PaymentAccount {
 
   purchaseInvoices PurchaseInvoice[]
   invoices Invoice[]
+  customerCollections CustomerCollection[]
 }
 
 model StockMovement {
@@ -691,6 +720,7 @@ model Company {
   units         Unit[]
   warehouses    Warehouse[]
   customers     Customer[]
+  customerCollections CustomerCollection[]
   stockMovements StockMovement[]
   stockTransfers StockTransfer[]
   stockAdjustments StockAdjustment[]

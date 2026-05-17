@@ -18,6 +18,26 @@ const PERMISSIONS = [
   { key: "customers.edit", name: "تعديل عميل", module: "customers" },
   { key: "customers.delete", name: "حذف عميل", module: "customers" },
   {
+    key: "customers.receivables.view",
+    name: "عرض مستحقات العميل",
+    module: "customers",
+  },
+  {
+    key: "customers.statement.view",
+    name: "عرض كشف حساب العميل",
+    module: "customers",
+  },
+  {
+    key: "collections.view",
+    name: "عرض التحصيلات",
+    module: "collections",
+  },
+  {
+    key: "collections.create",
+    name: "إنشاء تحصيل",
+    module: "collections",
+  },
+  {
     key: "customerCategories.view",
     name: "عرض أقسام العملاء",
     module: "customers",
@@ -246,6 +266,10 @@ const ROLES = [
       "sales.edit",
       "sales.delete",
       "sales.post",
+      "customers.receivables.view",
+      "customers.statement.view",
+      "collections.view",
+      "collections.create",
       "accounts.view",
       "accounts.manage",
       "purchases.view",
@@ -262,6 +286,10 @@ const ROLES = [
     permissions: [
       "customers.view",
       "customers.create",
+      "customers.receivables.view",
+      "customers.statement.view",
+      "collections.view",
+      "collections.create",
       "products.view",
       "invoices.view",
       "invoices.create",

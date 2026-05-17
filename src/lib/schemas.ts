@@ -307,3 +307,13 @@ export const salesInvoiceFormSchema = z.object({
 export type PurchaseInvoiceFormData = z.infer<typeof purchaseInvoiceFormSchema>;
 export type SalesInvoiceFormData = z.infer<typeof salesInvoiceFormSchema>;
 export type SalesInvoiceLineData = z.infer<typeof salesInvoiceLineSchema>;
+
+export const customerCollectionSchema = z.object({
+  customerId: z.string().min(1, "العميل مطلوب"),
+  invoiceId: z.string().optional().nullable(),
+  paymentAccountId: z.string().optional().nullable(),
+  amount: z.coerce.number().positive("المبلغ يجب أن يكون أكبر من 0"),
+  currency: z.enum(["IQD", "USD"]).default("IQD"),
+  collectionDate: z.coerce.date().default(new Date()),
+  notes: z.string().optional().nullable(),
+});
