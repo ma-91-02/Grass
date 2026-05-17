@@ -215,13 +215,19 @@ model SupplierAccount {
 
 model ProductCategory {
   id          String    @id @default(cuid())
-  name        String    @unique
+  companyId   String?
+  company     Company?  @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  name        String
+  code        String?
   description String?
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   products    Product[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
 }
 
 model ProductPackaging {
@@ -233,18 +239,42 @@ model ProductPackaging {
   updatedAt       DateTime  @updatedAt
 }
 
+model Unit {
+  id        String   @id @default(cuid())
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  name      String
+  code      String
+  symbol    String?
+  type      String   @default("PIECE")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products  Product[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+}
+
 model Product {
   id               String     @id @default(cuid())
+  companyId        String?
+  company          Company?   @relation(fields: [companyId], references: [id], onDelete: SetNull)
   name             String
-  code             String     @unique
-  barcode          String?    @unique
+  code             String
+  sku              String?
+  barcode          String?
   categoryId       String?
   category         ProductCategory? @relation(fields: [categoryId], references: [id])
+  unitId           String?
+  unit             Unit?      @relation(fields: [unitId], references: [id])
   packaging        String     @default("قطعة")
   piecesPerCarton  Int        @default(0)
-  unit             String     @default("قطعة")
   purchasePrice    Decimal    @default(0)
   purchaseCurrency Currency   @default(IQD)
+  productType      String     @default("STOCK")
+  description    String?
   isActive         Boolean    @default(true)
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
@@ -253,6 +283,12 @@ model Product {
   invoiceItems         InvoiceItem[]
   purchaseInvoiceItems PurchaseInvoiceItem[]
   stockMovements       StockMovement[]
+
+  @@unique([companyId, code])
+  @@unique([companyId, barcode])
+  @@index([companyId])
+  @@index([categoryId])
+  @@index([unitId])
 }
 
 model ProductPrice {
@@ -457,6 +493,9 @@ model Company {
   journalEntries JournalEntry[]
   users         User[]
   purchaseInvoices PurchaseInvoice[]
+  productCategories ProductCategory[]
+  products      Product[]
+  units         Unit[]
 
   @@index([code])
 }

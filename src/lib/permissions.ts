@@ -23,6 +23,16 @@ export const PERMISSIONS = {
   PRODUCTS_DELETE: "products.delete",
   PRODUCTS_VIEW_PURCHASE_PRICE: "products.viewPurchasePrice",
   PRODUCTS_EDIT_PRICE: "products.editPrice",
+
+  PRODUCT_CATEGORIES_VIEW: "productCategories.view",
+  PRODUCT_CATEGORIES_CREATE: "productCategories.create",
+  PRODUCT_CATEGORIES_EDIT: "productCategories.edit",
+  PRODUCT_CATEGORIES_DELETE: "productCategories.delete",
+
+  UNITS_VIEW: "units.view",
+  UNITS_CREATE: "units.create",
+  UNITS_EDIT: "units.edit",
+  UNITS_DELETE: "units.delete",
   WAREHOUSES_VIEW: "warehouses.view",
   WAREHOUSES_MANAGE: "warehouses.manage",
   EXCHANGE_RATES_VIEW: "exchangeRates.view",

@@ -13,14 +13,13 @@ import {
   unauthorizedError,
   forbiddenError,
   notFoundError,
-  conflictError,
 } from "@/lib/api-response";
 import { z } from "zod";
 
-const categoryUpdateSchema = z.object({
+const unitUpdateSchema = z.object({
   name: z.string().min(1, "الاسم مطلوب").optional(),
-  code: z.string().optional().nullable(),
-  description: z.string().optional().nullable(),
+  symbol: z.string().optional().nullable(),
+  type: z.enum(["PIECE", "BOX", "LITER", "KG", "OTHER"] as const).optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -30,18 +29,18 @@ export async function GET(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!(await requireDbPermission(user.userId, PERMISSIONS.PRODUCT_CATEGORIES_VIEW)))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.UNITS_VIEW)))
     return forbiddenError();
 
   const { id } = await params;
-  const category = await prisma.productCategory.findUnique({ where: { id } });
-  if (!category) return notFoundError();
+  const unit = await prisma.unit.findUnique({ where: { id } });
+  if (!unit) return notFoundError();
 
-  if (category.companyId && !(await canAccessCompany(user, category.companyId))) {
+  if (unit.companyId && !(await canAccessCompany(user, unit.companyId))) {
     return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
   }
 
-  return successResponse(category);
+  return successResponse(unit);
 }
 
 export async function PATCH(
@@ -50,41 +49,30 @@ export async function PATCH(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!(await requireDbPermission(user.userId, PERMISSIONS.PRODUCT_CATEGORIES_EDIT)))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.UNITS_EDIT)))
     return forbiddenError();
 
   const { id } = await params;
-  const existing = await prisma.productCategory.findUnique({ where: { id } });
+  const existing = await prisma.unit.findUnique({ where: { id } });
   if (!existing) return notFoundError();
 
-  if (existing.companyId && !(await canAccessCompany(user, existing.companyId))) {
+  if (
+    existing.companyId &&
+    !(await canAccessCompany(user, existing.companyId))
+  ) {
     return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
   }
 
   try {
     const body = await request.json();
-    const parsed = categoryUpdateSchema.parse(body);
+    const parsed = unitUpdateSchema.parse(body);
 
-    // Duplicate name check within same company
-    if (parsed.name && parsed.name !== existing.name) {
-      const duplicate = await prisma.productCategory.findFirst({
-        where: {
-          companyId: existing.companyId,
-          name: parsed.name,
-          id: { not: id },
-        },
-      });
-      if (duplicate) {
-        return conflictError("اسم التصنيف موجود مسبقاً في هذه الشركة");
-      }
-    }
-
-    const updated = await prisma.productCategory.update({
+    const updated = await prisma.unit.update({
       where: { id },
       data: parsed,
     });
 
-    await logAudit(user.userId, "UPDATE", "ProductCategory", id, {
+    await logAudit(user.userId, "UPDATE", "Unit", id, {
       name: updated.name,
     });
 
@@ -93,7 +81,7 @@ export async function PATCH(
     if (error instanceof z.ZodError) {
       return errorResponse(error.issues.map((e) => e.message).join("، "));
     }
-    return errorResponse("فشل تحديث التصنيف", 500);
+    return errorResponse("فشل تحديث الوحدة", 500);
   }
 }
 
@@ -103,30 +91,31 @@ export async function DELETE(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!(await requireDbPermission(user.userId, PERMISSIONS.PRODUCT_CATEGORIES_DELETE)))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.UNITS_DELETE)))
     return forbiddenError();
 
   const { id } = await params;
-  const category = await prisma.productCategory.findUnique({ where: { id } });
-  if (!category) return notFoundError();
+  const unit = await prisma.unit.findUnique({ where: { id } });
+  if (!unit) return notFoundError();
 
-  if (category.companyId && !(await canAccessCompany(user, category.companyId))) {
+  if (unit.companyId && !(await canAccessCompany(user, unit.companyId))) {
     return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
   }
 
+  // Check if unit is used by any product
   const productsCount = await prisma.product.count({
-    where: { categoryId: id },
+    where: { unitId: id },
   });
 
   if (productsCount > 0) {
-    // Safe deactivate instead of hard delete
-    const updated = await prisma.productCategory.update({
+    // Safe deactivate
+    await prisma.unit.update({
       where: { id },
       data: { isActive: false },
     });
 
-    await logAudit(user.userId, "DEACTIVATE", "ProductCategory", id, {
-      name: category.name,
+    await logAudit(user.userId, "DEACTIVATE", "Unit", id, {
+      name: unit.name,
       reason: "has_products",
       productsCount,
     });
@@ -134,10 +123,11 @@ export async function DELETE(
     return successResponse({ id, action: "deactivated", isActive: false });
   }
 
-  await prisma.productCategory.delete({ where: { id } });
+  await prisma.unit.delete({ where: { id } });
 
-  await logAudit(user.userId, "DELETE", "ProductCategory", id, {
-    name: category.name,
+  await logAudit(user.userId, "DELETE", "Unit", id, {
+    name: unit.name,
+    wasPermanent: true,
   });
 
   return successResponse({ id, action: "deleted" });

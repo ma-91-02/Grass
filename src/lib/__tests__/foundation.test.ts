@@ -4,6 +4,9 @@ import {
   branchFormSchema,
   fiscalPeriodFormSchema,
   accountFormSchema,
+  productCategoryFormSchema,
+  unitSchema,
+  productFormSchema,
 } from "@/lib/schemas";
 import { checkPermission, checkRole } from "@/lib/auth";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -845,5 +848,105 @@ describe("account validation rules", () => {
         accountFormSchema.safeParse({ ...baseAccount, type: t }).success,
       ).toBe(true);
     }
+  });
+});
+
+describe("productCategoryFormSchema", () => {
+  const base = {
+    companyId: "c1",
+    name: "مواد غذائية",
+    code: "FOOD",
+  } as const;
+
+  it("accepts valid category", () => {
+    expect(productCategoryFormSchema.safeParse(base).success).toBe(true);
+  });
+
+  it("rejects empty name", () => {
+    expect(
+      productCategoryFormSchema.safeParse({ ...base, name: "" }).success,
+    ).toBe(false);
+  });
+
+  it("rejects missing companyId", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { companyId, ...rest } = base;
+    expect(productCategoryFormSchema.safeParse(rest).success).toBe(false);
+  });
+});
+
+describe("unitSchema", () => {
+  const base = {
+    companyId: "c1",
+    name: "علبة",
+    code: "BOX",
+    type: "BOX",
+  } as const;
+
+  it("accepts valid unit", () => {
+    expect(unitSchema.safeParse(base).success).toBe(true);
+  });
+
+  it("rejects empty name", () => {
+    expect(unitSchema.safeParse({ ...base, name: "" }).success).toBe(false);
+  });
+
+  it("rejects invalid type", () => {
+    expect(unitSchema.safeParse({ ...base, type: "INVALID" }).success).toBe(
+      false,
+    );
+  });
+});
+
+describe("productFormSchema", () => {
+  const base = {
+    companyId: "c1",
+    name: "تمر",
+    code: "DATES-01",
+    sku: "SKU-001",
+    barcode: "123456789",
+    categoryId: "cat-1",
+    unitId: "unit-1",
+    packaging: "قطعة",
+    purchasePrice: 1000,
+    purchaseCurrency: "IQD",
+    productType: "STOCK",
+    description: "تمر عراقي",
+    isActive: true,
+    prices: [],
+  } as const;
+
+  it("accepts valid product", () => {
+    expect(productFormSchema.safeParse(base).success).toBe(true);
+  });
+
+  it("accepts SERVICE product", () => {
+    expect(
+      productFormSchema.safeParse({ ...base, productType: "SERVICE" }).success,
+    ).toBe(true);
+  });
+
+  it("rejects empty name", () => {
+    expect(productFormSchema.safeParse({ ...base, name: "" }).success).toBe(
+      false,
+    );
+  });
+
+  it("rejects missing companyId", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { companyId, ...rest } = base;
+    expect(productFormSchema.safeParse(rest).success).toBe(false);
+  });
+
+  it("rejects invalid productType", () => {
+    expect(
+      productFormSchema.safeParse({ ...base, productType: "INVALID" }).success,
+    ).toBe(false);
+  });
+
+  it("requires unitId", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { unitId, ...rest } = base;
+    expect(productFormSchema.safeParse(rest).success).toBe(false);
   });
 });

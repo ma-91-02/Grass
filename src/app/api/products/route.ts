@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, logAudit, checkPermission } from "@/lib/auth";
+import {
+  getCurrentUser,
+  logAudit,
+  requireDbPermission,
+  canAccessCompany,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -8,53 +13,41 @@ import {
   forbiddenError,
   conflictError,
 } from "@/lib/api-response";
-import { z } from "zod";
+import { productFormSchema } from "@/lib/schemas";
 import { PERMISSIONS } from "@/lib/permissions";
+import { z } from "zod";
 
-const productSchema = z.object({
-  name: z.string().min(1, "الاسم مطلوب"),
-  code: z.string().min(1, "كود المادة مطلوب"),
-  barcode: z.string().optional().nullable(),
-  categoryId: z.string().min(1, "المجموعة مطلوبة"),
-  packaging: z.enum(["قطعة", "كارتون"] as const),
-  piecesPerCarton: z.number().optional().default(0),
-  purchasePrice: z.number().optional().default(0),
-  purchaseCurrency: z
-    .enum(["USD", "IQD"] as const)
-    .optional()
-    .default("IQD"),
-  prices: z
-    .array(
-      z.object({
-        customerType: z.enum([
-          "INDIVIDUAL",
-          "MARKET",
-          "WHOLESALE",
-          "AGENT",
-          "ONLINE",
-        ]),
-        price: z.number().min(0),
-        currency: z.enum(["USD", "IQD"] as const).default("IQD"),
-      }),
-    )
-    .optional()
-    .default([]),
+const productQuerySchema = z.object({
+  companyId: z.string().min(1, "companyId مطلوب"),
 });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.PRODUCTS_VIEW)))
+    return forbiddenError();
+
+  const { searchParams } = new URL(request.url);
+  const companyId = searchParams.get("companyId");
+
+  if (!companyId) return errorResponse("companyId مطلوب");
+
+  if (!(await canAccessCompany(user, companyId))) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
 
   const products = await prisma.product.findMany({
+    where: { companyId },
     include: {
       category: true,
+      unit: true,
       prices: true,
     },
     orderBy: { createdAt: "desc" },
   });
 
-  const canViewPurchasePrice = checkPermission(
-    user,
+  const canViewPurchasePrice = await requireDbPermission(
+    user.userId,
     PERMISSIONS.PRODUCTS_VIEW_PURCHASE_PRICE,
   );
 
@@ -63,12 +56,16 @@ export async function GET() {
       id: p.id,
       name: p.name,
       code: p.code,
+      sku: p.sku,
       barcode: p.barcode,
       categoryId: p.categoryId,
       categoryName: p.category?.name || null,
+      unitId: p.unitId,
+      unitName: p.unit?.name || null,
       packaging: p.packaging,
       piecesPerCarton: p.piecesPerCarton,
-      unit: p.unit,
+      productType: p.productType,
+      description: p.description,
       isActive: p.isActive,
       prices: p.prices.map((pr) => ({
         id: pr.id,
@@ -94,20 +91,46 @@ export async function POST(request: NextRequest) {
   const currentUser = await getCurrentUser();
   if (!currentUser) return unauthorizedError();
 
-  if (!checkPermission(currentUser, PERMISSIONS.PRODUCTS_CREATE)) {
+  if (!(await requireDbPermission(currentUser.userId, PERMISSIONS.PRODUCTS_CREATE))) {
     return forbiddenError("لا تملك صلاحية إنشاء مادة");
   }
 
   try {
     const body = await request.json();
-    const parsed = productSchema.parse(body);
+    const parsed = productFormSchema.parse(body);
 
-    const canEditPrices = checkPermission(
-      currentUser,
+    if (!(await canAccessCompany(currentUser, parsed.companyId))) {
+      return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+    }
+
+    // Validate category belongs to same company
+    if (parsed.categoryId) {
+      const category = await prisma.productCategory.findUnique({
+        where: { id: parsed.categoryId },
+        select: { companyId: true },
+      });
+      if (!category || category.companyId !== parsed.companyId) {
+        return conflictError("التصنيف لا ينتمي لنفس الشركة");
+      }
+    }
+
+    // Validate unit belongs to same company
+    if (parsed.unitId) {
+      const unit = await prisma.unit.findUnique({
+        where: { id: parsed.unitId },
+        select: { companyId: true },
+      });
+      if (!unit || unit.companyId !== parsed.companyId) {
+        return conflictError("الوحدة لا تنتمي لنفس الشركة");
+      }
+    }
+
+    const canEditPrices = await requireDbPermission(
+      currentUser.userId,
       PERMISSIONS.PRODUCTS_EDIT_PRICE,
     );
-    const canViewPurchasePrice = checkPermission(
-      currentUser,
+    const canViewPurchasePrice = await requireDbPermission(
+      currentUser.userId,
       PERMISSIONS.PRODUCTS_VIEW_PURCHASE_PRICE,
     );
 
@@ -115,36 +138,50 @@ export async function POST(request: NextRequest) {
       return forbiddenError("لا تملك صلاحية تعديل الأسعار أو سعر الشراء");
     }
 
-    const existingCode = await prisma.product.findUnique({
-      where: { code: parsed.code },
+    // Duplicate check per company
+    const existingCode = await prisma.product.findFirst({
+      where: { companyId: parsed.companyId, code: parsed.code },
     });
     if (existingCode) {
-      return conflictError("كود المادة مستخدم مسبقاً.");
+      return conflictError("كود المادة مستخدم مسبقاً في هذه الشركة.");
+    }
+
+    if (parsed.sku) {
+      const existingSku = await prisma.product.findFirst({
+        where: { companyId: parsed.companyId, sku: parsed.sku },
+      });
+      if (existingSku) {
+        return conflictError("SKU مستخدم مسبقاً في هذه الشركة.");
+      }
     }
 
     if (parsed.barcode) {
-      const existingBarcode = await prisma.product.findUnique({
-        where: { barcode: parsed.barcode },
+      const existingBarcode = await prisma.product.findFirst({
+        where: { companyId: parsed.companyId, barcode: parsed.barcode },
       });
       if (existingBarcode) {
-        return conflictError("الباركود مستخدم مسبقاً.");
+        return conflictError("الباركود مستخدم مسبقاً في هذه الشركة.");
       }
     }
 
     const product = await prisma.product.create({
       data: {
+        companyId: parsed.companyId,
         name: parsed.name,
         code: parsed.code,
+        sku: parsed.sku || null,
         barcode: parsed.barcode || null,
         categoryId: parsed.categoryId,
+        unitId: parsed.unitId,
         packaging: parsed.packaging,
         piecesPerCarton:
           parsed.packaging === "كارتون" ? parsed.piecesPerCarton : 0,
-        unit: parsed.packaging,
         purchasePrice: canViewPurchasePrice ? parsed.purchasePrice : 0,
         purchaseCurrency: canViewPurchasePrice
           ? parsed.purchaseCurrency
           : "IQD",
+        productType: parsed.productType,
+        description: parsed.description || null,
         prices: canEditPrices
           ? {
               create: parsed.prices.map((p) => ({
@@ -155,26 +192,26 @@ export async function POST(request: NextRequest) {
             }
           : undefined,
       },
-      include: { prices: true, category: true },
+      include: { prices: true, category: true, unit: true },
     });
 
-    try {
-      await logAudit(currentUser.userId, "CREATE", "Product", product.id, {
-        name: product.name,
-      });
-    } catch {
-      console.error("Audit log failed for product create");
-    }
+    await logAudit(currentUser.userId, "CREATE", "Product", product.id, {
+      name: product.name,
+      companyId: product.companyId,
+    });
 
     const postResult: Record<string, unknown> = {
       id: product.id,
       name: product.name,
       code: product.code,
+      sku: product.sku,
       barcode: product.barcode,
       categoryName: product.category?.name || null,
+      unitName: product.unit?.name || null,
       packaging: product.packaging,
       piecesPerCarton: product.piecesPerCarton,
-      unit: product.unit,
+      productType: product.productType,
+      description: product.description,
       prices: product.prices.map((pr) => ({
         id: pr.id,
         productId: pr.productId,

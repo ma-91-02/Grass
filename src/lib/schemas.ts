@@ -33,11 +33,29 @@ export const customerCategoryFormSchema = z.object({
   description: z.string().optional().nullable(),
 });
 
+export const productCategoryFormSchema = z.object({
+  companyId: z.string().min(1, "الشركة مطلوبة"),
+  name: z.string().min(1, "الاسم مطلوب"),
+  code: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+});
+
+export const unitSchema = z.object({
+  companyId: z.string().min(1, "الشركة مطلوبة"),
+  name: z.string().min(1, "الاسم مطلوب"),
+  code: z.string().min(1, "كود الوحدة مطلوب"),
+  symbol: z.string().optional().nullable(),
+  type: z.enum(["PIECE", "BOX", "LITER", "KG", "OTHER"] as const).default("PIECE"),
+});
+
 export const productFormSchema = z.object({
+  companyId: z.string().min(1, "الشركة مطلوبة"),
   name: z.string().min(1, "الاسم مطلوب"),
   code: z.string().min(1, "كود المادة مطلوب"),
+  sku: z.string().optional().nullable(),
   barcode: z.string().optional().nullable(),
   categoryId: z.string().min(1, "المجموعة مطلوبة"),
+  unitId: z.string().min(1, "الوحدة مطلوبة"),
   packaging: z.enum(["قطعة", "كارتون"] as const),
   piecesPerCarton: z.coerce.number().min(0).default(0),
   purchasePrice: z.coerce
@@ -45,6 +63,8 @@ export const productFormSchema = z.object({
     .min(0, "سعر الشراء يجب أن يكون 0 أو أكثر")
     .default(0),
   purchaseCurrency: z.enum(["USD", "IQD"] as const).default("IQD"),
+  productType: z.enum(["STOCK", "SERVICE"] as const).default("STOCK"),
+  description: z.string().optional().nullable(),
   prices: z
     .array(
       z.object({
@@ -161,6 +181,8 @@ export type SupplierFormData = z.infer<typeof supplierFormSchema>;
 export type CustomerCategoryFormData = z.infer<
   typeof customerCategoryFormSchema
 >;
+export type ProductCategoryFormData = z.infer<typeof productCategoryFormSchema>;
+export type UnitFormData = z.infer<typeof unitSchema>;
 export type ProductFormData = z.infer<typeof productFormSchema>;
 export type WarehouseFormData = z.infer<typeof warehouseFormSchema>;
 export type ExchangeRateFormData = z.infer<typeof exchangeRateFormSchema>;
