@@ -147,6 +147,26 @@ export const stockTransferFormSchema = z
     path: ["toWarehouseId"],
   });
 
+export const stockAdjustmentLineSchema = z.object({
+  productId: z.string().min(1, "المادة مطلوبة"),
+  quantity: z.coerce.number().int().min(1, "الكمية يجب أن تكون أكبر من 0"),
+  unitCost: z.coerce.number().min(0).optional().nullable(),
+  currency: z.enum(["USD", "IQD"] as const).default("IQD"),
+  notes: z.string().optional().nullable(),
+});
+
+export const stockAdjustmentFormSchema = z.object({
+  companyId: z.string().min(1, "الشركة مطلوبة"),
+  warehouseId: z.string().min(1, "المخزن مطلوب"),
+  adjustmentType: z.enum(["IN", "OUT"]),
+  adjustmentDate: z.string().optional().nullable(),
+  reason: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  lines: z
+    .array(stockAdjustmentLineSchema)
+    .min(1, "يجب إضافة مادة واحدة على الأقل"),
+});
+
 export const exchangeRateFormSchema = z.object({
   usdToIqd: z.coerce.number().min(1, "سعر الصرف مطلوب"),
   note: z.string().optional().nullable(),
@@ -247,5 +267,7 @@ export type WarehouseFormData = z.infer<typeof warehouseFormSchema>;
 export type StockMovementFormData = z.infer<typeof stockMovementFormSchema>;
 export type StockTransferFormData = z.infer<typeof stockTransferFormSchema>;
 export type StockTransferLineData = z.infer<typeof stockTransferLineSchema>;
+export type StockAdjustmentFormData = z.infer<typeof stockAdjustmentFormSchema>;
+export type StockAdjustmentLineData = z.infer<typeof stockAdjustmentLineSchema>;
 export type ExchangeRateFormData = z.infer<typeof exchangeRateFormSchema>;
 export type PurchaseInvoiceFormData = z.infer<typeof purchaseInvoiceFormSchema>;

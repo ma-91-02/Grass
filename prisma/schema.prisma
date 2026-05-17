@@ -38,6 +38,7 @@ model User {
   createdCustomers Customer[] @relation("CustomerCreatedBy")
   createdSuppliers Supplier[] @relation("SupplierCreatedBy")
   createdStockTransfers StockTransfer[]
+  createdStockAdjustments StockAdjustment[]
 
   @@index([companyId])
 }
@@ -302,6 +303,7 @@ model Product {
   stockMovements       StockMovement[]
   stockBalances        StockBalance[]
   stockTransferLines   StockTransferLine[]
+  stockAdjustmentLines StockAdjustmentLine[]
 
   @@unique([companyId, code])
   @@unique([companyId, barcode])
@@ -342,6 +344,7 @@ model Warehouse {
   stockBalances    StockBalance[]
   transfersFrom    StockTransfer[] @relation("TransferFrom")
   transfersTo      StockTransfer[] @relation("TransferTo")
+  stockAdjustments StockAdjustment[]
 
   @@unique([companyId, code])
   @@index([companyId])
@@ -583,6 +586,49 @@ model StockTransferLine {
   @@index([productId])
 }
 
+model StockAdjustment {
+  id                String               @id @default(cuid())
+  companyId         String
+  company           Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  warehouseId       String
+  warehouse         Warehouse            @relation(fields: [warehouseId], references: [id])
+  adjustmentNumber  String
+  adjustmentType    String               // IN or OUT
+  status            MovementStatus       @default(DRAFT)
+  adjustmentDate    DateTime             @default(now())
+  reason            String?
+  notes             String?
+  createdById       String?
+  createdBy         User?                @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  lines             StockAdjustmentLine[]
+
+  @@unique([companyId, adjustmentNumber])
+  @@index([companyId])
+  @@index([warehouseId])
+  @@index([status])
+  @@index([adjustmentDate])
+}
+
+model StockAdjustmentLine {
+  id           String          @id @default(cuid())
+  adjustmentId String
+  adjustment   StockAdjustment @relation(fields: [adjustmentId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product         @relation(fields: [productId], references: [id])
+  quantity     Int
+  unitCost     Decimal         @default(0)
+  currency     Currency        @default(IQD)
+  notes        String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([adjustmentId])
+  @@index([productId])
+}
+
 model Company {
   id        String   @id @default(cuid())
   name      String
@@ -607,6 +653,7 @@ model Company {
   warehouses    Warehouse[]
   stockMovements StockMovement[]
   stockTransfers StockTransfer[]
+  stockAdjustments StockAdjustment[]
 
   @@index([code])
 }

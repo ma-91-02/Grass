@@ -107,6 +107,31 @@ const PERMISSIONS = [
     module: "inventory",
   },
   {
+    key: "stockAdjustments.view",
+    name: "عرض تسويات المخزون",
+    module: "inventory",
+  },
+  {
+    key: "stockAdjustments.create",
+    name: "إنشاء تسوية مخزون",
+    module: "inventory",
+  },
+  {
+    key: "stockAdjustments.edit",
+    name: "تعديل تسوية مخزون",
+    module: "inventory",
+  },
+  {
+    key: "stockAdjustments.delete",
+    name: "حذف تسوية مخزون",
+    module: "inventory",
+  },
+  {
+    key: "stockAdjustments.post",
+    name: "ترحيل تسوية مخزون",
+    module: "inventory",
+  },
+  {
     key: "stockBalances.view",
     name: "عرض أرصدة المخزون",
     module: "inventory",
@@ -243,6 +268,11 @@ const ROLES = [
       "stockTransfers.edit",
       "stockTransfers.delete",
       "stockTransfers.post",
+      "stockAdjustments.view",
+      "stockAdjustments.create",
+      "stockAdjustments.edit",
+      "stockAdjustments.delete",
+      "stockAdjustments.post",
       "stockBalances.view",
     ],
   },
