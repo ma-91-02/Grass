@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, logAudit, checkDbPermission } from "@/lib/auth";
+import {
+  getCurrentUser,
+  logAudit,
+  checkDbPermission,
+  canAccessCompany,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -114,7 +119,19 @@ export async function GET() {
       return forbiddenError("لا تملك صلاحية عرض فواتير المشتريات");
     }
 
+    // Load user's company scope from DB
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.userId },
+      select: { companyId: true },
+    });
+
+    const isGlobalAdmin = await canAccessCompany(user, "any");
+
     const invoices = await prisma.purchaseInvoice.findMany({
+      where:
+        isGlobalAdmin || !dbUser?.companyId
+          ? undefined
+          : { companyId: dbUser.companyId },
       include: {
         supplier: { select: { name: true } },
         warehouse: { select: { name: true } },
@@ -143,6 +160,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // Derive companyId from the authenticated user's DB scope
+    const dbUser = await prisma.user.findUnique({
+      where: { id: currentUser.userId },
+      select: { companyId: true },
+    });
+    const userCompanyId = dbUser?.companyId;
+    if (!userCompanyId) {
+      return errorResponse("المستخدم غير مرتبط بشركة");
+    }
+    if (!(await canAccessCompany(currentUser, userCompanyId))) {
+      return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+    }
+
     const body = await request.json();
     const parsed = purchaseSchema.parse(body);
     const errors: string[] = [];
@@ -192,6 +222,7 @@ export async function POST(request: NextRequest) {
     const result = await prisma.$transaction(async (tx) => {
       const invoice = await tx.purchaseInvoice.create({
         data: {
+          companyId: userCompanyId,
           invoiceNumber,
           supplierInvoiceNumber: parsed.supplierInvoiceNumber || null,
           purchaseDate: parsed.purchaseDate

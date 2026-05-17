@@ -345,6 +345,8 @@ model Payment {
 
 model PurchaseInvoice {
   id                     String               @id @default(cuid())
+  companyId              String?
+  company                Company?             @relation(fields: [companyId], references: [id], onDelete: SetNull)
   invoiceNumber          String               @unique
   supplierInvoiceNumber  String?
   purchaseDate           DateTime             @default(now())
@@ -370,6 +372,8 @@ model PurchaseInvoice {
 
   items                  PurchaseInvoiceItem[]
   expenses               PurchaseExpense[]
+
+  @@index([companyId])
 }
 
 model PurchaseInvoiceItem {
@@ -452,6 +456,7 @@ model Company {
   fiscalPeriods FiscalPeriod[]
   journalEntries JournalEntry[]
   users         User[]
+  purchaseInvoices PurchaseInvoice[]
 
   @@index([code])
 }

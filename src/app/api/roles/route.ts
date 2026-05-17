@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, checkPermission } from "@/lib/auth";
+import { getCurrentUser, requireDbPermission } from "@/lib/auth";
 import {
   successResponse,
   unauthorizedError,
@@ -11,7 +11,8 @@ import { PERMISSIONS } from "@/lib/permissions";
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.ROLES_VIEW)) return forbiddenError();
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.ROLES_VIEW)))
+    return forbiddenError();
 
   const roles = await prisma.role.findMany({
     include: {

@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, logAudit, checkDbPermission } from "@/lib/auth";
+import {
+  getCurrentUser,
+  logAudit,
+  checkDbPermission,
+  canAccessCompany,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -132,6 +137,13 @@ export async function GET(
 
     if (!invoice) return notFoundError("فاتورة المشتريات غير موجودة");
 
+    if (
+      invoice.companyId &&
+      !(await canAccessCompany(user, invoice.companyId))
+    ) {
+      return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+    }
+
     return successResponse(formatInvoiceResponse(invoice));
   } catch (error) {
     console.error("GET purchase invoice error:", error);
@@ -160,6 +172,13 @@ export async function PATCH(
     });
 
     if (!existing) return notFoundError("فاتورة المشتريات غير موجودة");
+
+    if (
+      existing.companyId &&
+      !(await canAccessCompany(currentUser, existing.companyId))
+    ) {
+      return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+    }
 
     const body = await request.json();
     const parsed = purchaseUpdateSchema.parse(body);
@@ -391,6 +410,13 @@ export async function DELETE(
     });
 
     if (!invoice) return notFoundError("فاتورة المشتريات غير موجودة");
+
+    if (
+      invoice.companyId &&
+      !(await canAccessCompany(currentUser, invoice.companyId))
+    ) {
+      return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+    }
 
     await prisma.$transaction(async (tx) => {
       await tx.stockMovement.deleteMany({

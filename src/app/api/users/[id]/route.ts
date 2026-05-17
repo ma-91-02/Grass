@@ -4,7 +4,7 @@ import {
   getCurrentUser,
   hashPassword,
   logAudit,
-  checkPermission,
+  requireDbPermission,
 } from "@/lib/auth";
 import {
   successResponse,
@@ -21,7 +21,8 @@ export async function GET(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.USERS_VIEW)) return forbiddenError();
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.USERS_VIEW)))
+    return forbiddenError();
 
   const { id } = await params;
   const found = await prisma.user.findUnique({
@@ -47,7 +48,7 @@ export async function PATCH(
 ) {
   const currentUser = await getCurrentUser();
   if (!currentUser) return unauthorizedError();
-  if (!checkPermission(currentUser, PERMISSIONS.USERS_EDIT))
+  if (!(await requireDbPermission(currentUser.userId, PERMISSIONS.USERS_EDIT)))
     return forbiddenError();
 
   const { id } = await params;
@@ -96,7 +97,9 @@ export async function DELETE(
 ) {
   const currentUser = await getCurrentUser();
   if (!currentUser) return unauthorizedError();
-  if (!checkPermission(currentUser, PERMISSIONS.USERS_DELETE))
+  if (
+    !(await requireDbPermission(currentUser.userId, PERMISSIONS.USERS_DELETE))
+  )
     return forbiddenError();
 
   const { id } = await params;

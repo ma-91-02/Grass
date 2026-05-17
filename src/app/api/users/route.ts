@@ -4,7 +4,7 @@ import {
   getCurrentUser,
   hashPassword,
   logAudit,
-  checkPermission,
+  requireDbPermission,
 } from "@/lib/auth";
 import {
   successResponse,
@@ -17,7 +17,8 @@ import { PERMISSIONS } from "@/lib/permissions";
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.USERS_VIEW)) return forbiddenError();
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.USERS_VIEW)))
+    return forbiddenError();
 
   const users = await prisma.user.findMany({
     include: {
@@ -42,7 +43,9 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const currentUser = await getCurrentUser();
   if (!currentUser) return unauthorizedError();
-  if (!checkPermission(currentUser, PERMISSIONS.USERS_CREATE))
+  if (
+    !(await requireDbPermission(currentUser.userId, PERMISSIONS.USERS_CREATE))
+  )
     return forbiddenError();
 
   try {

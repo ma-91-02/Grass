@@ -161,4 +161,33 @@ describe("requireDbPermission", () => {
     const result = await requireDbPermission("user-123", "journals.post");
     expect(result).toBe(false);
   });
+
+  it("ignores stale JWT permissions and checks DB only", async () => {
+    // JWT payload claims the user has "journals.post", but DB says otherwise
+    const staleJwtUser: TokenPayload = {
+      userId: "user-456",
+      email: "stale@grass.com",
+      name: "Stale User",
+      roles: ["admin"],
+      permissions: ["journals.post"],
+    } as TokenPayload;
+
+    (
+      prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({
+      id: "user-456",
+      isActive: true,
+      roles: [
+        {
+          role: {
+            permissions: [{ permission: { key: "journals.create" } }],
+          },
+        },
+      ],
+    });
+
+    // requireDbPermission should query DB, not trust JWT
+    const result = await requireDbPermission(staleJwtUser.userId, "journals.post");
+    expect(result).toBe(false);
+  });
 });
