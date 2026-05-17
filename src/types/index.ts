@@ -210,3 +210,107 @@ export interface PaymentAccountData {
   balance: number;
   isActive: boolean;
 }
+
+// Phase 1 — Foundation Core Types
+
+export interface CompanyData {
+  id: string;
+  name: string;
+  code: string;
+  taxId: string | null;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface BranchData {
+  id: string;
+  companyId: string;
+  companyName?: string;
+  name: string;
+  code: string;
+  address: string | null;
+  phone: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface FiscalPeriodData {
+  id: string;
+  companyId: string;
+  companyName?: string;
+  branchId: string | null;
+  name: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface AccountData {
+  id: string;
+  companyId: string;
+  code: string;
+  name: string;
+  parentId: string | null;
+  parentName?: string | null;
+  type: string;
+  subtype: string | null;
+  normalBalance: string;
+  currency: string;
+  level: number;
+  isPosting: boolean;
+  isSystem: boolean;
+  isProtected: boolean;
+  isActive: boolean;
+  allowManualJournal: boolean;
+  description: string | null;
+  childrenCount?: number;
+  createdAt: string;
+}
+
+export interface JournalEntryData {
+  id: string;
+  companyId: string;
+  branchId: string | null;
+  branchName?: string | null;
+  fiscalPeriodId: string | null;
+  entryNumber: string;
+  entryDate: string;
+  currency: string;
+  exchangeRateSnapshot: number;
+  description: string | null;
+  sourceType: string | null;
+  sourceId: string | null;
+  status: string;
+  postedAt: string | null;
+  createdById: string | null;
+  lines: JournalLineData[];
+  createdAt: string;
+}
+
+export interface JournalLineData {
+  id: string;
+  journalEntryId: string;
+  accountId: string;
+  accountName?: string;
+  accountCode?: string;
+  debit: number;
+  credit: number;
+  description: string | null;
+}
+
+export interface PostingOperationData {
+  id: string;
+  idempotencyKey: string;
+  sourceType: string;
+  sourceId: string;
+  journalEntryId: string | null;
+  status: string;
+  error: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+}

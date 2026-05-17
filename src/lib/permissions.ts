@@ -44,4 +44,22 @@ export const PERMISSIONS = {
   PURCHASES_PRINT: "purchases.print",
   PAYMENT_ACCOUNTS_VIEW: "paymentAccounts.view",
   PAYMENT_ACCOUNTS_MANAGE: "paymentAccounts.manage",
+
+  // Phase 1 — Foundation Core
+  ACCOUNTS_CREATE: "accounts.create",
+  ACCOUNTS_EDIT: "accounts.edit",
+  ACCOUNTS_DELETE: "accounts.delete",
+  ACCOUNTS_STATEMENT: "accounts.statement",
+  ACCOUNTS_TREE: "accounts.tree",
+  COMPANIES_VIEW: "companies.view",
+  COMPANIES_CREATE: "companies.create",
+  COMPANIES_EDIT: "companies.edit",
+  BRANCHES_VIEW: "branches.view",
+  BRANCHES_CREATE: "branches.create",
+  BRANCHES_EDIT: "branches.edit",
+  FISCAL_PERIODS_VIEW: "fiscalPeriods.view",
+  FISCAL_PERIODS_MANAGE: "fiscalPeriods.manage",
+  JOURNALS_CREATE: "journals.create",
+  JOURNALS_POST: "journals.post",
+  JOURNALS_REVERSE: "journals.reverse",
 } as const;
