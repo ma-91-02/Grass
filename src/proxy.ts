@@ -45,7 +45,7 @@ export async function proxy(request: NextRequest) {
       );
       requestHeaders.set(
         "x-user-roles",
-        JSON.stringify(userPayload.roles || []),
+        encodeURIComponent(JSON.stringify(userPayload.roles || [])),
       );
       return NextResponse.next({
         request: { headers: requestHeaders },
