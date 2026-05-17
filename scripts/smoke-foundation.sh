@@ -123,7 +123,7 @@ fi
 
 # ---- JOURNAL ENTRIES ----
 echo "--- JOURNAL ENTRIES ---"
-JE_CODE=$(curl -s -o "$OUT" -w "%{http_code}}" "$BASE_URL/api/journal-entries" -b "$COOKIE_JAR")
+JE_CODE=$(curl -s -o "$OUT" -w "%{http_code}" "$BASE_URL/api/journal-entries" -b "$COOKIE_JAR")
 if [ "$JE_CODE" = "200" ]; then
   JE_SUCCESS=$(python3 -c "import json; d=json.load(open('$OUT')); print(d.get('success',False))" 2>/dev/null)
   if [ "$JE_SUCCESS" = "True" ]; then
