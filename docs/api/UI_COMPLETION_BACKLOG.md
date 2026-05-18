@@ -446,9 +446,10 @@
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
-- API_REGISTRY.md: UI Status = CONNECTED للـ POST endpoint
-- UI_BINDING_ROADMAP.md: إزالة المهمة
-**Commit Hash:**
+- API_REGISTRY.md: UI Status = CONNECTED للـ GET و POST endpoints
+- UI_BINDING_ROADMAP.md: تحديث UI Binding 1.3
+**Commit Hash:** `e0ed2bd`
+**Date:** 2026-05-18
 
 ---
 
