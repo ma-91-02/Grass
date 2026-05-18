@@ -317,3 +317,21 @@ export const customerCollectionSchema = z.object({
   collectionDate: z.coerce.date().default(new Date()),
   notes: z.string().optional().nullable(),
 });
+
+export const salesReturnLineSchema = z.object({
+  originalInvoiceItemId: z.string().min(1, "بند الفاتورة الأصلية مطلوب"),
+  productId: z.string().min(1, "المنتج مطلوب"),
+  quantity: z.coerce.number().positive("الكمية يجب أن تكون أكبر من 0"),
+  notes: z.string().optional().nullable(),
+});
+
+export const salesReturnSchema = z.object({
+  companyId: z.string().min(1, "الشركة مطلوبة"),
+  originalInvoiceId: z.string().min(1, "الفاتورة الأصلية مطلوبة"),
+  returnDate: z.coerce.date().default(new Date()),
+  currency: z.enum(["IQD", "USD"]).default("IQD"),
+  notes: z.string().optional().nullable(),
+  lines: z
+    .array(salesReturnLineSchema)
+    .min(1, "يجب إضافة بند مرتجع واحد على الأقل"),
+});

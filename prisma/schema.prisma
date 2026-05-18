@@ -40,6 +40,7 @@ model User {
   createdStockTransfers StockTransfer[]
   createdStockAdjustments StockAdjustment[]
   collectionsCreated CustomerCollection[] @relation("CollectionCreatedBy")
+  createdSalesReturns SalesReturn[] @relation("SalesReturnCreatedBy")
 
   @@index([companyId])
 }
@@ -125,6 +126,7 @@ enum MovementType {
   ADJUSTMENT_OUT
   TRANSFER_OUT
   TRANSFER_IN
+  RETURN_IN
 }
 
 enum MovementStatus {
@@ -195,6 +197,7 @@ model Customer {
   accounts            CustomerAccount[]
   invoices            Invoice[]
   collections         CustomerCollection[]
+  salesReturns        SalesReturn[]
 
   @@unique([companyId, code])
   @@index([companyId])
@@ -311,10 +314,11 @@ model Product {
   prices           ProductPrice[]
   invoiceItems         InvoiceItem[]
   purchaseInvoiceItems PurchaseInvoiceItem[]
+  salesReturnLines     SalesReturnLine[]
   stockMovements       StockMovement[]
   stockBalances        StockBalance[]
-  stockTransferLines   StockTransferLine[]
-  stockAdjustmentLines StockAdjustmentLine[]
+  transferLines        StockTransferLine[]
+  adjustmentLines      StockAdjustmentLine[]
 
   @@unique([companyId, code])
   @@unique([companyId, barcode])
@@ -356,6 +360,7 @@ model Warehouse {
   transfersFrom    StockTransfer[] @relation("TransferFrom")
   transfersTo      StockTransfer[] @relation("TransferTo")
   stockAdjustments StockAdjustment[]
+  salesReturns     SalesReturn[]
 
   @@unique([companyId, code])
   @@index([companyId])
@@ -412,6 +417,7 @@ model Invoice {
   items                 InvoiceItem[]
   payments              Payment[]
   collections           CustomerCollection[]
+  salesReturns          SalesReturn[]
 
   @@unique([companyId, invoiceNumber])
   @@index([companyId])
@@ -450,6 +456,60 @@ model Payment {
   note        String?
   createdById String?
   createdAt   DateTime @default(now())
+}
+
+model SalesReturn {
+  id                 String          @id @default(cuid())
+  companyId          String
+  company            Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  returnNumber       String
+  originalInvoiceId  String
+  originalInvoice    Invoice         @relation(fields: [originalInvoiceId], references: [id], onDelete: Restrict)
+  customerId         String
+  customer           Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  warehouseId        String
+  warehouse          Warehouse       @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  returnDate         DateTime        @default(now())
+  currency           Currency        @default(IQD)
+  totalAmount        Decimal         @default(0)
+  totalCogs          Decimal         @default(0)
+  status             String          @default("DRAFT")
+  postedAt           DateTime?
+  postedById         String?
+  journalEntryId     String?
+  cogsJournalEntryId String?
+  notes              String?
+  createdById        String?
+  createdBy          User?           @relation("SalesReturnCreatedBy", fields: [createdById], references: [id])
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  lines              SalesReturnLine[]
+
+  @@unique([companyId, returnNumber])
+  @@index([companyId])
+  @@index([originalInvoiceId])
+  @@index([customerId])
+  @@index([status])
+}
+
+model SalesReturnLine {
+  id                  String       @id @default(cuid())
+  salesReturnId       String
+  salesReturn         SalesReturn  @relation(fields: [salesReturnId], references: [id], onDelete: Cascade)
+  originalInvoiceItemId String
+  productId           String
+  product             Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity            Int          @default(0)
+  unitPriceSnapshot   Decimal      @default(0)
+  averageCostSnapshot Decimal      @default(0)
+  lineTotal           Decimal      @default(0)
+  stockMovementId     String?
+  notes               String?
+  createdAt           DateTime     @default(now())
+
+  @@index([salesReturnId])
+  @@index([productId])
 }
 
 model CustomerCollection {
@@ -721,6 +781,7 @@ model Company {
   warehouses    Warehouse[]
   customers     Customer[]
   customerCollections CustomerCollection[]
+  salesReturns    SalesReturn[]
   stockMovements StockMovement[]
   stockTransfers StockTransfer[]
   stockAdjustments StockAdjustment[]

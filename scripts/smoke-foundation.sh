@@ -392,6 +392,28 @@ else
   FAIL=$((FAIL+1))
 fi
 
+# ---- SALES RETURNS (with companyId) ----
+echo "--- SALES RETURNS ---"
+if [ -n "$COMPANY_ID" ]; then
+  SR_CODE=$(curl -s -o "$OUT" -w "%{http_code}" "$BASE_URL/api/sales-returns?companyId=$COMPANY_ID" -b "$COOKIE_JAR")
+  if [ "$SR_CODE" = "200" ]; then
+    SR_SUCCESS=$(python3 -c "import json; d=json.load(open('$OUT')); print(d.get('success',False))" 2>/dev/null)
+    if [ "$SR_SUCCESS" = "True" ]; then
+      green "GET /api/sales-returns?companyId=... -> 200 + success:true"
+      PASS=$((PASS+1))
+    else
+      red "GET /api/sales-returns body missing success:true"
+      FAIL=$((FAIL+1))
+    fi
+  else
+    red "GET /api/sales-returns?companyId=... -> $SR_CODE (expected 200)"
+    FAIL=$((FAIL+1))
+  fi
+else
+  red "GET /api/sales-returns (no companyId available)"
+  FAIL=$((FAIL+1))
+fi
+
 # ---- UNAUTHENTICATED ACCESS REJECTION ----
 echo "--- UNAUTHENTICATED ---"
 for path in /api/companies /api/accounts /api/branches /api/fiscal-periods /api/journal-entries /api/users; do

@@ -116,8 +116,22 @@ const mockInvoice = {
 };
 
 const mockAccounts = {
-  cash: { id: "acc-cash", code: "1.1.1", name: "Cash IQD", isActive: true, isPosting: true, currency: "IQD" },
-  ar: { id: "acc-ar", code: "1.1.6", name: "AR IQD", isActive: true, isPosting: true, currency: "IQD" },
+  cash: {
+    id: "acc-cash",
+    code: "1.1.1",
+    name: "Cash IQD",
+    isActive: true,
+    isPosting: true,
+    currency: "IQD",
+  },
+  ar: {
+    id: "acc-ar",
+    code: "1.1.6",
+    name: "AR IQD",
+    isActive: true,
+    isPosting: true,
+    currency: "IQD",
+  },
 };
 
 const mockPaymentAccount = {
@@ -974,11 +988,14 @@ describe("customers/[id]/statement route", () => {
     });
     expect(res.status).toBe(200);
 
-    const invoiceCalls = (prisma.invoice.findMany as ReturnType<typeof vi.fn>).mock.calls;
+    const invoiceCalls = (prisma.invoice.findMany as ReturnType<typeof vi.fn>)
+      .mock.calls;
     expect(invoiceCalls.length).toBe(1);
     expect(invoiceCalls[0][0].where.currency).toBe("IQD");
 
-    const collectionCalls = (prisma.customerCollection.findMany as ReturnType<typeof vi.fn>).mock.calls;
+    const collectionCalls = (
+      prisma.customerCollection.findMany as ReturnType<typeof vi.fn>
+    ).mock.calls;
     expect(collectionCalls.length).toBe(1);
     expect(collectionCalls[0][0].where.currency).toBe("IQD");
   });

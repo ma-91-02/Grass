@@ -6,6 +6,7 @@ const INCREASE_TYPES = new Set([
   "IN",
   "ADJUSTMENT_IN",
   "TRANSFER_IN",
+  "RETURN_IN",
 ]);
 
 const DECREASE_TYPES = new Set(["OUT", "ADJUSTMENT_OUT", "TRANSFER_OUT"]);
