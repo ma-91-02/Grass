@@ -19,6 +19,9 @@ import {
   ChevronDown,
   BookOpen,
   Building2,
+  Receipt,
+  RotateCcw,
+  Boxes,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -32,6 +35,21 @@ const menuItems = [
     title: "المبيعات",
     href: "/dashboard/sales",
     icon: ShoppingCart,
+  },
+  {
+    title: "فواتير البيع",
+    href: "/dashboard/sales-invoices",
+    icon: Receipt,
+  },
+  {
+    title: "التحصيلات",
+    href: "/dashboard/collections",
+    icon: DollarSign,
+  },
+  {
+    title: "مرتجعات المبيعات",
+    href: "/dashboard/sales-returns",
+    icon: RotateCcw,
   },
   {
     title: "المشتريات",
@@ -62,6 +80,11 @@ const menuItems = [
     title: "النقل المخزني",
     href: "/dashboard/warehouse-transfers",
     icon: Truck,
+  },
+  {
+    title: "أرصدة المخزن",
+    href: "/dashboard/stock-balances",
+    icon: Boxes,
   },
   {
     title: "العملاء والموردون",
@@ -117,7 +140,6 @@ export function Sidebar({
   const [collapsed, setCollapsed] = useState(false);
 
   async function handleLogout() {
-    // Clear the auth cookie by redirecting to a logout API
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/auth/login");
   }
@@ -157,7 +179,7 @@ export function Sidebar({
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors mb-0.5",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors mb-0.5",
                 isActive
                   ? "bg-primary text-white"
                   : "text-gray-600 hover:bg-muted hover:text-dark",

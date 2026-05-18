@@ -13,7 +13,8 @@ import { CustomerCategoryForm } from "@/components/forms/customer-category-form"
 import { useToast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { CUSTOMER_TYPE_LABELS, type CustomerType } from "@/types";
-import { Edit, Ban, CheckCircle, Trash2, Plus } from "lucide-react";
+import { Edit, Ban, CheckCircle, Trash2, Plus, Eye } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type Tab = "customers" | "suppliers" | "categories";
 
@@ -58,6 +59,7 @@ interface CustomerCategory {
 export default function CustomersPage() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("customers");
   const [search, setSearch] = useState("");
 
@@ -521,6 +523,13 @@ export default function CustomersPage() {
             searchPlaceholder="بحث بالاسم أو الكود أو الهاتف..."
             actions={(item: Customer) => (
               <div className="flex items-center justify-center gap-1">
+                <button
+                  onClick={() => router.push(`/dashboard/customers/${item.id}`)}
+                  className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-primary"
+                  title="عرض"
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
                 {userPermissions.includes("customers.edit") && (
                   <button
                     onClick={() => {
