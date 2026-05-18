@@ -57,6 +57,187 @@
 
 ---
 
+## قواعد هندسية صارمة إضافية
+
+### 1. Runtime Verification Rule
+
+أي مهمة UI لا تعتبر DONE إلا إذا تم التحقق فعليًا من التشغيل داخل المتصفح.
+
+يجب التحقق من:
+
+- تشغيل dev server
+- فتح الصفحة المستهدفة فعليًا
+- تنفيذ الـ flow الأساسي للمهمة
+- عدم وجود white page
+- عدم وجود runtime errors
+- عدم وجود hydration mismatch
+- عدم وجود dead buttons
+- عدم وجود infinite loading
+- عدم وجود silent failures
+
+لا يكفي نجاح lint/typecheck/build وحده لإغلاق مهمة UI.
+
+---
+
+### 2. Company Isolation Rule
+
+أي مهمة UI تتعامل مع بيانات مرتبطة بشركة يجب أن تتحقق من العزل بين الشركات.
+
+يشمل ذلك:
+
+- customers
+- suppliers
+- products
+- warehouses
+- invoices
+- purchases
+- collections
+- returns
+- stock
+- accounts
+- journal entries
+
+يجب التأكد من:
+
+- إرسال companyId في كل request يتطلب ذلك
+- عدم جلب بيانات كل الشركات بدون سبب
+- query keys في React Query تعتمد على companyId عند الحاجة
+- dropdowns لا تعرض بيانات شركات أخرى
+- عدم كسر canAccessCompany behavior
+
+---
+
+### 3. No Silent Failures Rule
+
+ممنوع وجود فشل صامت داخل الواجهة.
+
+أي fetch أو form يجب أن يحتوي على:
+
+- loading state
+- error state
+- empty state عند الحاجة
+- رسالة واضحة عند الفشل
+
+ممنوع:
+
+- dropdown فارغ بدون تفسير
+- button disabled بدون سبب واضح
+- catch فارغ يخفي الخطأ
+- تجاهل response غير ناجحة
+- عرض صفحة فارغة بدل رسالة خطأ
+
+---
+
+### 4. Frontend Scope Enforcement
+
+مهام UI هي Frontend-only إلا إذا ذُكر غير ذلك صراحة.
+
+في مهام UI ممنوع تعديل:
+
+- src/app/api/**
+- prisma/**
+- src/lib/services/**
+- auth/session logic
+- permissions backend logic
+- posting engines
+- accounting logic
+- inventory logic
+- validation business rules
+
+إذا كان backend ناقصًا:
+- يتم تسجيله في Notes
+- أو إنشاء Task جديدة
+- ولا يتم إصلاحه داخل نفس مهمة UI
+
+---
+
+### 5. Documentation Consistency Rule
+
+أي endpoint يتم ربطه بالواجهة يجب تحديث الوثائق التالية في نفس الـ commit:
+
+- docs/api/API_REGISTRY.md
+- docs/api/UI_BINDING_ROADMAP.md
+- docs/api/UI_COMPLETION_BACKLOG.md
+
+يجب تحديث:
+
+- UI Status
+- UI Page
+- Notes
+- Task Status
+- Commit Hash
+
+لا تعتبر المهمة DONE إذا لم تُحدّث الوثائق.
+
+---
+
+### 6. UX Stability Rule
+
+أي واجهة جديدة أو معدلة يجب أن تلتزم بالاستقرار البصري والتشغيلي.
+
+يجب:
+
+- دعم RTL
+- استخدام التصميم الحالي
+- استخدام components الموجودة قدر الإمكان
+- استخدام router.push بدل window.location.href
+- الحفاظ على loading/error/empty states
+
+ممنوع:
+
+- إضافة design system جديد
+- إضافة state management جديد
+- إضافة UI library جديدة
+- إعادة تصميم صفحات خارج scope المهمة
+- كسر responsive behavior الأساسي
+
+---
+
+### 7. Forbidden AI Behavior
+
+ممنوع على AI أثناء تنفيذ أي مهمة:
+
+- تنفيذ features غير مطلوبة
+- تحسينات خارج scope المهمة
+- refactor واسع
+- تغيير architecture
+- إضافة مكتبات بدون طلب صريح
+- تعديل ملفات غير مذكورة في المهمة
+- إعادة كتابة صفحات كاملة بدون ضرورة
+- تغيير أسماء routes أو APIs
+- حذف placeholders بدون توثيق
+- اعتبار المهمة مكتملة بدون تحقق فعلي
+
+---
+
+### 8. Production Safety Rule
+
+أي مهمة تمس واجهات مرتبطة بالعمليات المالية أو المخزنية يجب أن تبقى آمنة.
+
+يشمل ذلك:
+
+- posting
+- accounting
+- stock balances
+- receivables
+- collections
+- returns
+- purchases
+- journal entries
+
+ممنوع داخل مهام UI:
+
+- تعديل financial logic
+- تعديل stock calculation
+- تعديل weighted average cost
+- تعديل journal posting
+- تعديل receivables balance logic
+- تعديل audit behavior
+
+أي مشكلة في هذا النوع تُسجل كملاحظة أو task منفصلة.
+
+---
+
 ## 5. شروط إغلاق المهمة (Closure Criteria)
 
 قبل وضع حالة `DONE` على أي مهمة، يجب التحقق من:
@@ -66,8 +247,15 @@
 - [ ] `npm run lint` خالٍ من الأخطاء
 - [ ] `npm run typecheck` خالٍ من الأخطاء
 - [ ] `npm run build` ناجح
+- [ ] تم فتح الصفحة فعليًا في المتصفح
+- [ ] تم تنفيذ الـ flow الأساسي للمهمة
+- [ ] لا توجد runtime errors
+- [ ] لا توجد hydration errors
+- [ ] لا توجد silent failures
+- [ ] تم التحقق من companyId isolation عند الحاجة
 - [ ] `API_REGISTRY.md` مُحدَّث (UI Status)
 - [ ] `UI_BINDING_ROADMAP.md` مُحدَّث إذا لزم
+- [ ] `UI_COMPLETION_BACKLOG.md` مُحدَّث (Task Status + Commit Hash)
 - [ ] commit مستقل مكتوب ومدفوع إلى origin/main
 - [ ] commit hash مُسجَّل في هذا الملف
 
