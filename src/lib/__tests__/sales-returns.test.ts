@@ -1074,4 +1074,136 @@ describe("sales-returns [id]/post route", () => {
       }),
     );
   });
+
+  // Print tests
+  describe("print", () => {
+    const mockReturnForPrint = {
+      id: "ret1",
+      companyId: "c1",
+      returnNumber: "RET-00001",
+      returnDate: new Date("2025-02-01"),
+      originalInvoiceId: "inv1",
+      originalInvoice: { invoiceNumber: "INV-001" },
+      customerId: "cus1",
+      customer: { name: "عميل أ", code: "C001" },
+      warehouseId: "wh1",
+      warehouse: { name: "مخزن رئيسي", code: "WH01" },
+      currency: "IQD",
+      totalAmount: 100,
+      totalCogs: 60,
+      status: "POSTED",
+      notes: "ملاحظة مرتجع",
+      company: { name: "شركة اختبار", code: "COMP01", taxId: null },
+      lines: [
+        {
+          id: "rl1",
+          productId: "p1",
+          product: { name: "منتج 1", code: "P001" },
+          quantity: 1,
+          unitPriceSnapshot: 100,
+          averageCostSnapshot: 60,
+          lineTotal: 100,
+          notes: null,
+        },
+      ],
+    };
+
+    it("GET print requires auth", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+      const { GET } = await import("@/app/api/sales-returns/[id]/print/route");
+      const res = await GET(
+        new Request("http://localhost/api/sales-returns/ret1/print") as never,
+        { params: Promise.resolve({ id: "ret1" }) },
+      );
+      expect(res.status).toBe(401);
+    });
+
+    it("GET print requires salesReturns.view permission", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "t@t.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(
+        false,
+      );
+      const { GET } = await import("@/app/api/sales-returns/[id]/print/route");
+      const res = await GET(
+        new Request("http://localhost/api/sales-returns/ret1/print") as never,
+        { params: Promise.resolve({ id: "ret1" }) },
+      );
+      expect(res.status).toBe(403);
+    });
+
+    it("GET print enforces company isolation", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "t@t.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+      (
+        prisma.salesReturn.findUnique as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(mockReturnForPrint);
+      const { GET } = await import("@/app/api/sales-returns/[id]/print/route");
+      const res = await GET(
+        new Request("http://localhost/api/sales-returns/ret1/print") as never,
+        { params: Promise.resolve({ id: "ret1" }) },
+      );
+      expect(res.status).toBe(403);
+    });
+
+    it("GET print returns HTML with returnNumber and totals", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "t@t.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (
+        prisma.salesReturn.findUnique as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(mockReturnForPrint);
+      const { GET } = await import("@/app/api/sales-returns/[id]/print/route");
+      const res = await GET(
+        new Request("http://localhost/api/sales-returns/ret1/print") as never,
+        { params: Promise.resolve({ id: "ret1" }) },
+      );
+      expect(res.status).toBe(200);
+      expect(res.headers.get("content-type")).toContain("text/html");
+      const text = await res.text();
+      expect(text).toContain("RET-00001");
+      expect(text).toContain("١٠٠٫٠٠");
+      expect(text).toContain("عميل أ");
+    });
+
+    it("GET print returns 404 for missing return", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "t@t.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (
+        prisma.salesReturn.findUnique as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(null);
+      const { GET } = await import("@/app/api/sales-returns/[id]/print/route");
+      const res = await GET(
+        new Request(
+          "http://localhost/api/sales-returns/ret-missing/print",
+        ) as never,
+        { params: Promise.resolve({ id: "ret-missing" }) },
+      );
+      expect(res.status).toBe(404);
+    });
+  });
 });

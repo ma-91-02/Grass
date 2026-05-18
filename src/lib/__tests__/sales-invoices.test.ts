@@ -3216,4 +3216,202 @@ describe("sales-invoices route", () => {
     expect(json.data.totalAfterTax).toBe(85);
     expect(json.data.remaining).toBe(85);
   });
+
+  // Print tests
+  describe("print", () => {
+    const mockInvoiceForPrint = {
+      id: "inv1",
+      companyId: "c1",
+      invoiceNumber: "INV-001",
+      invoiceDate: new Date("2025-01-15"),
+      customerId: "cus1",
+      customer: { name: "عميل أ", code: "C001" },
+      warehouseId: "wh1",
+      warehouse: { name: "مخزن رئيسي", code: "WH01" },
+      currency: "IQD",
+      exchangeRateValue: 1,
+      paymentType: "CREDIT",
+      totalBeforeTax: 200,
+      taxAmount: 0,
+      discountAmount: 10,
+      discountPercent: 0,
+      totalAfterTax: 190,
+      totalInUsd: 0,
+      paid: 50,
+      remaining: 140,
+      status: "POSTED",
+      notes: "ملاحظة تجريبية",
+      company: { name: "شركة اختبار", code: "COMP01", taxId: "123456789" },
+      items: [
+        {
+          id: "item1",
+          productId: "p1",
+          product: { name: "منتج 1", code: "P001" },
+          productNameSnapshot: "منتج 1",
+          productCodeSnapshot: "P001",
+          quantity: 2,
+          unitPrice: 100,
+          discountPercent: 0,
+          discountAmount: 0,
+          totalPrice: 200,
+          lineTotal: 200,
+          notes: null,
+        },
+      ],
+    };
+
+    it("GET print requires auth", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+      const { GET } = await import("@/app/api/sales-invoices/[id]/print/route");
+      const res = await GET(
+        new Request("http://localhost/api/sales-invoices/inv1/print") as never,
+        { params: Promise.resolve({ id: "inv1" }) },
+      );
+      expect(res.status).toBe(401);
+    });
+
+    it("GET print requires sales.view permission", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(
+        false,
+      );
+      const { GET } = await import("@/app/api/sales-invoices/[id]/print/route");
+      const res = await GET(
+        new Request("http://localhost/api/sales-invoices/inv1/print") as never,
+        { params: Promise.resolve({ id: "inv1" }) },
+      );
+      expect(res.status).toBe(403);
+    });
+
+    it("GET print enforces company isolation", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+      (prisma.invoice.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockInvoiceForPrint,
+      );
+      const { GET } = await import("@/app/api/sales-invoices/[id]/print/route");
+      const res = await GET(
+        new Request("http://localhost/api/sales-invoices/inv1/print") as never,
+        { params: Promise.resolve({ id: "inv1" }) },
+      );
+      expect(res.status).toBe(403);
+    });
+
+    it("GET print returns HTML with invoiceNumber and totals", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (prisma.invoice.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockInvoiceForPrint,
+      );
+      const { GET } = await import("@/app/api/sales-invoices/[id]/print/route");
+      const res = await GET(
+        new Request("http://localhost/api/sales-invoices/inv1/print") as never,
+        { params: Promise.resolve({ id: "inv1" }) },
+      );
+      expect(res.status).toBe(200);
+      expect(res.headers.get("content-type")).toContain("text/html");
+      const text = await res.text();
+      expect(text).toContain("INV-001");
+      expect(text).toContain("١٩٠٫٠٠");
+      expect(text).toContain("عميل أ");
+      expect(text).toContain("شركة اختبار");
+    });
+
+    it("GET print with format=json returns JSON payload", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (prisma.invoice.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockInvoiceForPrint,
+      );
+      const { GET } = await import("@/app/api/sales-invoices/[id]/print/route");
+      const res = await GET(
+        new Request(
+          "http://localhost/api/sales-invoices/inv1/print?format=json",
+        ) as never,
+        { params: Promise.resolve({ id: "inv1" }) },
+      );
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.data.invoiceNumber).toBe("INV-001");
+      expect(json.data.totalAfterTax).toBe(190);
+    });
+
+    it("GET print escapes unsafe text", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (prisma.invoice.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+        {
+          ...mockInvoiceForPrint,
+          notes: "<script>alert('xss')</script>",
+          customer: { name: "<b>عميل</b>", code: "C001" },
+        },
+      );
+      const { GET } = await import("@/app/api/sales-invoices/[id]/print/route");
+      const res = await GET(
+        new Request("http://localhost/api/sales-invoices/inv1/print") as never,
+        { params: Promise.resolve({ id: "inv1" }) },
+      );
+      expect(res.status).toBe(200);
+      const text = await res.text();
+      expect(text).toContain("&lt;script&gt;");
+      expect(text).not.toContain("<script>");
+      expect(text).toContain("&lt;b&gt;عميل&lt;/b&gt;");
+    });
+
+    it("GET print returns 404 for missing invoice", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (prisma.invoice.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+        null,
+      );
+      const { GET } = await import("@/app/api/sales-invoices/[id]/print/route");
+      const res = await GET(
+        new Request(
+          "http://localhost/api/sales-invoices/inv-missing/print",
+        ) as never,
+        { params: Promise.resolve({ id: "inv-missing" }) },
+      );
+      expect(res.status).toBe(404);
+    });
+  });
 });

@@ -16,6 +16,7 @@ vi.mock("@/lib/prisma", () => ({
     },
     customerCollection: {
       findMany: vi.fn(),
+      findUnique: vi.fn(),
       count: vi.fn(),
       create: vi.fn(),
     },
@@ -1048,5 +1049,163 @@ describe("customers/[id]/statement route", () => {
     const json = await res.json();
     expect(json.data.transactions).toHaveLength(2);
     expect(json.data.summary.endingBalance).toBe(70);
+  });
+
+  // Print tests
+  describe("collections/[id]/print route", () => {
+    const mockCollectionForPrint = {
+      id: "col1",
+      companyId: "c1",
+      collectionDate: new Date("2025-03-01"),
+      customerId: "cus1",
+      customer: { name: "عميل أ", code: "C001" },
+      invoiceId: "inv1",
+      invoice: { invoiceNumber: "INV-001" },
+      paymentAccountId: "pa1",
+      paymentAccount: { name: "صندوق" },
+      amount: 50,
+      currency: "IQD",
+      notes: "دفعة جزئية",
+      journalEntryId: "je1",
+      company: { name: "شركة اختبار", code: "COMP01", taxId: null },
+    };
+
+    it("GET print requires auth", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+      const { GET } =
+        await import("@/app/api/customer-collections/[id]/print/route");
+      const res = await GET(
+        new Request(
+          "http://localhost/api/customer-collections/col1/print",
+        ) as never,
+        { params: Promise.resolve({ id: "col1" }) },
+      );
+      expect(res.status).toBe(401);
+    });
+
+    it("GET print requires collections.view permission", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(
+        false,
+      );
+      const { GET } =
+        await import("@/app/api/customer-collections/[id]/print/route");
+      const res = await GET(
+        new Request(
+          "http://localhost/api/customer-collections/col1/print",
+        ) as never,
+        { params: Promise.resolve({ id: "col1" }) },
+      );
+      expect(res.status).toBe(403);
+    });
+
+    it("GET print enforces company isolation", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+      (
+        prisma.customerCollection.findUnique as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(mockCollectionForPrint);
+      const { GET } =
+        await import("@/app/api/customer-collections/[id]/print/route");
+      const res = await GET(
+        new Request(
+          "http://localhost/api/customer-collections/col1/print",
+        ) as never,
+        { params: Promise.resolve({ id: "col1" }) },
+      );
+      expect(res.status).toBe(403);
+    });
+
+    it("GET print returns HTML with amount and customer", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (
+        prisma.customerCollection.findUnique as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(mockCollectionForPrint);
+      const { GET } =
+        await import("@/app/api/customer-collections/[id]/print/route");
+      const res = await GET(
+        new Request(
+          "http://localhost/api/customer-collections/col1/print",
+        ) as never,
+        { params: Promise.resolve({ id: "col1" }) },
+      );
+      expect(res.status).toBe(200);
+      expect(res.headers.get("content-type")).toContain("text/html");
+      const text = await res.text();
+      expect(text).toContain("٥٠٫٠٠");
+      expect(text).toContain("عميل أ");
+      expect(text).toContain("سند تحصيل");
+    });
+
+    it("GET print with format=json returns JSON payload", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (
+        prisma.customerCollection.findUnique as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(mockCollectionForPrint);
+      const { GET } =
+        await import("@/app/api/customer-collections/[id]/print/route");
+      const res = await GET(
+        new Request(
+          "http://localhost/api/customer-collections/col1/print?format=json",
+        ) as never,
+        { params: Promise.resolve({ id: "col1" }) },
+      );
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.data.amount).toBe(50);
+      expect(json.data.customerName).toBe("عميل أ");
+    });
+
+    it("GET print returns 404 for missing collection", async () => {
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (
+        prisma.customerCollection.findUnique as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(null);
+      const { GET } =
+        await import("@/app/api/customer-collections/[id]/print/route");
+      const res = await GET(
+        new Request(
+          "http://localhost/api/customer-collections/col-missing/print",
+        ) as never,
+        { params: Promise.resolve({ id: "col-missing" }) },
+      );
+      expect(res.status).toBe(404);
+    });
   });
 });
