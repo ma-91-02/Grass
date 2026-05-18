@@ -78,17 +78,18 @@
 
 ### UI Binding 1.4 — Accounts Chart & Tree
 **Endpoints المطلوب ربطها:**
-- `GET /api/accounts` — قائمة الحسابات ❌
-- `GET /api/accounts/tree` — شجرة الحسابات ❌
+- `GET /api/accounts` — قائمة الحسابات ✅ (COMPLETED)
+- `GET /api/accounts/tree` — شجرة الحسابات ✅ (COMPLETED — UI يبني tree frontend من flat list)
 - `POST /api/accounts` — إنشاء حساب ❌
 - `PATCH /api/accounts/{id}` — تحديث حساب ❌
 - `DELETE /api/accounts/{id}` — حذف حساب ❌
 
 **الصفحات المطلوبة:**
-- `/dashboard/accounts/page.tsx` — شجرة الحسابات مع CRUD
+- `/dashboard/accounts/page.tsx` — شجرة الحسابات ✅ (COMPLETED — view مع search + expand/collapse)
 
 **Priority:** HIGH
-**السبب:** المحاسبون يحتاجون لعرض وإدارة شجرة الحسابات.
+**السبب:** المحاسبون يحتاجون لعرض شجرة الحسابات.
+**تاريخ الإنجاز:** 2026-05-18
 
 ---
 

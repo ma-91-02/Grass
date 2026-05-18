@@ -490,7 +490,7 @@
 
 #### Task UI-007
 **Title:** Accounts List UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** HIGH  
 **Related APIs:**
 - `GET /api/accounts`
@@ -511,8 +511,9 @@
 - npm run build
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ GET endpoint
-- UI_BINDING_ROADMAP.md: إزالة المهمة
+- UI_BINDING_ROADMAP.md: تحديث UI Binding 1.4
 **Commit Hash:**
+**Date:** 2026-05-18
 
 ---
 
