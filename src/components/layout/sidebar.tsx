@@ -87,6 +87,11 @@ const menuItems = [
     icon: Boxes,
   },
   {
+    title: "حركات المخزن",
+    href: "/dashboard/stock-movements",
+    icon: Boxes,
+  },
+  {
     title: "سعر الصرف",
     href: "/dashboard/exchange-rates",
     icon: DollarSign,

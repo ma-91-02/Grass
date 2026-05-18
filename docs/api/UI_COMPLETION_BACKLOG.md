@@ -588,7 +588,7 @@
 
 #### Task UI-010
 **Title:** Stock Movements List UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** HIGH  
 **Related APIs:**
 - `GET /api/stock-movements`
@@ -602,14 +602,14 @@
 **Acceptance Criteria:**
 - عرض قائمة حركات المخزن
 - فلترة حسب المخزن والحالة
-- pagination
+- بحث بالاسم والكود
 **Required Checks:**
 - npm run lint
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ GET endpoint
-- UI_BINDING_ROADMAP.md: إزالة المهمة
+- UI_BINDING_ROADMAP.md: تحديث UI Binding 2.2
 **Commit Hash:**
 
 ---
