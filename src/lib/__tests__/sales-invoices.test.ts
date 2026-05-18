@@ -112,6 +112,7 @@ vi.mock("@/lib/api-response", () => ({
 describe("sales-invoices route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (prisma.$transaction as ReturnType<typeof vi.fn>).mockReset();
   });
 
   // GET list tests

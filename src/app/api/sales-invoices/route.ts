@@ -228,16 +228,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Validate payment account if provided
-    if (parsed.paymentAccountId) {
-      const account = await prisma.paymentAccount.findUnique({
-        where: { id: parsed.paymentAccountId },
-      });
-      if (!account) {
-        return errorResponse("حساب الدفع غير موجود", 400);
-      }
-    }
-
     // Validate all products belong to same company
     const productIds = parsed.lines.map((l) => l.productId);
     const uniqueProductIds = [...new Set(productIds)];

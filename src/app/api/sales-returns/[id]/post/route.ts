@@ -18,6 +18,8 @@ import { PeriodGuard } from "@/lib/services/period-guard";
 import { LedgerValidator } from "@/lib/services/ledger-validator";
 
 const ACCOUNT_CODES = {
+  CASH_IQD: "1.1.1",
+  CASH_USD: "1.1.2",
   AR_IQD: "1.1.6",
   AR_USD: "1.1.7",
   INVENTORY: "1.1.5",
@@ -102,30 +104,40 @@ export async function POST(
 
   // Load system accounts
   const currency = salesReturn.currency;
+  const cashCode =
+    currency === "USD" ? ACCOUNT_CODES.CASH_USD : ACCOUNT_CODES.CASH_IQD;
   const arCode =
     currency === "USD" ? ACCOUNT_CODES.AR_USD : ACCOUNT_CODES.AR_IQD;
 
-  const [arAccount, inventoryAccount, revenueAccount, cogsAccount] =
-    await Promise.all([
-      prisma.account.findFirst({
-        where: { companyId: salesReturn.companyId, code: arCode },
-      }),
-      prisma.account.findFirst({
-        where: {
-          companyId: salesReturn.companyId,
-          code: ACCOUNT_CODES.INVENTORY,
-        },
-      }),
-      prisma.account.findFirst({
-        where: {
-          companyId: salesReturn.companyId,
-          code: ACCOUNT_CODES.SALES_REVENUE,
-        },
-      }),
-      prisma.account.findFirst({
-        where: { companyId: salesReturn.companyId, code: ACCOUNT_CODES.COGS },
-      }),
-    ]);
+  const [
+    arAccount,
+    inventoryAccount,
+    revenueAccount,
+    cogsAccount,
+    cashAccount,
+  ] = await Promise.all([
+    prisma.account.findFirst({
+      where: { companyId: salesReturn.companyId, code: arCode },
+    }),
+    prisma.account.findFirst({
+      where: {
+        companyId: salesReturn.companyId,
+        code: ACCOUNT_CODES.INVENTORY,
+      },
+    }),
+    prisma.account.findFirst({
+      where: {
+        companyId: salesReturn.companyId,
+        code: ACCOUNT_CODES.SALES_REVENUE,
+      },
+    }),
+    prisma.account.findFirst({
+      where: { companyId: salesReturn.companyId, code: ACCOUNT_CODES.COGS },
+    }),
+    prisma.account.findFirst({
+      where: { companyId: salesReturn.companyId, code: cashCode },
+    }),
+  ]);
 
   if (!arAccount)
     return errorResponse("حساب الذمم المدينة غير موجود في شجرة الحسابات", 500);
@@ -138,6 +150,8 @@ export async function POST(
       "حساب تكلفة البضاعة المباعة غير موجود في شجرة الحسابات",
       500,
     );
+  if (!cashAccount)
+    return errorResponse("حساب النقدية غير موجود في شجرة الحسابات", 500);
 
   // Validate account statuses
   for (const acc of [
@@ -145,21 +159,35 @@ export async function POST(
     inventoryAccount,
     revenueAccount,
     cogsAccount,
+    cashAccount,
   ]) {
-    if (!acc.isActive) {
-      return errorResponse(`حساب ${acc.name} غير نشط`, 400);
+    if (!acc || !acc.isActive) {
+      return errorResponse(`حساب ${acc?.name || "غير معروف"} غير نشط`, 400);
     }
     if (!acc.isPosting) {
       return errorResponse(`حساب ${acc.name} ليس حساب ترحيل`, 400);
     }
   }
 
-  // Guard: customer balance must not go negative (only when balance is positive)
+  // Guard: customer balance must not go negative
+  // Only the AR portion affects customer balance
   const customerBalance = Number(salesReturn.customer?.currentBalance ?? 0);
   const returnTotal = Number(salesReturn.totalAmount ?? 0);
-  if (customerBalance > 0 && returnTotal > customerBalance) {
+  const originalPaymentType = salesReturn.originalInvoice?.paymentType;
+  const originalTotal = Number(salesReturn.originalInvoice?.totalAfterTax ?? 0);
+  const originalPaid = Number(salesReturn.originalInvoice?.paid ?? 0);
+  let arPortion = returnTotal;
+  if (originalPaymentType === "CASH") {
+    arPortion = 0;
+  } else if (originalPaymentType === "MIXED") {
+    arPortion =
+      originalTotal > 0
+        ? returnTotal * ((originalTotal - originalPaid) / originalTotal)
+        : returnTotal;
+  }
+  if (arPortion > 0 && customerBalance > 0 && arPortion > customerBalance) {
     return errorResponse(
-      `مبلغ المرتجع (${returnTotal}) يتجاوز رصيد العميل (${customerBalance})`,
+      `مبلغ المرتجع (${arPortion.toFixed(2)}) يتجاوز رصيد العميل (${customerBalance})`,
       400,
     );
   }
@@ -277,20 +305,53 @@ export async function POST(
       const cogsEntryNumber = `JE-${String(jeCount + 2).padStart(5, "0")}`;
 
       // --- Revenue Reversal Journal Entry ---
-      const revenueLines = [
+      // Determine cash/AR split based on original invoice payment type
+      const originalPaymentType = lockedReturn.originalInvoice.paymentType;
+      const originalPaid = Number(lockedReturn.originalInvoice.paid ?? 0);
+      const originalTotal = Number(
+        lockedReturn.originalInvoice.totalAfterTax ?? 0,
+      );
+      let cashPortion = 0;
+      let arPortion = totalAmount;
+      if (originalPaymentType === "CASH") {
+        cashPortion = totalAmount;
+        arPortion = 0;
+      } else if (originalPaymentType === "MIXED") {
+        cashPortion =
+          originalTotal > 0 ? totalAmount * (originalPaid / originalTotal) : 0;
+        arPortion = totalAmount - cashPortion;
+      }
+
+      const revenueLines: {
+        accountId: string;
+        debit: number;
+        credit: number;
+        description: string;
+      }[] = [
         {
           accountId: revenueAccount.id,
           debit: totalAmount,
           credit: 0,
           description: `عكس إيراد - مرتجع ${lockedReturn.returnNumber}`,
         },
-        {
+      ];
+
+      if (cashPortion > 0) {
+        revenueLines.push({
+          accountId: cashAccount.id,
+          debit: 0,
+          credit: cashPortion,
+          description: `استرداد نقدي - مرتجع ${lockedReturn.returnNumber}`,
+        });
+      }
+      if (arPortion > 0) {
+        revenueLines.push({
           accountId: arAccount.id,
           debit: 0,
-          credit: totalAmount,
+          credit: arPortion,
           description: `تخفيض ذمة - مرتجع ${lockedReturn.returnNumber}`,
-        },
-      ];
+        });
+      }
 
       const revenueValidation = LedgerValidator.validateLines(revenueLines);
       if (!revenueValidation.valid) {
@@ -375,22 +436,22 @@ export async function POST(
         });
       }
 
-      // --- Update customer balance (decrement) ---
-      if (lockedReturn.customerId && totalAmount > 0) {
+      // --- Update customer balance (decrement only for AR portion) ---
+      if (lockedReturn.customerId && arPortion > 0) {
         await tx.$queryRaw`SELECT id FROM "Customer" WHERE id = ${lockedReturn.customerId} FOR UPDATE`;
         const lockedCustomer = await tx.customer.findUnique({
           where: { id: lockedReturn.customerId },
         });
         if (lockedCustomer) {
           const balance = Number(lockedCustomer.currentBalance ?? 0);
-          if (balance > 0 && totalAmount > balance) {
+          if (balance > 0 && arPortion > balance) {
             throw new Error(
-              `مبلغ المرتجع (${totalAmount}) يتجاوز رصيد العميل (${balance})`,
+              `مبلغ المرتجع (${arPortion}) يتجاوز رصيد العميل (${balance})`,
             );
           }
           await tx.customer.update({
             where: { id: lockedReturn.customerId },
-            data: { currentBalance: { decrement: totalAmount } },
+            data: { currentBalance: { decrement: arPortion } },
           });
         }
       }

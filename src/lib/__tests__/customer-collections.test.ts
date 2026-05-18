@@ -247,6 +247,29 @@ describe("customer-collections route", () => {
     expect(res.status).toBe(403);
   });
 
+  it("POST rejects invalid body with 400", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+
+    const { POST } = await import("@/app/api/customer-collections/route");
+    const req = new Request("http://localhost/api/customer-collections", {
+      method: "POST",
+      body: JSON.stringify({
+        customerId: "cus1",
+        amount: -50,
+        currency: "BAD",
+      }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(400);
+  });
+
   it("POST rejects missing customer", async () => {
     (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
       userId: "u1",

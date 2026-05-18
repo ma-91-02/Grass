@@ -383,14 +383,16 @@ export async function PATCH(
       updateData.exchangeRateValue = exchangeRateValue;
       updateData.exchangeRateSnapshot = exchangeRateValue;
 
-      // Delete old items and recreate
-      await prisma.invoiceItem.deleteMany({ where: { invoiceId: id } });
-      await prisma.invoice.update({
-        where: { id },
-        data: {
-          ...updateData,
-          items: { create: lineItems },
-        },
+      // Delete old items and recreate inside transaction
+      await prisma.$transaction(async (tx) => {
+        await tx.invoiceItem.deleteMany({ where: { invoiceId: id } });
+        await tx.invoice.update({
+          where: { id },
+          data: {
+            ...updateData,
+            items: { create: lineItems },
+          },
+        });
       });
     } else {
       // No lines change — still recalc if payment/discount/currency/exchangeRate changed

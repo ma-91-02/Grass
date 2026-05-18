@@ -17,6 +17,7 @@ import { PERMISSIONS } from "@/lib/permissions";
 import { customerCollectionSchema } from "@/lib/schemas";
 import { LedgerValidator } from "@/lib/services/ledger-validator";
 import { PeriodGuard } from "@/lib/services/period-guard";
+import { z } from "zod";
 
 const ACCOUNT_CODES = {
   CASH_IQD: "1.1.1",
@@ -484,6 +485,9 @@ export async function POST(request: NextRequest) {
         : null,
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return errorResponse(error.issues.map((e) => e.message).join("، "), 400);
+    }
     const message =
       error instanceof Error ? error.message : "فشل إنشاء التحصيل";
     console.error("Customer collection error:", error);

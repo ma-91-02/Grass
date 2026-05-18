@@ -15,6 +15,7 @@ import {
 } from "@/lib/api-response";
 import { PERMISSIONS } from "@/lib/permissions";
 import { salesReturnSchema } from "@/lib/schemas";
+import { z } from "zod";
 
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
@@ -365,6 +366,9 @@ export async function POST(request: NextRequest) {
       createdAt: salesReturn.createdAt,
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return errorResponse(error.issues.map((e) => e.message).join("، "), 400);
+    }
     const message =
       error instanceof Error ? error.message : "فشل إنشاء المرتجع";
     if (error instanceof Error && error.message.includes("Unique")) {

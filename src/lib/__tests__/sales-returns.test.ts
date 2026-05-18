@@ -153,6 +153,14 @@ const mockWarehouse = {
 };
 
 const mockAccounts = {
+  cash: {
+    id: "acc-cash",
+    code: "1.1.1",
+    name: "Cash IQD",
+    isActive: true,
+    isPosting: true,
+    currency: "IQD",
+  },
   ar: {
     id: "acc-ar",
     code: "1.1.6",
@@ -396,6 +404,31 @@ describe("sales-returns route", () => {
     expect(res.status).toBe(400);
     const json = await res.json();
     expect(json.error).toContain("تتجاوز");
+  });
+
+  it("POST create rejects invalid body with 400", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "t@t.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+
+    const { POST } = await import("@/app/api/sales-returns/route");
+    const res = await POST(
+      new Request("http://localhost/api/sales-returns", {
+        method: "POST",
+        body: JSON.stringify({
+          companyId: "c1",
+          originalInvoiceId: "inv1",
+          currency: "BAD_CURRENCY",
+          lines: [],
+        }),
+      }) as never,
+    );
+    expect(res.status).toBe(400);
   });
 
   it("POST create DRAFT with valid data", async () => {
@@ -665,7 +698,8 @@ describe("sales-returns [id]/post route", () => {
       .mockResolvedValueOnce(mockAccounts.ar)
       .mockResolvedValueOnce(mockAccounts.inventory)
       .mockResolvedValueOnce(mockAccounts.revenue)
-      .mockResolvedValueOnce(mockAccounts.cogs);
+      .mockResolvedValueOnce(mockAccounts.cogs)
+      .mockResolvedValueOnce(mockAccounts.cash);
 
     (LedgerValidator.validateLines as ReturnType<typeof vi.fn>).mockReturnValue(
       {
@@ -801,7 +835,8 @@ describe("sales-returns [id]/post route", () => {
       .mockResolvedValueOnce(mockAccounts.ar)
       .mockResolvedValueOnce(mockAccounts.inventory)
       .mockResolvedValueOnce(mockAccounts.revenue)
-      .mockResolvedValueOnce(mockAccounts.cogs);
+      .mockResolvedValueOnce(mockAccounts.cogs)
+      .mockResolvedValueOnce(mockAccounts.cash);
 
     const { POST } = await import("@/app/api/sales-returns/[id]/post/route");
     const res = await POST(
@@ -835,7 +870,8 @@ describe("sales-returns [id]/post route", () => {
       .mockResolvedValueOnce({ ...mockAccounts.ar, isActive: false })
       .mockResolvedValueOnce(mockAccounts.inventory)
       .mockResolvedValueOnce(mockAccounts.revenue)
-      .mockResolvedValueOnce(mockAccounts.cogs);
+      .mockResolvedValueOnce(mockAccounts.cogs)
+      .mockResolvedValueOnce(mockAccounts.cash);
 
     const { POST } = await import("@/app/api/sales-returns/[id]/post/route");
     const res = await POST(
@@ -872,7 +908,8 @@ describe("sales-returns [id]/post route", () => {
       .mockResolvedValueOnce(mockAccounts.ar)
       .mockResolvedValueOnce(mockAccounts.inventory)
       .mockResolvedValueOnce(mockAccounts.revenue)
-      .mockResolvedValueOnce(mockAccounts.cogs);
+      .mockResolvedValueOnce(mockAccounts.cogs)
+      .mockResolvedValueOnce(mockAccounts.cash);
 
     const mockTx = {
       $queryRaw: vi.fn().mockResolvedValue([]),
@@ -981,7 +1018,8 @@ describe("sales-returns [id]/post route", () => {
       .mockResolvedValueOnce(mockAccounts.ar)
       .mockResolvedValueOnce(mockAccounts.inventory)
       .mockResolvedValueOnce(mockAccounts.revenue)
-      .mockResolvedValueOnce(mockAccounts.cogs);
+      .mockResolvedValueOnce(mockAccounts.cogs)
+      .mockResolvedValueOnce(mockAccounts.cash);
 
     const mockTx = {
       $queryRaw: vi.fn().mockResolvedValue([]),
@@ -1073,6 +1111,151 @@ describe("sales-returns [id]/post route", () => {
         data: { status: "RETURNED_PARTIAL" },
       }),
     );
+  });
+
+  it("POST CASH return does not decrement customer balance and credits Cash", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "t@t.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    const cashReturnDraft = {
+      ...mockReturnDraft,
+      originalInvoice: {
+        ...mockInvoice,
+        paymentType: "CASH",
+        paid: 100,
+        remaining: 0,
+        totalAfterTax: 100,
+      },
+      customer: { ...mockCustomer, currentBalance: 0 },
+    };
+    (
+      prisma.salesReturn.findUnique as ReturnType<typeof vi.fn>
+    ).mockResolvedValue(cashReturnDraft);
+    (PeriodGuard.checkPeriodOpen as ReturnType<typeof vi.fn>).mockResolvedValue(
+      { allowed: true },
+    );
+    (prisma.account.findFirst as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(mockAccounts.ar)
+      .mockResolvedValueOnce(mockAccounts.inventory)
+      .mockResolvedValueOnce(mockAccounts.revenue)
+      .mockResolvedValueOnce(mockAccounts.cogs)
+      .mockResolvedValueOnce(mockAccounts.cash);
+
+    (LedgerValidator.validateLines as ReturnType<typeof vi.fn>).mockReturnValue(
+      { valid: true, errors: [] },
+    );
+
+    const mockTxCash = {
+      $queryRaw: vi.fn().mockResolvedValue([]),
+      auditLog: { create: vi.fn().mockResolvedValue({ id: "al1" }) },
+      salesReturn: {
+        findUnique: vi.fn().mockResolvedValue(cashReturnDraft),
+        update: vi.fn().mockResolvedValue({
+          ...cashReturnDraft,
+          status: "POSTED",
+          postedAt: new Date(),
+        }),
+      },
+      invoice: {
+        findMany: vi.fn().mockResolvedValue(mockInvoice.items),
+        update: vi
+          .fn()
+          .mockResolvedValue({ ...mockInvoice, status: "RETURNED_PARTIAL" }),
+      },
+      invoiceItem: { findMany: vi.fn().mockResolvedValue(mockInvoice.items) },
+      salesReturnLine: {
+        groupBy: vi.fn().mockResolvedValue([]),
+        update: vi.fn().mockResolvedValue({ id: "rl1" }),
+      },
+      stockMovement: {
+        create: vi.fn().mockResolvedValue({ id: "sm1", status: "DRAFT" }),
+        update: vi.fn().mockResolvedValue({ id: "sm1" }),
+      },
+      stockBalance: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: "sb1",
+          quantityOnHand: 20,
+          averageCost: 6,
+          totalValue: 120,
+        }),
+        upsert: vi.fn().mockResolvedValue({
+          id: "sb1",
+          quantityOnHand: 25,
+          averageCost: 6,
+          totalValue: 150,
+        }),
+      },
+      journalEntry: {
+        create: vi
+          .fn()
+          .mockImplementation(
+            (args: { data: { lines?: { create: unknown[] } } }) => ({
+              id: "je1",
+              entryNumber: "JE-00001",
+              lines: args.data.lines?.create || [],
+            }),
+          ),
+        count: vi.fn().mockResolvedValue(0),
+      },
+      customer: {
+        findUnique: vi
+          .fn()
+          .mockResolvedValue({ ...mockCustomer, currentBalance: 0 }),
+        update: vi
+          .fn()
+          .mockResolvedValue({ ...mockCustomer, currentBalance: 0 }),
+      },
+    };
+
+    (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
+      async (callback: (tx: typeof mockTxCash) => Promise<unknown>) => {
+        return callback(mockTxCash as unknown as typeof mockTxCash);
+      },
+    );
+
+    (
+      StockBalanceService.applyPostedMovement as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({
+      success: true,
+      balance: {
+        id: "sb1",
+        quantityOnHand: 25,
+        reservedQuantity: 0,
+        averageCost: 6,
+        totalValue: 150,
+      },
+      movement: { id: "sm1", status: "POSTED" },
+    });
+
+    const { POST } = await import("@/app/api/sales-returns/[id]/post/route");
+    const res = await POST(
+      new Request("http://localhost/api/sales-returns/ret1/post", {
+        method: "POST",
+      }) as never,
+      { params: Promise.resolve({ id: "ret1" }) },
+    );
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.data.status).toBe("POSTED");
+    // Verify customer balance was NOT decremented (cash return has arPortion=0)
+    expect(mockTxCash.customer.update).not.toHaveBeenCalled();
+    // Verify revenue reversal credited Cash, not AR
+    const revenueJournalCall = mockTxCash.journalEntry.create.mock.calls.find(
+      (call) => call[0].data.description?.includes("عكس إيراد"),
+    );
+    expect(revenueJournalCall).toBeDefined();
+    const lines = revenueJournalCall![0].data.lines.create;
+    const cashLine = lines.find(
+      (l: { accountId: string }) => l.accountId === mockAccounts.cash.id,
+    );
+    expect(cashLine).toBeDefined();
+    expect(cashLine.credit).toBe(50);
   });
 
   // Print tests
