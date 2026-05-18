@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency } from "@/lib/utils";
+import { useToast } from "@/components/ui/toast";
 
 interface User {
   id: string;
@@ -19,16 +21,38 @@ interface User {
 }
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const qc = useQueryClient();
+  const { toast } = useToast();
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    fetch("/api/users")
-      .then((res) => res.json())
-      .then((data) => setUsers(data.data))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ["users"],
+    queryFn: async () => {
+      const res = await fetch("/api/users");
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "فشل تحميل المستخدمين");
+      return json.data as User[];
+    },
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      const res = await fetch(`/api/users/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "فشل تحديث المستخدم");
+      return json.data;
+    },
+    onSuccess: () => {
+      toast("تم تحديث الحالة بنجاح", "success");
+      qc.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (err: Error) => toast(err.message, "error"),
+  });
 
   const filtered = users.filter(
     (u) => u.name.includes(search) || u.email.includes(search),
@@ -41,7 +65,7 @@ export default function UsersPage() {
           <h1 className="text-2xl font-bold text-dark">المستخدمين</h1>
           <p className="text-sm text-gray-500">إدارة حسابات المستخدمين</p>
         </div>
-        <Button>
+        <Button onClick={() => router.push("/dashboard/users/new")}>
           <Plus className="h-4 w-4" />
           مستخدم جديد
         </Button>
@@ -59,7 +83,7 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <div className="text-center py-12 text-gray-500">جاري التحميل...</div>
       ) : filtered.length === 0 ? (
         <Card>
@@ -88,6 +112,9 @@ export default function UsersPage() {
                   <th className="text-right p-4 text-sm font-medium text-gray-500">
                     تاريخ الإنشاء
                   </th>
+                  <th className="text-center p-4 text-sm font-medium text-gray-500">
+                    إجراءات
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -102,18 +129,45 @@ export default function UsersPage() {
                     </td>
                     <td className="p-4">
                       {user.roles.map((role) => (
-                        <Badge key={role} variant="info" className="ml-1">
+                        <Badge
+                          key={role}
+                          className="ml-1 bg-blue-100 text-blue-700"
+                        >
                           {role}
                         </Badge>
                       ))}
                     </td>
                     <td className="p-4">
-                      <Badge variant={user.isActive ? "success" : "danger"}>
+                      <Badge
+                        className={
+                          user.isActive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-700"
+                        }
+                      >
                         {user.isActive ? "نشط" : "غير نشط"}
                       </Badge>
                     </td>
                     <td className="p-4 text-gray-600">
                       {new Date(user.createdAt).toLocaleDateString("ar-IQ")}
+                    </td>
+                    <td className="p-4 text-center">
+                      <button
+                        onClick={() =>
+                          toggleMutation.mutate({
+                            id: user.id,
+                            isActive: !user.isActive,
+                          })
+                        }
+                        className={`rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
+                          user.isActive
+                            ? "text-red-600 hover:bg-red-50"
+                            : "text-green-600 hover:bg-green-50"
+                        }`}
+                        disabled={toggleMutation.isPending}
+                      >
+                        {user.isActive ? "تعطيل" : "تفعيل"}
+                      </button>
                     </td>
                   </tr>
                 ))}

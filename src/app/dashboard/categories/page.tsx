@@ -35,7 +35,7 @@ export default function CategoriesPage() {
           <h1 className="text-2xl font-bold text-dark">تصنيفات المواد</h1>
           <p className="text-sm text-gray-500">إدارة مجموعات المواد</p>
         </div>
-        <Button>
+        <Button disabled title="قريباً">
           <Plus className="h-4 w-4" />
           تصنيف جديد
         </Button>

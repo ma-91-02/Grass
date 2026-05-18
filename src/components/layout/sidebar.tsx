@@ -14,14 +14,14 @@ import {
   Settings,
   LogOut,
   FileText,
-  BarChart3,
-  Truck,
-  ChevronDown,
-  BookOpen,
-  Building2,
   Receipt,
   RotateCcw,
   Boxes,
+  Landmark,
+  CalendarDays,
+  ScrollText,
+  Wallet,
+  ChevronDown,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -52,39 +52,14 @@ const menuItems = [
     icon: RotateCcw,
   },
   {
-    title: "المشتريات",
-    href: "/dashboard/purchases",
-    icon: Package,
-  },
-  {
     title: "الحسابات",
     href: "/dashboard/accounts",
-    icon: DollarSign,
+    icon: Landmark,
   },
   {
     title: "القيود اليومية",
     href: "/dashboard/journal-entries",
-    icon: BookOpen,
-  },
-  {
-    title: "الشركة والفروع",
-    href: "/dashboard/company",
-    icon: Building2,
-  },
-  {
-    title: "التقارير",
-    href: "/dashboard/reports",
-    icon: BarChart3,
-  },
-  {
-    title: "النقل المخزني",
-    href: "/dashboard/warehouse-transfers",
-    icon: Truck,
-  },
-  {
-    title: "أرصدة المخزن",
-    href: "/dashboard/stock-balances",
-    icon: Boxes,
+    icon: ScrollText,
   },
   {
     title: "العملاء والموردون",
@@ -97,9 +72,39 @@ const menuItems = [
     icon: Package,
   },
   {
+    title: "تصنيفات المواد",
+    href: "/dashboard/categories",
+    icon: Package,
+  },
+  {
     title: "المخازن",
     href: "/dashboard/warehouses",
     icon: Warehouse,
+  },
+  {
+    title: "أرصدة المخزن",
+    href: "/dashboard/stock-balances",
+    icon: Boxes,
+  },
+  {
+    title: "سعر الصرف",
+    href: "/dashboard/exchange-rates",
+    icon: DollarSign,
+  },
+  {
+    title: "حسابات الدفع",
+    href: "/dashboard/payment-accounts",
+    icon: Wallet,
+  },
+  {
+    title: "الفترات المالية",
+    href: "/dashboard/fiscal-periods",
+    icon: CalendarDays,
+  },
+  {
+    title: "سجل النشاطات",
+    href: "/dashboard/audit-logs",
+    icon: FileText,
   },
   {
     title: "المستخدمين",
@@ -109,21 +114,6 @@ const menuItems = [
   {
     title: "الأدوار",
     href: "/dashboard/roles",
-    icon: Settings,
-  },
-  {
-    title: "سعر الصرف",
-    href: "/dashboard/exchange-rates",
-    icon: DollarSign,
-  },
-  {
-    title: "سجل النشاطات",
-    href: "/dashboard/audit-logs",
-    icon: FileText,
-  },
-  {
-    title: "الإعدادات",
-    href: "/dashboard/settings",
     icon: Settings,
   },
 ];
