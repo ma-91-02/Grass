@@ -34,7 +34,7 @@
 ### UI Binding 1.1 — Purchases Full UI
 **Endpoints المطلوب ربطها:**
 - `GET /api/purchases` — قائمة فواتير الشراء ✅ (موجود)
-- `POST /api/purchases` — إنشاء فاتورة شراء ❌
+- `POST /api/purchases` — إنشاء فاتورة شراء ✅ (COMPLETED)
 - `GET /api/purchases/{id}` — تفاصيل فاتورة شراء ❌
 - `PATCH /api/purchases/{id}` — تحديث فاتورة شراء ❌
 

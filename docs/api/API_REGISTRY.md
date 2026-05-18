@@ -325,7 +325,7 @@
 | Module | Method | Endpoint | Purpose | Backend Status | UI Status | UI Page | Priority | Phase | Notes |
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | Purchases | GET | `/api/purchases` | قائمة فواتير الشراء | DONE | CONNECTED | `/dashboard/purchases` | CRITICAL | 0 | — |
-| Purchases | POST | `/api/purchases` | إنشاء فاتورة شراء | DONE | PARTIAL | `/components/forms/purchase-invoice-form.tsx` | CRITICAL | 1.0 | لا يوجد صفحة create منفصلة |
+| Purchases | POST | `/api/purchases` | إنشاء فاتورة شراء | DONE | CONNECTED | `/dashboard/purchases/new` | CRITICAL | 1.0 | — |
 | Purchases | GET | `/api/purchases/{id}` | تفاصيل فاتورة شراء | DONE | NO_UI | — | HIGH | 1.0 | لا يوجد detail page |
 | Purchases | PATCH | `/api/purchases/{id}` | تحديث فاتورة شراء | DONE | NO_UI | — | HIGH | 1.0 | — |
 | Purchases | DELETE | `/api/purchases/{id}` | حذف فاتورة شراء | DONE | CONNECTED | `/dashboard/purchases` | CRITICAL | 0 | — |

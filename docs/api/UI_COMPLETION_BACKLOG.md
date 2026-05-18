@@ -319,7 +319,7 @@
 
 #### Task UI-002
 **Title:** Purchases Create UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** CRITICAL  
 **Related APIs:**
 - `POST /api/purchases`
