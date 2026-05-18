@@ -28,6 +28,8 @@ interface ProductFormProps {
   onSubmit: (data: ProductFormData) => Promise<void>;
   loading?: boolean;
   categories: Category[];
+  units: { id: string; name: string }[];
+  companyId: string;
   onCategoriesChange?: (categories: Category[]) => void;
   userPermissions: string[];
 }
@@ -36,6 +38,8 @@ export function ProductForm({
   defaultValues,
   onSubmit,
   categories,
+  units,
+  companyId,
   onCategoriesChange,
   userPermissions,
 }: ProductFormProps) {
@@ -89,6 +93,7 @@ export function ProductForm({
       code: "",
       barcode: "",
       categoryId: "",
+      unitId: "",
       packaging: "قطعة",
       piecesPerCarton: 0,
       purchasePrice: 0,
@@ -111,8 +116,8 @@ export function ProductForm({
     if (canViewPurchasePrice && watchedPurchasePrice) {
       result["سعر شراء"] = Number(watchedPurchasePrice) * qty;
     }
-    watchedPrices?.forEach((p, i) => {
-      const label = CUSTOMER_TYPE_LABELS[CUSTOMER_TYPES[i] as CustomerType];
+    watchedPrices?.forEach((p) => {
+      const label = CUSTOMER_TYPE_LABELS[p.customerType as CustomerType];
       result[label] = Number(p.price) * qty;
     });
     return result;
@@ -155,7 +160,7 @@ export function ProductForm({
       const res = await fetch("/api/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newCategoryName.trim() }),
+        body: JSON.stringify({ name: newCategoryName.trim(), companyId }),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل إنشاء المجموعة");
@@ -244,7 +249,18 @@ export function ProductForm({
             {...register("barcode")}
             dir="ltr"
           />
-          <div className="space-y-1">
+          <Select
+            label="الوحدة"
+            options={units.map((u) => ({
+              value: u.id,
+              label: u.name,
+            }))}
+            placeholder="اختر الوحدة"
+            error={errors.unitId?.message}
+            {...register("unitId")}
+            required
+          />
+          <div className="space-y-1 sm:col-span-2">
             <div className="flex items-end gap-2">
               <div className="flex-1">
                 <Select

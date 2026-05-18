@@ -32,7 +32,8 @@ interface Product {
   categoryName: string | null;
   packaging: string;
   piecesPerCarton: number;
-  unit: string;
+  unitId: string | null;
+  unitName: string | null;
   purchasePrice: number;
   purchaseCurrency: string;
   isActive: boolean;
@@ -53,11 +54,15 @@ export default function ProductsPage() {
   const [hardDeleteItem, setHardDeleteItem] = useState<Product | null>(null);
   const [toggleItem, setToggleItem] = useState<Product | null>(null);
   const [user, setUser] = useState<TokenPayload | null>(null);
+  const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
-      .then((d) => setUser(d.data))
+      .then((d) => {
+        setUser(d.data);
+        setUserCompanyId(d.data?.companyId || null);
+      })
       .catch(() => {});
   }, []);
 
@@ -74,13 +79,15 @@ export default function ProductsPage() {
     isLoading: productsLoading,
     error: productsError,
   } = useQuery({
-    queryKey: ["products"],
+    queryKey: ["products", userCompanyId],
     queryFn: async () => {
-      const res = await fetch("/api/products");
+      const params = userCompanyId ? `?companyId=${userCompanyId}` : "";
+      const res = await fetch(`/api/products${params}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل تحميل المواد");
       return json.data as Product[];
     },
+    enabled: !!userCompanyId,
   });
 
   const { data: categories = [] } = useQuery({
@@ -89,6 +96,16 @@ export default function ProductsPage() {
       const res = await fetch("/api/categories");
       const json = await res.json();
       return json.data as Category[];
+    },
+  });
+
+  const { data: units = [] } = useQuery({
+    queryKey: ["units"],
+    queryFn: async () => {
+      const res = await fetch("/api/units");
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "فشل تحميل الوحدات");
+      return json.data as { id: string; name: string }[];
     },
   });
 
@@ -102,17 +119,20 @@ export default function ProductsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: unknown) => {
+      const payload = userCompanyId
+        ? { ...(data as object), companyId: userCompanyId }
+        : data;
       const res = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل إنشاء المادة");
       return json.data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["products", userCompanyId] });
       toast("تم إنشاء المادة بنجاح", "success");
       setDialogOpen(false);
     },
@@ -121,17 +141,20 @@ export default function ProductsPage() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: unknown }) => {
+      const payload = userCompanyId
+        ? { ...(data as object), companyId: userCompanyId }
+        : data;
       const res = await fetch(`/api/products/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل تحديث المادة");
       return json.data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["products", userCompanyId] });
       toast("تم تحديث المادة بنجاح", "success");
       setEditItem(null);
       setDialogOpen(false);
@@ -151,7 +174,7 @@ export default function ProductsPage() {
       return json.data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["products", userCompanyId] });
       toast("تم تغيير الحالة بنجاح", "success");
       setToggleItem(null);
     },
@@ -168,7 +191,7 @@ export default function ProductsPage() {
       return json.data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["products", userCompanyId] });
       toast("تم حذف المادة نهائياً", "success");
       setHardDeleteItem(null);
     },
@@ -350,6 +373,7 @@ export default function ProductsPage() {
                   code: editItem.code,
                   barcode: editItem.barcode || "",
                   categoryId: editItem.categoryId || "",
+                  unitId: editItem.unitId || "",
                   packaging:
                     (editItem.packaging as "قطعة" | "كارتون") || "قطعة",
                   piecesPerCarton: editItem.piecesPerCarton,
@@ -367,6 +391,8 @@ export default function ProductsPage() {
           onSubmit={handleSubmit}
           loading={isLoading}
           categories={categories}
+          units={units}
+          companyId={userCompanyId || ""}
           onCategoriesChange={(updated) => {
             qc.setQueryData(["categories"], updated);
           }}
