@@ -455,7 +455,7 @@
 
 #### Task UI-006
 **Title:** Journal Entries Reverse UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** CRITICAL  
 **Related APIs:**
 - `POST /api/journal-entries/{id}/reverse`

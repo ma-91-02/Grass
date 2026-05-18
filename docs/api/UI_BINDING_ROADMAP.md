@@ -64,7 +64,7 @@
 **Endpoints المطلوب ربطها:**
 - `POST /api/journal-entries` — إنشاء قيد يومي ✅ (COMPLETED)
 - `POST /api/journal-entries/{id}/post` — ترحيل قيد ✅ (COMPLETED)
-- `POST /api/journal-entries/{id}/reverse` — عكس قيد ❌
+- `POST /api/journal-entries/{id}/reverse` — عكس قيد ✅ (COMPLETED)
 - `PATCH /api/journal-entries/{id}` — تحديث مسودة قيد ❌
 
 **الصفحات المطلوبة:**

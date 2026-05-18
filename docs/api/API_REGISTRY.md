@@ -271,7 +271,7 @@
 | JournalEntries | PATCH | `/api/journal-entries/{id}` | تحديث مسودة | DONE | NO_UI | — | CRITICAL | 1.3 | — |
 | JournalEntries | DELETE | `/api/journal-entries/{id}` | حذف مسودة | DONE | NO_UI | — | CRITICAL | 1.3 | — |
 | JournalEntries | POST | `/api/journal-entries/{id}/post` | ترحيل قيد | DONE | CONNECTED | `/dashboard/journal-entries/[id]` | CRITICAL | 1.3 | — |
-| JournalEntries | POST | `/api/journal-entries/{id}/reverse` | عكس قيد | DONE | NO_UI | — | CRITICAL | 1.3 | — |
+| JournalEntries | POST | `/api/journal-entries/{id}/reverse` | عكس قيد | DONE | CONNECTED | `/dashboard/journal-entries/[id]` | CRITICAL | 1.3 | — |
 
 ---
 

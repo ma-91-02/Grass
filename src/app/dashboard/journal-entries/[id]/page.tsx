@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, RotateCcw } from "lucide-react";
 
 interface JournalLine {
   id: string;
@@ -41,6 +41,7 @@ export default function JournalEntryDetailPage() {
   const qc = useQueryClient();
   const id = params.id as string;
   const [showPostConfirm, setShowPostConfirm] = useState(false);
+  const [showReverseConfirm, setShowReverseConfirm] = useState(false);
 
   const {
     data: entry,
@@ -75,6 +76,30 @@ export default function JournalEntryDetailPage() {
     onError: (err: Error) => {
       toast(err.message, "error");
       setShowPostConfirm(false);
+    },
+  });
+
+  const reverseMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/journal-entries/${id}/reverse`, {
+        method: "POST",
+      });
+      const json = await res.json();
+      if (!json.success)
+        throw new Error(json.error || "فشل عكس القيد");
+      return json.data;
+    },
+    onSuccess: (data) => {
+      toast(
+        `تم عكس القيد بنجاح. قيد العكس: ${data.entryNumber}`,
+        "success",
+      );
+      qc.invalidateQueries({ queryKey: ["journal-entry", id] });
+      setShowReverseConfirm(false);
+    },
+    onError: (err: Error) => {
+      toast(err.message, "error");
+      setShowReverseConfirm(false);
     },
   });
 
@@ -137,6 +162,16 @@ export default function JournalEntryDetailPage() {
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-700">
               القيد غير متوازن
             </div>
+          )}
+          {entry.status === "POSTED" && (
+            <Button
+              variant="outline"
+              onClick={() => setShowReverseConfirm(true)}
+              disabled={reverseMutation.isPending}
+            >
+              <RotateCcw className="h-4 w-4" />
+              {reverseMutation.isPending ? "جاري العكس..." : "عكس القيد"}
+            </Button>
           )}
         </div>
       </div>
@@ -287,6 +322,16 @@ export default function JournalEntryDetailPage() {
         message={`هل أنت متأكد من ترحيل القيد ${entry.entryNumber}؟ لا يمكن التراجع عن هذه العملية.`}
         confirmLabel="ترحيل"
         loading={postMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={showReverseConfirm}
+        onClose={() => setShowReverseConfirm(false)}
+        onConfirm={() => reverseMutation.mutate()}
+        title="عكس القيد"
+        message={`هل أنت متأكد من عكس القيد ${entry.entryNumber}؟ سيتم إنشاء قيد عكسي جديد وتحديث حالة القيد الحالي إلى "ملغى".`}
+        confirmLabel="عكس"
+        loading={reverseMutation.isPending}
       />
     </div>
   );
