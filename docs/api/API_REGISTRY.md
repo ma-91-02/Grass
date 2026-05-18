@@ -267,10 +267,10 @@
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | JournalEntries | GET | `/api/journal-entries` | قائمة القيود اليومية | DONE | CONNECTED | `/dashboard/journal-entries` | CRITICAL | 0 | read-only list |
 | JournalEntries | POST | `/api/journal-entries` | إنشاء قيد | DONE | CONNECTED | `/dashboard/journal-entries/new` | CRITICAL | 1.3 | — |
-| JournalEntries | GET | `/api/journal-entries/{id}` | تفاصيل قيد | DONE | PARTIAL | `/dashboard/journal-entries` | CRITICAL | 0 | read-only detail inline |
+| JournalEntries | GET | `/api/journal-entries/{id}` | تفاصيل قيد | DONE | CONNECTED | `/dashboard/journal-entries/[id]` | CRITICAL | 0 | — |
 | JournalEntries | PATCH | `/api/journal-entries/{id}` | تحديث مسودة | DONE | NO_UI | — | CRITICAL | 1.3 | — |
 | JournalEntries | DELETE | `/api/journal-entries/{id}` | حذف مسودة | DONE | NO_UI | — | CRITICAL | 1.3 | — |
-| JournalEntries | POST | `/api/journal-entries/{id}/post` | ترحيل قيد | DONE | NO_UI | — | CRITICAL | 1.3 | — |
+| JournalEntries | POST | `/api/journal-entries/{id}/post` | ترحيل قيد | DONE | CONNECTED | `/dashboard/journal-entries/[id]` | CRITICAL | 1.3 | — |
 | JournalEntries | POST | `/api/journal-entries/{id}/reverse` | عكس قيد | DONE | NO_UI | — | CRITICAL | 1.3 | — |
 
 ---

@@ -424,7 +424,7 @@
 
 #### Task UI-005
 **Title:** Journal Entries Post UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** CRITICAL  
 **Related APIs:**
 - `POST /api/journal-entries/{id}/post`
