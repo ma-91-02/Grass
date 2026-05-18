@@ -49,7 +49,7 @@ export default function NewSalesInvoicePage() {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => setUserCompanyId(d.data?.companyId || null))
-      .catch(() => {});
+      .catch((err) => console.error("Failed to fetch auth/me", err));
   }, []);
 
   const { data: customers = [] } = useQuery({
@@ -66,13 +66,16 @@ export default function NewSalesInvoicePage() {
   });
 
   const { data: warehouses = [] } = useQuery({
-    queryKey: ["warehouses-list"],
+    queryKey: ["warehouses", userCompanyId],
     queryFn: async () => {
-      const res = await fetch("/api/warehouses");
+      const params = new URLSearchParams();
+      if (userCompanyId) params.append("companyId", userCompanyId);
+      const res = await fetch(`/api/warehouses?${params.toString()}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
       return json.data;
     },
+    enabled: !!userCompanyId,
   });
 
   const { data: products = [] } = useQuery({

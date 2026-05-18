@@ -2,13 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable, type Column } from "@/components/shared/data-table";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/toast";
-import { Receipt, Printer, Eye } from "lucide-react";
-import Link from "next/link";
+import { Printer } from "lucide-react";
 
 interface Invoice {
   id: string;
@@ -25,7 +23,7 @@ interface Invoice {
 }
 
 export default function SalesInvoicesPage() {
-  const { toast } = useToast();
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
 
@@ -33,7 +31,7 @@ export default function SalesInvoicesPage() {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => setUserCompanyId(d.data?.companyId || null))
-      .catch(() => {});
+      .catch((err) => console.error("Failed to fetch auth/me", err));
   }, []);
 
   const { data, isLoading, error } = useQuery({
@@ -133,7 +131,7 @@ export default function SalesInvoicesPage() {
         description="إنشاء وإدارة فواتير البيع"
         actionLabel="فاتورة جديدة"
         onAction={() => {
-          window.location.href = "/dashboard/sales-invoices/new";
+          router.push("/dashboard/sales-invoices/new");
         }}
       />
 
@@ -146,7 +144,7 @@ export default function SalesInvoicesPage() {
         onSearchChange={setSearch}
         searchPlaceholder="بحث برقم الفاتورة أو اسم العميل..."
         onView={(inv) => {
-          window.location.href = `/dashboard/sales-invoices/${inv.id}`;
+          router.push(`/dashboard/sales-invoices/${inv.id}`);
         }}
         viewLabel="عرض التفاصيل"
         extraActions={[
