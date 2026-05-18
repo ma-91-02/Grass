@@ -326,7 +326,7 @@
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | Purchases | GET | `/api/purchases` | قائمة فواتير الشراء | DONE | CONNECTED | `/dashboard/purchases` | CRITICAL | 0 | — |
 | Purchases | POST | `/api/purchases` | إنشاء فاتورة شراء | DONE | CONNECTED | `/dashboard/purchases/new` | CRITICAL | 1.0 | — |
-| Purchases | GET | `/api/purchases/{id}` | تفاصيل فاتورة شراء | DONE | NO_UI | — | HIGH | 1.0 | لا يوجد detail page |
+| Purchases | GET | `/api/purchases/{id}` | تفاصيل فاتورة شراء | DONE | CONNECTED | `/dashboard/purchases/[id]` | HIGH | 1.0 | — |
 | Purchases | PATCH | `/api/purchases/{id}` | تحديث فاتورة شراء | DONE | NO_UI | — | HIGH | 1.0 | — |
 | Purchases | DELETE | `/api/purchases/{id}` | حذف فاتورة شراء | DONE | CONNECTED | `/dashboard/purchases` | CRITICAL | 0 | — |
 | Purchases | GET | `/api/purchases/{id}/pdf` | تحميل PDF فاتورة الشراء | DONE | CONNECTED | `/dashboard/purchases` | HIGH | 0 | — |

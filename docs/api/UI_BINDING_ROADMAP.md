@@ -35,7 +35,7 @@
 **Endpoints المطلوب ربطها:**
 - `GET /api/purchases` — قائمة فواتير الشراء ✅ (موجود)
 - `POST /api/purchases` — إنشاء فاتورة شراء ✅ (COMPLETED)
-- `GET /api/purchases/{id}` — تفاصيل فاتورة شراء ❌
+- `GET /api/purchases/{id}` — تفاصيل فاتورة شراء ✅ (COMPLETED)
 - `PATCH /api/purchases/{id}` — تحديث فاتورة شراء ❌
 
 **الصفحات المطلوبة:**

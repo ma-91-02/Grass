@@ -356,7 +356,7 @@
 
 #### Task UI-003
 **Title:** Purchases Detail UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** CRITICAL  
 **Related APIs:**
 - `GET /api/purchases/{id}`
