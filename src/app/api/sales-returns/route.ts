@@ -255,44 +255,48 @@ export async function POST(request: NextRequest) {
     });
     const returnNumber = `RET-${String(returnCount + 1).padStart(5, "0")}`;
 
-    // Create return DRAFT
-    const salesReturn = await prisma.salesReturn.create({
-      data: {
-        companyId,
-        returnNumber,
-        originalInvoiceId,
-        customerId,
-        warehouseId,
-        returnDate,
-        currency,
-        totalAmount,
-        totalCogs,
-        status: "DRAFT",
-        notes,
-        createdById: currentUser.userId,
-        lines: { create: returnLines },
-      },
-      include: {
-        lines: {
-          include: { product: { select: { id: true, name: true } } },
-        },
-      },
-    });
-
-    await prisma.auditLog.create({
-      data: {
-        userId: currentUser.userId,
-        action: "CREATE",
-        entity: "SalesReturn",
-        entityId: salesReturn.id,
-        details: {
+    // Create return DRAFT inside transaction with audit
+    const salesReturn = await prisma.$transaction(async (tx) => {
+      const created = await tx.salesReturn.create({
+        data: {
+          companyId,
           returnNumber,
           originalInvoiceId,
+          customerId,
+          warehouseId,
+          returnDate,
+          currency,
           totalAmount,
           totalCogs,
-          lineCount: returnLines.length,
-        } as never,
-      },
+          status: "DRAFT",
+          notes,
+          createdById: currentUser.userId,
+          lines: { create: returnLines },
+        },
+        include: {
+          lines: {
+            include: { product: { select: { id: true, name: true } } },
+          },
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId: currentUser.userId,
+          action: "CREATE",
+          entity: "SalesReturn",
+          entityId: created.id,
+          details: {
+            returnNumber,
+            originalInvoiceId,
+            totalAmount,
+            totalCogs,
+            lineCount: returnLines.length,
+          } as never,
+        },
+      });
+
+      return created;
     });
 
     return successResponse({

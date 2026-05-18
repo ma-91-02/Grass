@@ -165,11 +165,12 @@ export async function POST(request: NextRequest) {
 
     // Validate all products belong to same company
     const productIds = parsed.lines.map((l) => l.productId);
+    const uniqueProductIds = [...new Set(productIds)];
     const products = await prisma.product.findMany({
-      where: { id: { in: productIds }, companyId: parsed.companyId },
+      where: { id: { in: uniqueProductIds }, companyId: parsed.companyId },
       include: { prices: true },
     });
-    if (products.length !== productIds.length) {
+    if (products.length !== uniqueProductIds.length) {
       return errorResponse(
         "بعض المواد غير موجودة أو لا تنتمي لهذه الشركة",
         400,
@@ -247,7 +248,7 @@ export async function POST(request: NextRequest) {
       paid = 0;
       remaining = totalAfterTax;
     } else if (parsed.paymentType === "MIXED") {
-      paid = Math.min(parsed.paid, totalAfterTax);
+      paid = Math.min(parsed.paid ?? 0, totalAfterTax);
       remaining = totalAfterTax - paid;
     }
 
@@ -313,7 +314,7 @@ export async function POST(request: NextRequest) {
         paymentAccountId: parsed.paymentAccountId || null,
         totalBeforeTax: subtotal,
         taxAmount,
-        discountAmount: totalDiscount,
+        discountAmount: parsed.discountAmount || 0,
         discountPercent,
         totalAfterTax,
         totalInUsd,

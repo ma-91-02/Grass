@@ -154,10 +154,10 @@ export async function POST(
     }
   }
 
-  // Guard: customer balance must not go negative
+  // Guard: customer balance must not go negative (only when balance is positive)
   const customerBalance = Number(salesReturn.customer?.currentBalance ?? 0);
   const returnTotal = Number(salesReturn.totalAmount ?? 0);
-  if (returnTotal > customerBalance) {
+  if (customerBalance > 0 && returnTotal > customerBalance) {
     return errorResponse(
       `مبلغ المرتجع (${returnTotal}) يتجاوز رصيد العميل (${customerBalance})`,
       400,
@@ -250,7 +250,7 @@ export async function POST(
             referenceType: "SalesReturn",
             referenceId: id,
             reason: "Sale Return",
-            status: "DRAFT",
+            status: "POSTED",
             createdById: currentUser.userId,
           },
         });
@@ -377,12 +377,13 @@ export async function POST(
 
       // --- Update customer balance (decrement) ---
       if (lockedReturn.customerId && totalAmount > 0) {
+        await tx.$queryRaw`SELECT id FROM "Customer" WHERE id = ${lockedReturn.customerId} FOR UPDATE`;
         const lockedCustomer = await tx.customer.findUnique({
           where: { id: lockedReturn.customerId },
         });
         if (lockedCustomer) {
           const balance = Number(lockedCustomer.currentBalance ?? 0);
-          if (totalAmount > balance) {
+          if (balance > 0 && totalAmount > balance) {
             throw new Error(
               `مبلغ المرتجع (${totalAmount}) يتجاوز رصيد العميل (${balance})`,
             );
@@ -393,6 +394,19 @@ export async function POST(
           });
         }
       }
+
+      // --- Update return to POSTED ---
+      const postedReturn = await tx.salesReturn.update({
+        where: { id },
+        data: {
+          status: "POSTED",
+          postedAt: new Date(),
+          postedById: currentUser.userId,
+          journalEntryId: revenueJournal.id,
+          cogsJournalEntryId: cogsJournal?.id || null,
+        },
+        include: { lines: true },
+      });
 
       // --- Update original invoice status if fully returned ---
       const originalInvoice = lockedReturn.originalInvoice;
@@ -439,19 +453,6 @@ export async function POST(
           }
         }
       }
-
-      // --- Update return to POSTED ---
-      const postedReturn = await tx.salesReturn.update({
-        where: { id },
-        data: {
-          status: "POSTED",
-          postedAt: new Date(),
-          postedById: currentUser.userId,
-          journalEntryId: revenueJournal.id,
-          cogsJournalEntryId: cogsJournal?.id || null,
-        },
-        include: { lines: true },
-      });
 
       // --- Audit inside transaction ---
       await tx.auditLog.create({

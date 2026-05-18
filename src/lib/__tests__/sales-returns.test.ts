@@ -414,6 +414,11 @@ describe("sales-returns route", () => {
     (prisma.auditLog.create as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: "al1",
     });
+    (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
+      async (callback: (tx: typeof prisma) => Promise<unknown>) => {
+        return callback(prisma as unknown as typeof prisma);
+      },
+    );
 
     const { POST } = await import("@/app/api/sales-returns/route");
     const res = await POST(
@@ -811,5 +816,231 @@ describe("sales-returns [id]/post route", () => {
     expect(res.status).toBe(400);
     const json = await res.json();
     expect(json.error).toContain("غير نشط");
+  });
+
+  it("POST allows return when customer has negative balance (credit)", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "t@t.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (
+      prisma.salesReturn.findUnique as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({
+      ...mockReturnDraft,
+      customer: { ...mockCustomer, currentBalance: -50 },
+    });
+    (PeriodGuard.checkPeriodOpen as ReturnType<typeof vi.fn>).mockResolvedValue(
+      { allowed: true },
+    );
+    (prisma.account.findFirst as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(mockAccounts.ar)
+      .mockResolvedValueOnce(mockAccounts.inventory)
+      .mockResolvedValueOnce(mockAccounts.revenue)
+      .mockResolvedValueOnce(mockAccounts.cogs);
+
+    const mockTx = {
+      $queryRaw: vi.fn().mockResolvedValue([]),
+      auditLog: { create: vi.fn().mockResolvedValue({ id: "al1" }) },
+      salesReturn: {
+        findUnique: vi.fn().mockResolvedValue({
+          ...mockReturnDraft,
+          customer: { ...mockCustomer, currentBalance: -50 },
+        }),
+        update: vi.fn().mockResolvedValue({
+          ...mockReturnDraft,
+          status: "POSTED",
+          postedAt: new Date(),
+        }),
+      },
+      invoice: {
+        findMany: vi.fn().mockResolvedValue(mockInvoice.items),
+        update: vi
+          .fn()
+          .mockResolvedValue({ ...mockInvoice, status: "RETURNED_PARTIAL" }),
+      },
+      salesReturnLine: {
+        groupBy: vi.fn().mockResolvedValue([]),
+        update: vi.fn().mockResolvedValue({ id: "rl1" }),
+      },
+      invoiceItem: {
+        findMany: vi.fn().mockResolvedValue(mockInvoice.items),
+      },
+      stockMovement: {
+        create: vi.fn().mockResolvedValue({ id: "sm1", status: "POSTED" }),
+        update: vi.fn().mockResolvedValue({ id: "sm1" }),
+      },
+      stockBalance: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: "sb1",
+          quantityOnHand: 10,
+          averageCost: 30,
+          totalValue: 300,
+        }),
+      },
+      journalEntry: {
+        create: vi.fn().mockResolvedValue({
+          id: "je1",
+          entryNumber: "JE-00001",
+          lines: [],
+        }),
+        count: vi.fn().mockResolvedValue(0),
+      },
+      customer: {
+        findUnique: vi
+          .fn()
+          .mockResolvedValue({ ...mockCustomer, currentBalance: -50 }),
+        update: vi.fn().mockResolvedValue({ id: "cus1", currentBalance: -100 }),
+      },
+    };
+
+    (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
+      async (callback: (tx: typeof mockTx) => Promise<unknown>) => {
+        return callback(mockTx as unknown as typeof mockTx);
+      },
+    );
+
+    (
+      StockBalanceService.applyPostedMovement as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({
+      success: true,
+      balance: {
+        id: "sb1",
+        quantityOnHand: 10,
+        averageCost: 30,
+        totalValue: 300,
+        reservedQuantity: 0,
+      },
+      movement: { id: "sm1", status: "POSTED" },
+    });
+
+    const { POST } = await import("@/app/api/sales-returns/[id]/post/route");
+    const res = await POST(
+      new Request("http://localhost/api/sales-returns/ret1/post", {
+        method: "POST",
+      }) as never,
+      { params: Promise.resolve({ id: "ret1" }) },
+    );
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.data.status).toBe("POSTED");
+  });
+
+  it("POST updates invoice status to RETURNED_PARTIAL after return posted", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "t@t.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (
+      prisma.salesReturn.findUnique as ReturnType<typeof vi.fn>
+    ).mockResolvedValue(mockReturnDraft);
+    (PeriodGuard.checkPeriodOpen as ReturnType<typeof vi.fn>).mockResolvedValue(
+      { allowed: true },
+    );
+    (prisma.account.findFirst as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(mockAccounts.ar)
+      .mockResolvedValueOnce(mockAccounts.inventory)
+      .mockResolvedValueOnce(mockAccounts.revenue)
+      .mockResolvedValueOnce(mockAccounts.cogs);
+
+    const mockTx = {
+      $queryRaw: vi.fn().mockResolvedValue([]),
+      auditLog: { create: vi.fn().mockResolvedValue({ id: "al1" }) },
+      salesReturn: {
+        findUnique: vi.fn().mockResolvedValue(mockReturnDraft),
+        update: vi.fn().mockResolvedValue({
+          ...mockReturnDraft,
+          status: "POSTED",
+          postedAt: new Date(),
+        }),
+      },
+      invoice: {
+        findMany: vi.fn().mockResolvedValue(mockInvoice.items),
+        update: vi
+          .fn()
+          .mockResolvedValue({ ...mockInvoice, status: "RETURNED_PARTIAL" }),
+      },
+      salesReturnLine: {
+        groupBy: vi
+          .fn()
+          .mockResolvedValue([
+            { originalInvoiceItemId: "ii1", _sum: { quantity: 5 } },
+          ]),
+        update: vi.fn().mockResolvedValue({ id: "rl1" }),
+      },
+      invoiceItem: {
+        findMany: vi.fn().mockResolvedValue(mockInvoice.items),
+      },
+      stockMovement: {
+        create: vi.fn().mockResolvedValue({ id: "sm1", status: "POSTED" }),
+        update: vi.fn().mockResolvedValue({ id: "sm1" }),
+      },
+      stockBalance: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: "sb1",
+          quantityOnHand: 10,
+          averageCost: 30,
+          totalValue: 300,
+        }),
+      },
+      journalEntry: {
+        create: vi.fn().mockResolvedValue({
+          id: "je1",
+          entryNumber: "JE-00001",
+          lines: [],
+        }),
+        count: vi.fn().mockResolvedValue(0),
+      },
+      customer: {
+        findUnique: vi.fn().mockResolvedValue(mockCustomer),
+        update: vi.fn().mockResolvedValue({ id: "cus1", currentBalance: 30 }),
+      },
+    };
+
+    (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
+      async (callback: (tx: typeof mockTx) => Promise<unknown>) => {
+        return callback(mockTx as unknown as typeof mockTx);
+      },
+    );
+
+    (
+      StockBalanceService.applyPostedMovement as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({
+      success: true,
+      balance: {
+        id: "sb1",
+        quantityOnHand: 10,
+        averageCost: 30,
+        totalValue: 300,
+        reservedQuantity: 0,
+      },
+      movement: { id: "sm1", status: "POSTED" },
+    });
+
+    const { POST } = await import("@/app/api/sales-returns/[id]/post/route");
+    const res = await POST(
+      new Request("http://localhost/api/sales-returns/ret1/post", {
+        method: "POST",
+      }) as never,
+      { params: Promise.resolve({ id: "ret1" }) },
+    );
+    expect(res.status).toBe(200);
+
+    // Verify invoice update was called with RETURNED_PARTIAL
+    expect(mockTx.invoice.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: mockInvoice.id },
+        data: { status: "RETURNED_PARTIAL" },
+      }),
+    );
   });
 });

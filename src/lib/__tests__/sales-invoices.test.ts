@@ -1402,13 +1402,11 @@ describe("sales-invoices route", () => {
           count: vi.fn().mockResolvedValue(0),
         },
         customer: {
-          findUnique: vi
-            .fn()
-            .mockResolvedValue({
-              id: "cus1",
-              creditLimit: 0,
-              currentBalance: 0,
-            }),
+          findUnique: vi.fn().mockResolvedValue({
+            id: "cus1",
+            creditLimit: 0,
+            currentBalance: 0,
+          }),
           update: vi
             .fn()
             .mockResolvedValue({ id: "cus1", currentBalance: 100 }),
@@ -1543,13 +1541,11 @@ describe("sales-invoices route", () => {
           count: vi.fn().mockResolvedValue(0),
         },
         customer: {
-          findUnique: vi
-            .fn()
-            .mockResolvedValue({
-              id: "cus1",
-              creditLimit: 0,
-              currentBalance: 0,
-            }),
+          findUnique: vi.fn().mockResolvedValue({
+            id: "cus1",
+            creditLimit: 0,
+            currentBalance: 0,
+          }),
           update: vi.fn().mockResolvedValue({ id: "cus1", currentBalance: 70 }),
         },
       };
@@ -2742,5 +2738,325 @@ describe("sales-invoices route", () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.data.remaining).toBe(50);
+  });
+
+  it("POST allows duplicate product IDs on separate lines", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.customer.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "cus1",
+    });
+    (prisma.warehouse.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "wh1",
+    });
+    (prisma.product.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: "p1", name: "Product A", code: "PA001", prices: [] },
+    ]);
+    (prisma.invoice.count as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+    (prisma.invoice.create as ReturnType<typeof vi.fn>).mockImplementation(
+      (args: { data: Record<string, unknown> }) => ({
+        id: "inv1",
+        companyId: "c1",
+        invoiceNumber: "INV-c1-0001",
+        invoiceDate: new Date(),
+        customer: null,
+        warehouse: null,
+        currency: "IQD",
+        exchangeRateValue: 0,
+        paymentType: args.data.paymentType,
+        totalBeforeTax: args.data.totalBeforeTax,
+        taxAmount: args.data.taxAmount,
+        discountAmount: args.data.discountAmount,
+        discountPercent: args.data.discountPercent,
+        totalAfterTax: args.data.totalAfterTax,
+        totalInUsd: args.data.totalInUsd,
+        paid: args.data.paid,
+        remaining: args.data.remaining,
+        status: "DRAFT",
+        notes: null,
+        createdAt: new Date(),
+        items: [],
+      }),
+    );
+
+    const { POST } = await import("@/app/api/sales-invoices/route");
+    const req = new Request("http://localhost/api/sales-invoices", {
+      method: "POST",
+      body: JSON.stringify({
+        companyId: "c1",
+        warehouseId: "wh1",
+        currency: "IQD",
+        paymentType: "CASH",
+        lines: [
+          { productId: "p1", quantity: 1, unitPrice: 50 },
+          { productId: "p1", quantity: 2, unitPrice: 50 },
+        ],
+      }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(201);
+    const json = await res.json();
+    expect(json.data.totalAfterTax).toBe(150);
+  });
+
+  it("POST MIXED payment defaults paid to 0 when not provided", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.customer.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "cus1",
+    });
+    (prisma.warehouse.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "wh1",
+    });
+    (prisma.product.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: "p1", name: "Product A", code: "PA001", prices: [] },
+    ]);
+    (prisma.invoice.count as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+    (prisma.invoice.create as ReturnType<typeof vi.fn>).mockImplementation(
+      (args: { data: Record<string, unknown> }) => ({
+        id: "inv1",
+        companyId: "c1",
+        invoiceNumber: "INV-c1-0001",
+        invoiceDate: new Date(),
+        customer: null,
+        warehouse: null,
+        currency: "IQD",
+        exchangeRateValue: 0,
+        paymentType: args.data.paymentType,
+        totalBeforeTax: args.data.totalBeforeTax,
+        taxAmount: args.data.taxAmount,
+        discountAmount: args.data.discountAmount,
+        discountPercent: args.data.discountPercent,
+        totalAfterTax: args.data.totalAfterTax,
+        totalInUsd: args.data.totalInUsd,
+        paid: args.data.paid,
+        remaining: args.data.remaining,
+        status: "DRAFT",
+        notes: null,
+        createdAt: new Date(),
+        items: [],
+      }),
+    );
+
+    const { POST } = await import("@/app/api/sales-invoices/route");
+    const req = new Request("http://localhost/api/sales-invoices", {
+      method: "POST",
+      body: JSON.stringify({
+        companyId: "c1",
+        warehouseId: "wh1",
+        currency: "IQD",
+        paymentType: "MIXED",
+        lines: [{ productId: "p1", quantity: 2, unitPrice: 50 }],
+      }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(201);
+    const json = await res.json();
+    expect(json.data.paid).toBe(0);
+    expect(json.data.remaining).toBe(100);
+    expect(Number.isNaN(json.data.paid)).toBe(false);
+    expect(Number.isNaN(json.data.remaining)).toBe(false);
+  });
+
+  it("PATCH without lines recalculates totals when discountPercent changes", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.invoice.findUnique as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({
+        id: "inv1",
+        companyId: "c1",
+        status: "DRAFT",
+        totalBeforeTax: 100,
+        totalAfterTax: 90,
+        paid: 90,
+        remaining: 0,
+        exchangeRateValue: 1,
+        discountPercent: 10,
+        discountAmount: 0,
+        paymentType: "CASH",
+        currency: "IQD",
+        customerId: null,
+        items: [],
+      })
+      .mockResolvedValueOnce({
+        id: "inv1",
+        companyId: "c1",
+        invoiceNumber: "INV-001",
+        invoiceDate: new Date(),
+        customer: null,
+        warehouse: null,
+        currency: "IQD",
+        exchangeRateValue: 0,
+        paymentType: "CASH",
+        totalBeforeTax: 100,
+        taxAmount: 0,
+        discountAmount: 0,
+        discountPercent: 20,
+        totalAfterTax: 80,
+        totalInUsd: 0,
+        paid: 80,
+        remaining: 0,
+        status: "DRAFT",
+        notes: null,
+        createdAt: new Date(),
+        items: [],
+      });
+
+    (prisma.invoice.update as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "inv1",
+      companyId: "c1",
+      invoiceNumber: "INV-001",
+      invoiceDate: new Date(),
+      customer: null,
+      warehouse: null,
+      currency: "IQD",
+      exchangeRateValue: 0,
+      paymentType: "CASH",
+      totalBeforeTax: 100,
+      taxAmount: 0,
+      discountAmount: 0,
+      discountPercent: 20,
+      totalAfterTax: 80,
+      totalInUsd: 0,
+      paid: 80,
+      remaining: 0,
+      status: "DRAFT",
+      notes: null,
+      createdAt: new Date(),
+      items: [],
+    });
+
+    const { PATCH } = await import("@/app/api/sales-invoices/[id]/route");
+    const req = new Request("http://localhost/api/sales-invoices/inv1", {
+      method: "PATCH",
+      body: JSON.stringify({
+        discountPercent: 20,
+      }),
+    });
+    const res = await PATCH(req as never, {
+      params: Promise.resolve({ id: "inv1" }),
+    });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.data.totalAfterTax).toBe(80);
+    expect(json.data.paid).toBe(80);
+    expect(json.data.remaining).toBe(0);
+  });
+
+  it("PATCH without lines recalculates totals when discountAmount changes", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.invoice.findUnique as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({
+        id: "inv1",
+        companyId: "c1",
+        status: "DRAFT",
+        totalBeforeTax: 100,
+        totalAfterTax: 100,
+        paid: 0,
+        remaining: 100,
+        exchangeRateValue: 1,
+        discountPercent: 0,
+        discountAmount: 0,
+        paymentType: "CREDIT",
+        currency: "IQD",
+        customerId: "cus1",
+        items: [],
+      })
+      .mockResolvedValueOnce({
+        id: "inv1",
+        companyId: "c1",
+        invoiceNumber: "INV-001",
+        invoiceDate: new Date(),
+        customer: null,
+        warehouse: null,
+        currency: "IQD",
+        exchangeRateValue: 0,
+        paymentType: "CREDIT",
+        totalBeforeTax: 100,
+        taxAmount: 0,
+        discountAmount: 15,
+        discountPercent: 0,
+        totalAfterTax: 85,
+        totalInUsd: 0,
+        paid: 0,
+        remaining: 85,
+        status: "DRAFT",
+        notes: null,
+        createdAt: new Date(),
+        items: [],
+      });
+    (prisma.customer.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "cus1",
+      creditLimit: 500,
+      currentBalance: 0,
+    });
+
+    (prisma.invoice.update as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "inv1",
+      companyId: "c1",
+      invoiceNumber: "INV-001",
+      invoiceDate: new Date(),
+      customer: null,
+      warehouse: null,
+      currency: "IQD",
+      exchangeRateValue: 0,
+      paymentType: "CREDIT",
+      totalBeforeTax: 100,
+      taxAmount: 0,
+      discountAmount: 15,
+      discountPercent: 0,
+      totalAfterTax: 85,
+      totalInUsd: 0,
+      paid: 0,
+      remaining: 85,
+      status: "DRAFT",
+      notes: null,
+      createdAt: new Date(),
+      items: [],
+    });
+
+    const { PATCH } = await import("@/app/api/sales-invoices/[id]/route");
+    const req = new Request("http://localhost/api/sales-invoices/inv1", {
+      method: "PATCH",
+      body: JSON.stringify({
+        discountAmount: 15,
+      }),
+    });
+    const res = await PATCH(req as never, {
+      params: Promise.resolve({ id: "inv1" }),
+    });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.data.totalAfterTax).toBe(85);
+    expect(json.data.remaining).toBe(85);
   });
 });

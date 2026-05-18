@@ -230,7 +230,7 @@ export async function POST(
       if (paid > totalAfterTax) {
         throw new Error("المبلغ المدفوع لا يمكن أن يتجاوز المجموع الإجمالي");
       }
-      if (remaining !== totalAfterTax - paid) {
+      if (Math.abs(remaining - (totalAfterTax - paid)) > 0.001) {
         throw new Error("عدم تناسق في حسابات الفاتورة");
       }
 

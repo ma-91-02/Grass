@@ -225,13 +225,14 @@ export async function PATCH(
     // If lines provided, recompute everything server-side
     if (parsed.lines && parsed.lines.length > 0) {
       const productIds = parsed.lines.map((l) => l.productId);
+      const uniqueProductIds = [...new Set(productIds)];
       const products = await prisma.product.findMany({
         where: {
-          id: { in: productIds },
+          id: { in: uniqueProductIds },
           companyId: existing.companyId!,
         },
       });
-      if (products.length !== productIds.length) {
+      if (products.length !== uniqueProductIds.length) {
         return errorResponse(
           "بعض المواد غير موجودة أو لا تنتمي لهذه الشركة",
           400,
@@ -373,7 +374,7 @@ export async function PATCH(
 
       updateData.totalBeforeTax = subtotal;
       updateData.taxAmount = 0;
-      updateData.discountAmount = totalDiscount;
+      updateData.discountAmount = discountAmount;
       updateData.discountPercent = discountPercent;
       updateData.totalAfterTax = totalAfterTax;
       updateData.totalInUsd = totalInUsd;
@@ -392,29 +393,44 @@ export async function PATCH(
         },
       });
     } else {
-      // No lines change — still recalc if payment/discount changed
+      // No lines change — still recalc if payment/discount/currency/exchangeRate changed
       const paymentType = parsed.paymentType || existing.paymentType || "CASH";
-      const totalAfterTax = Number(existing.totalAfterTax ?? 0);
-      let paid = Number(existing.paid ?? 0);
-      let remaining = Number(existing.remaining ?? 0);
+      const subtotal = Number(existing.totalBeforeTax ?? 0);
+      const discountPercent =
+        parsed.discountPercent !== undefined
+          ? parsed.discountPercent
+          : Number(existing.discountPercent ?? 0);
+      const discountAmount =
+        parsed.discountAmount !== undefined
+          ? parsed.discountAmount
+          : Number(existing.discountAmount ?? 0);
+      const totalDiscount = subtotal * (discountPercent / 100) + discountAmount;
+      const totalAfterTax = Math.max(0, subtotal - totalDiscount);
 
-      if (parsed.paymentType !== undefined || parsed.paid !== undefined) {
-        if (paymentType === "CASH") {
-          paid = totalAfterTax;
-          remaining = 0;
-        } else if (paymentType === "CREDIT") {
-          paid = 0;
-          remaining = totalAfterTax;
-        } else if (paymentType === "MIXED") {
-          const paidInput =
-            parsed.paid !== undefined
-              ? parsed.paid
-              : Number(existing.paid ?? 0);
-          paid = Math.min(paidInput, totalAfterTax);
-          remaining = totalAfterTax - paid;
-        }
-        updateData.paid = paid;
-        updateData.remaining = remaining;
+      // Discount hardening
+      if (totalDiscount > subtotal) {
+        return errorResponse(
+          "إجمالي الخصم لا يمكن أن يتجاوز المجموع الفرعي",
+          400,
+        );
+      }
+      if (totalAfterTax < 0) {
+        return errorResponse("المجموع الإجمالي لا يمكن أن يكون سالباً", 400);
+      }
+
+      let paid = 0;
+      let remaining = 0;
+      if (paymentType === "CASH") {
+        paid = totalAfterTax;
+        remaining = 0;
+      } else if (paymentType === "CREDIT") {
+        paid = 0;
+        remaining = totalAfterTax;
+      } else if (paymentType === "MIXED") {
+        const paidInput =
+          parsed.paid !== undefined ? parsed.paid : Number(existing.paid ?? 0);
+        paid = Math.min(paidInput, totalAfterTax);
+        remaining = totalAfterTax - paid;
       }
 
       // Total consistency guards
@@ -430,6 +446,23 @@ export async function PATCH(
           400,
         );
       }
+
+      const currency = parsed.currency || existing.currency || "IQD";
+      const exchangeRateValue =
+        parsed.exchangeRateValue !== undefined
+          ? parsed.exchangeRateValue
+          : Number(existing.exchangeRateValue ?? 1);
+      const totalInUsd =
+        currency === "USD" ? totalAfterTax : totalAfterTax / exchangeRateValue;
+
+      updateData.totalAfterTax = totalAfterTax;
+      updateData.discountAmount = discountAmount;
+      updateData.discountPercent = discountPercent;
+      updateData.paid = paid;
+      updateData.remaining = remaining;
+      updateData.totalInUsd = totalInUsd;
+      updateData.exchangeRateValue = exchangeRateValue;
+      updateData.exchangeRateSnapshot = exchangeRateValue;
 
       // Credit limit check for CREDIT / MIXED when no lines changed
       if (
@@ -458,11 +491,6 @@ export async function PATCH(
             );
           }
         }
-      }
-
-      if (parsed.exchangeRateValue !== undefined) {
-        updateData.exchangeRateValue = parsed.exchangeRateValue;
-        updateData.exchangeRateSnapshot = parsed.exchangeRateValue;
       }
 
       await prisma.invoice.update({ where: { id }, data: updateData });

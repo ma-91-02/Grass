@@ -273,9 +273,10 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // If invoice specified, re-read and validate remaining
+      // If invoice specified, lock and re-read remaining
       let lockedInvoice = null;
       if (invoiceId) {
+        await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${invoiceId} FOR UPDATE`;
         lockedInvoice = await tx.invoice.findUnique({
           where: { id: invoiceId },
         });
