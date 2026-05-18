@@ -24,6 +24,7 @@ interface Customer {
   code: string;
   phone: string | null;
   whatsapp: string | null;
+  email: string | null;
   address: string | null;
   governorate: string | null;
   customerType: CustomerType;
@@ -31,6 +32,9 @@ interface Customer {
   customerCategoryName: string | null;
   isActive: boolean;
   notes: string | null;
+  creditLimit: number;
+  currentBalance: number;
+  currency: string;
   accounts: { id: string; currency: string; balance: number }[];
   createdAt: string;
 }
@@ -97,7 +101,7 @@ export default function CustomersPage() {
         setUserPermissions(d.data?.permissions || []);
         setUserCompanyId(d.data?.companyId || null);
       })
-      .catch(() => {});
+      .catch((err) => console.error("Failed to fetch auth/me", err));
   }, []);
 
   // Queries
@@ -106,13 +110,15 @@ export default function CustomersPage() {
     isLoading: customersLoading,
     error: customersError,
   } = useQuery({
-    queryKey: ["customers"],
+    queryKey: ["customers", userCompanyId],
     queryFn: async () => {
-      const res = await fetch("/api/customers");
+      const params = userCompanyId ? `?companyId=${userCompanyId}` : "";
+      const res = await fetch(`/api/customers${params}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل تحميل العملاء");
       return json.data as Customer[];
     },
+    enabled: !!userCompanyId,
   });
 
   const {
@@ -615,13 +621,13 @@ export default function CustomersPage() {
                       name: editCustomer.name,
                       phone: editCustomer.phone || "",
                       whatsapp: editCustomer.whatsapp || "",
-                      email: "",
+                      email: editCustomer.email || "",
                       address: editCustomer.address || "",
                       governorate: editCustomer.governorate || "",
                       customerType: editCustomer.customerType,
                       customerCategoryId: editCustomer.customerCategoryId || "",
                       notes: editCustomer.notes || "",
-                      creditLimit: 0,
+                      creditLimit: editCustomer.creditLimit ?? 0,
                       openingBalanceIqd:
                         editCustomer.accounts.find((a) => a.currency === "IQD")
                           ?.balance || 0,

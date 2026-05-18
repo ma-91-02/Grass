@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
 
 interface Receivable {
@@ -19,9 +18,10 @@ interface Receivable {
 }
 
 interface StatementItem {
+  id: string;
   date: string;
   type: string;
-  referenceNumber: string;
+  reference: string;
   description: string;
   debit: number;
   credit: number;
@@ -45,7 +45,11 @@ export default function CustomerDetailPage() {
     },
   });
 
-  const { data: receivables = [] } = useQuery({
+  const {
+    data: receivables = [],
+    isLoading: receivablesLoading,
+    error: receivablesError,
+  } = useQuery({
     queryKey: ["customer-receivables", id],
     queryFn: async () => {
       const res = await fetch(`/api/customers/${id}/receivables`);
@@ -55,7 +59,11 @@ export default function CustomerDetailPage() {
     },
   });
 
-  const { data: statementData } = useQuery({
+  const {
+    data: statementData,
+    isLoading: statementLoading,
+    error: statementError,
+  } = useQuery({
     queryKey: ["customer-statement", id],
     queryFn: async () => {
       const res = await fetch(`/api/customers/${id}/statement?limit=100`);
@@ -65,7 +73,7 @@ export default function CustomerDetailPage() {
     },
   });
 
-  const statementItems: StatementItem[] = statementData?.items || [];
+  const statementItems: StatementItem[] = statementData?.transactions || [];
 
   if (customerLoading) {
     return (
@@ -181,7 +189,13 @@ export default function CustomerDetailPage() {
             <CardTitle>فواتير غير مسددة</CardTitle>
           </CardHeader>
           <CardContent>
-            {receivables.length === 0 ? (
+            {receivablesLoading ? (
+              <p className="text-center text-gray-500 py-8">جاري التحميل...</p>
+            ) : receivablesError ? (
+              <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-center text-red-600">
+                {(receivablesError as Error).message}
+              </p>
+            ) : receivables.length === 0 ? (
               <p className="text-center text-gray-500 py-8">
                 لا توجد فواتير مستحقة
               </p>
@@ -246,7 +260,13 @@ export default function CustomerDetailPage() {
             <CardTitle>كشف حساب العميل</CardTitle>
           </CardHeader>
           <CardContent>
-            {statementItems.length === 0 ? (
+            {statementLoading ? (
+              <p className="text-center text-gray-500 py-8">جاري التحميل...</p>
+            ) : statementError ? (
+              <p className="rounded-lg border border-red-200 bg-red-50 p-4 text-center text-red-600">
+                {(statementError as Error).message}
+              </p>
+            ) : statementItems.length === 0 ? (
               <p className="text-center text-gray-500 py-8">لا توجد حركات</p>
             ) : (
               <div className="overflow-x-auto">
@@ -274,18 +294,16 @@ export default function CustomerDetailPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {statementItems.map((item, idx) => (
+                    {statementItems.map((item) => (
                       <tr
-                        key={idx}
+                        key={item.id}
                         className="border-b border-border hover:bg-muted/30"
                       >
                         <td className="px-4 py-3 text-sm">
                           {new Date(item.date).toLocaleDateString("ar-IQ")}
                         </td>
                         <td className="px-4 py-3 text-sm">{item.type}</td>
-                        <td className="px-4 py-3 text-sm">
-                          {item.referenceNumber}
-                        </td>
+                        <td className="px-4 py-3 text-sm">{item.reference}</td>
                         <td className="px-4 py-3 text-sm">
                           {item.debit.toLocaleString()}
                         </td>
