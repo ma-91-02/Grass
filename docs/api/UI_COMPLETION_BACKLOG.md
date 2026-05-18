@@ -548,7 +548,7 @@
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ POST/PATCH/DELETE endpoints
 - UI_BINDING_ROADMAP.md: تحديث UI Binding 1.4
-**Commit Hash:**
+**Commit Hash:** `78d3294`
 **Date:** 2026-05-18
 
 ---
