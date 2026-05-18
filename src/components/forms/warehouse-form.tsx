@@ -28,6 +28,7 @@ export function WarehouseForm({
     ) as unknown as import("react-hook-form").Resolver<WarehouseFormData>,
     defaultValues: {
       name: "",
+      code: "",
       address: "",
       ...defaultValues,
     },
@@ -42,14 +43,13 @@ export function WarehouseForm({
           {...register("name")}
           required
         />
-        {isEdit ? (
-          <Input
-            label="كود المخزن"
-            value={defaultValues?.code || ""}
-            readOnly
-            dir="ltr"
-          />
-        ) : null}
+        <Input
+          label="كود المخزن"
+          error={errors.code?.message}
+          {...register("code")}
+          readOnly={isEdit}
+          required
+        />
         <Input
           label="العنوان"
           error={errors.address?.message}

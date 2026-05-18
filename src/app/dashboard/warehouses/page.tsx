@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable } from "@/components/shared/data-table";
@@ -16,7 +16,6 @@ interface Warehouse {
   code: string;
   address: string | null;
   isActive: boolean;
-  inUse: boolean;
 }
 
 export default function WarehousesPage() {
@@ -27,19 +26,29 @@ export default function WarehousesPage() {
   const [editItem, setEditItem] = useState<Warehouse | null>(null);
   const [deleteItem, setDeleteItem] = useState<Warehouse | null>(null);
   const [toggleItem, setToggleItem] = useState<Warehouse | null>(null);
+  const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => setUserCompanyId(d.data?.companyId || null))
+      .catch(() => {});
+  }, []);
 
   const {
     data: warehouses = [],
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["warehouses"],
+    queryKey: ["warehouses", userCompanyId],
     queryFn: async () => {
-      const res = await fetch("/api/warehouses");
+      const params = userCompanyId ? `?companyId=${userCompanyId}` : "";
+      const res = await fetch(`/api/warehouses${params}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل تحميل المخازن");
       return json.data as Warehouse[];
     },
+    enabled: !!userCompanyId,
   });
 
   const filtered = warehouses.filter(
@@ -48,17 +57,20 @@ export default function WarehousesPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: unknown) => {
+      const payload = userCompanyId
+        ? { ...(data as object), companyId: userCompanyId }
+        : data;
       const res = await fetch("/api/warehouses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل إنشاء المخزن");
       return json.data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["warehouses"] });
+      qc.invalidateQueries({ queryKey: ["warehouses", userCompanyId] });
       toast("تم إنشاء المخزن بنجاح", "success");
       setDialogOpen(false);
     },
@@ -67,17 +79,20 @@ export default function WarehousesPage() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: unknown }) => {
+      const payload = userCompanyId
+        ? { ...(data as object), companyId: userCompanyId }
+        : data;
       const res = await fetch(`/api/warehouses/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل تحديث المخزن");
       return json.data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["warehouses"] });
+      qc.invalidateQueries({ queryKey: ["warehouses", userCompanyId] });
       toast("تم تحديث المخزن بنجاح", "success");
       setEditItem(null);
       setDialogOpen(false);
@@ -97,7 +112,7 @@ export default function WarehousesPage() {
       return json.data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["warehouses"] });
+      qc.invalidateQueries({ queryKey: ["warehouses", userCompanyId] });
       toast("تم تغيير الحالة بنجاح", "success");
       setToggleItem(null);
     },
@@ -114,7 +129,7 @@ export default function WarehousesPage() {
       return json.data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["warehouses"] });
+      qc.invalidateQueries({ queryKey: ["warehouses", userCompanyId] });
       toast("تم حذف المخزن نهائياً", "success");
       setDeleteItem(null);
     },
@@ -227,7 +242,7 @@ export default function WarehousesPage() {
                 />
               </svg>
             </button>
-            {!item.isActive && !item.inUse && (
+            {!item.isActive && (
               <button
                 onClick={() => setDeleteItem(item)}
                 className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-red-600"
