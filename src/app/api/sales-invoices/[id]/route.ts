@@ -30,17 +30,30 @@ const salesInvoiceUpdateSchema = z.object({
   notes: z.string().optional().nullable(),
   lines: z
     .array(
-      z.object({
-        productId: z.string().min(1, "المادة مطلوبة"),
-        quantity: z.coerce
-          .number()
-          .int()
-          .min(1, "الكمية يجب أن تكون أكبر من 0"),
-        unitPrice: z.coerce.number().min(0, "السعر يجب أن يكون 0 أو أكثر"),
-        discountPercent: z.coerce.number().min(0).max(100).default(0),
-        discountAmount: z.coerce.number().min(0).default(0),
-        notes: z.string().optional().nullable(),
-      }),
+      z
+        .object({
+          productId: z.string().min(1, "المادة مطلوبة"),
+          quantity: z.coerce
+            .number()
+            .int()
+            .min(1, "الكمية يجب أن تكون أكبر من 0"),
+          unitPrice: z.coerce.number().min(0, "السعر يجب أن يكون 0 أو أكثر"),
+          discountPercent: z.coerce.number().min(0).max(100).default(0),
+          discountAmount: z.coerce.number().min(0).default(0),
+          notes: z.string().optional().nullable(),
+        })
+        .refine(
+          (data) => {
+            const subtotal = data.quantity * data.unitPrice;
+            const totalDiscount =
+              subtotal * (data.discountPercent / 100) + data.discountAmount;
+            return totalDiscount <= subtotal;
+          },
+          {
+            message: "خصم البند لا يمكن أن يتجاوز المجموع الفرعي للبند",
+            path: ["discountAmount"],
+          },
+        ),
     )
     .optional(),
 });
@@ -148,14 +161,23 @@ export async function PATCH(
     const parsed = salesInvoiceUpdateSchema.parse(body);
 
     // Validate customer if changed
+    let updatedCustomerForCreditCheck: Awaited<
+      ReturnType<
+        typeof prisma.customer.findFirst<{
+          select: { id: true; creditLimit: true; currentBalance: true };
+        }>
+      >
+    > = null;
     if (parsed.customerId !== undefined) {
       if (parsed.customerId) {
         const customer = await prisma.customer.findFirst({
           where: { id: parsed.customerId, companyId: existing.companyId! },
+          select: { id: true, creditLimit: true, currentBalance: true },
         });
         if (!customer) {
           return errorResponse("العميل غير موجود أو لا ينتمي لهذه الشركة", 400);
         }
+        updatedCustomerForCreditCheck = customer;
       }
     }
 
@@ -216,6 +238,23 @@ export async function PATCH(
         );
       }
 
+      // Validate line discounts
+      for (const line of parsed.lines) {
+        const lineSubtotal = line.quantity * line.unitPrice;
+        const lineDiscountPercent = line.discountPercent || 0;
+        const lineDiscountAmount = line.discountAmount || 0;
+        const lineTotal =
+          lineSubtotal -
+          lineSubtotal * (lineDiscountPercent / 100) -
+          lineDiscountAmount;
+        if (lineTotal < 0) {
+          return errorResponse(
+            "خصم البند لا يمكن أن يتجاوز المجموع الفرعي للبند",
+            400,
+          );
+        }
+      }
+
       const lineItems = parsed.lines.map((line) => {
         const product = products.find((p) => p.id === line.productId);
         const quantity = line.quantity;
@@ -254,6 +293,17 @@ export async function PATCH(
       const totalDiscount = subtotal * (discountPercent / 100) + discountAmount;
       const totalAfterTax = Math.max(0, subtotal - totalDiscount);
 
+      // Discount hardening
+      if (totalDiscount > subtotal) {
+        return errorResponse(
+          "إجمالي الخصم لا يمكن أن يتجاوز المجموع الفرعي",
+          400,
+        );
+      }
+      if (totalAfterTax < 0) {
+        return errorResponse("المجموع الإجمالي لا يمكن أن يكون سالباً", 400);
+      }
+
       const paymentType = parsed.paymentType || existing.paymentType || "CASH";
       let paid = 0;
       let remaining = 0;
@@ -268,6 +318,49 @@ export async function PATCH(
           parsed.paid !== undefined ? parsed.paid : Number(existing.paid ?? 0);
         paid = Math.min(paidInput, totalAfterTax);
         remaining = totalAfterTax - paid;
+      }
+
+      // Total consistency guards
+      if (paid < 0 || remaining < 0) {
+        return errorResponse(
+          "المبلغ المدفوع أو المتبقي لا يمكن أن يكون سالباً",
+          400,
+        );
+      }
+      if (paid > totalAfterTax) {
+        return errorResponse(
+          "المبلغ المدفوع لا يمكن أن يتجاوز المجموع الإجمالي",
+          400,
+        );
+      }
+
+      // Credit limit check for CREDIT / MIXED
+      if (
+        (paymentType === "CREDIT" || paymentType === "MIXED") &&
+        remaining > 0
+      ) {
+        const customerToCheck =
+          updatedCustomerForCreditCheck ||
+          (existing.customerId
+            ? await prisma.customer.findUnique({
+                where: { id: existing.customerId },
+                select: { creditLimit: true, currentBalance: true },
+              })
+            : null);
+        if (
+          customerToCheck &&
+          customerToCheck.creditLimit !== null &&
+          Number(customerToCheck.creditLimit) > 0
+        ) {
+          const currentBalance = Number(customerToCheck.currentBalance ?? 0);
+          const projectedBalance = currentBalance + remaining;
+          if (projectedBalance > Number(customerToCheck.creditLimit)) {
+            return errorResponse(
+              `تجاوز حد الائتمان: الرصيد الحالي ${currentBalance} + ${remaining} = ${projectedBalance}، الحد الأقصى ${customerToCheck.creditLimit}`,
+              400,
+            );
+          }
+        }
       }
 
       const currency = parsed.currency || existing.currency || "IQD";
@@ -322,6 +415,49 @@ export async function PATCH(
         }
         updateData.paid = paid;
         updateData.remaining = remaining;
+      }
+
+      // Total consistency guards
+      if (paid < 0 || remaining < 0) {
+        return errorResponse(
+          "المبلغ المدفوع أو المتبقي لا يمكن أن يكون سالباً",
+          400,
+        );
+      }
+      if (paid > totalAfterTax) {
+        return errorResponse(
+          "المبلغ المدفوع لا يمكن أن يتجاوز المجموع الإجمالي",
+          400,
+        );
+      }
+
+      // Credit limit check for CREDIT / MIXED when no lines changed
+      if (
+        (paymentType === "CREDIT" || paymentType === "MIXED") &&
+        remaining > 0
+      ) {
+        const customerToCheck =
+          updatedCustomerForCreditCheck ||
+          (existing.customerId
+            ? await prisma.customer.findUnique({
+                where: { id: existing.customerId },
+                select: { creditLimit: true, currentBalance: true },
+              })
+            : null);
+        if (
+          customerToCheck &&
+          customerToCheck.creditLimit !== null &&
+          Number(customerToCheck.creditLimit) > 0
+        ) {
+          const currentBalance = Number(customerToCheck.currentBalance ?? 0);
+          const projectedBalance = currentBalance + remaining;
+          if (projectedBalance > Number(customerToCheck.creditLimit)) {
+            return errorResponse(
+              `تجاوز حد الائتمان: الرصيد الحالي ${currentBalance} + ${remaining} = ${projectedBalance}، الحد الأقصى ${customerToCheck.creditLimit}`,
+              400,
+            );
+          }
+        }
       }
 
       if (parsed.exchangeRateValue !== undefined) {

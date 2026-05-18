@@ -1402,6 +1402,13 @@ describe("sales-invoices route", () => {
           count: vi.fn().mockResolvedValue(0),
         },
         customer: {
+          findUnique: vi
+            .fn()
+            .mockResolvedValue({
+              id: "cus1",
+              creditLimit: 0,
+              currentBalance: 0,
+            }),
           update: vi
             .fn()
             .mockResolvedValue({ id: "cus1", currentBalance: 100 }),
@@ -1536,6 +1543,13 @@ describe("sales-invoices route", () => {
           count: vi.fn().mockResolvedValue(0),
         },
         customer: {
+          findUnique: vi
+            .fn()
+            .mockResolvedValue({
+              id: "cus1",
+              creditLimit: 0,
+              currentBalance: 0,
+            }),
           update: vi.fn().mockResolvedValue({ id: "cus1", currentBalance: 70 }),
         },
       };
@@ -2098,5 +2112,635 @@ describe("sales-invoices route", () => {
       });
       expect(res.status).toBe(403);
     });
+
+    it("rejects posting when credit limit exceeded inside transaction", async () => {
+      const creditInvoice = {
+        ...mockInvoice,
+        paymentType: "CREDIT",
+        paid: 0,
+        remaining: 100,
+      };
+
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (prisma.invoice.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+        creditInvoice,
+      );
+      (
+        StockBalanceService.ensureSufficientStock as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({
+        sufficient: true,
+        available: 10,
+      });
+      (
+        PeriodGuard.checkPeriodOpen as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({ allowed: true });
+      (prisma.account.findFirst as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce(mockAccounts.cash)
+        .mockResolvedValueOnce(mockAccounts.ar)
+        .mockResolvedValueOnce(mockAccounts.inventory)
+        .mockResolvedValueOnce(mockAccounts.revenue)
+        .mockResolvedValueOnce(mockAccounts.cogs);
+
+      const mockTx = {
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        auditLog: { create: vi.fn().mockResolvedValue({ id: "al1" }) },
+        invoice: {
+          findUnique: vi.fn().mockResolvedValue(creditInvoice),
+          update: vi.fn().mockResolvedValue({
+            ...creditInvoice,
+            status: "POSTED",
+            postedAt: new Date(),
+          }),
+        },
+        stockMovement: {
+          create: vi.fn().mockResolvedValue({ id: "sm1", status: "DRAFT" }),
+          update: vi.fn().mockResolvedValue({ id: "sm1" }),
+        },
+        stockBalance: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "sb1",
+            quantityOnHand: 8,
+            averageCost: 30,
+            totalValue: 240,
+          }),
+        },
+        invoiceItem: {
+          update: vi.fn().mockResolvedValue({ id: "item1" }),
+        },
+        journalEntry: {
+          create: vi.fn().mockResolvedValue({
+            id: "je1",
+            entryNumber: "JE-00001",
+            lines: [],
+          }),
+          count: vi.fn().mockResolvedValue(0),
+        },
+        customer: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "cus1",
+            creditLimit: 50,
+            currentBalance: 10,
+          }),
+          update: vi
+            .fn()
+            .mockResolvedValue({ id: "cus1", currentBalance: 110 }),
+        },
+      };
+
+      (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
+        async (callback: (tx: typeof mockTx) => Promise<unknown>) => {
+          return callback(mockTx as unknown as typeof mockTx);
+        },
+      );
+
+      (
+        StockBalanceService.applyPostedMovement as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({
+        success: true,
+        balance: {
+          id: "sb1",
+          quantityOnHand: 8,
+          averageCost: 30,
+          totalValue: 240,
+          reservedQuantity: 0,
+        },
+        movement: { id: "sm1", status: "POSTED" },
+      });
+
+      const { POST } = await import("@/app/api/sales-invoices/[id]/post/route");
+      const req = new Request("http://localhost/api/sales-invoices/inv1/post", {
+        method: "POST",
+      });
+      const res = await POST(req as never, {
+        params: Promise.resolve({ id: "inv1" }),
+      });
+      expect(res.status).toBe(500);
+      const json = await res.json();
+      expect(json.error).toContain("تجاوز حد الائتمان");
+    });
+
+    it("rejects posting when invoice totals are inconsistent", async () => {
+      const inconsistentInvoice = {
+        ...mockInvoice,
+        totalAfterTax: 100,
+        paid: 60,
+        remaining: 50, // 60 + 50 != 100
+      };
+
+      (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        userId: "u1",
+        email: "test@test.com",
+        name: "Test",
+        roles: ["user"],
+        permissions: [],
+      });
+      (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (prisma.invoice.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+        inconsistentInvoice,
+      );
+      (
+        StockBalanceService.ensureSufficientStock as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({
+        sufficient: true,
+        available: 10,
+      });
+      (
+        PeriodGuard.checkPeriodOpen as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({ allowed: true });
+      (prisma.account.findFirst as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce(mockAccounts.cash)
+        .mockResolvedValueOnce(mockAccounts.ar)
+        .mockResolvedValueOnce(mockAccounts.inventory)
+        .mockResolvedValueOnce(mockAccounts.revenue)
+        .mockResolvedValueOnce(mockAccounts.cogs);
+
+      const mockTx = {
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        auditLog: { create: vi.fn().mockResolvedValue({ id: "al1" }) },
+        invoice: {
+          findUnique: vi.fn().mockResolvedValue(inconsistentInvoice),
+          update: vi.fn().mockResolvedValue({
+            ...inconsistentInvoice,
+            status: "POSTED",
+            postedAt: new Date(),
+          }),
+        },
+        stockMovement: {
+          create: vi.fn().mockResolvedValue({ id: "sm1", status: "DRAFT" }),
+          update: vi.fn().mockResolvedValue({ id: "sm1" }),
+        },
+        stockBalance: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "sb1",
+            quantityOnHand: 8,
+            averageCost: 30,
+            totalValue: 240,
+          }),
+        },
+        invoiceItem: {
+          update: vi.fn().mockResolvedValue({ id: "item1" }),
+        },
+        journalEntry: {
+          create: vi.fn().mockResolvedValue({
+            id: "je1",
+            entryNumber: "JE-00001",
+            lines: [],
+          }),
+          count: vi.fn().mockResolvedValue(0),
+        },
+      };
+
+      (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
+        async (callback: (tx: typeof mockTx) => Promise<unknown>) => {
+          return callback(mockTx as unknown as typeof mockTx);
+        },
+      );
+
+      (
+        StockBalanceService.applyPostedMovement as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({
+        success: true,
+        balance: {
+          id: "sb1",
+          quantityOnHand: 8,
+          averageCost: 30,
+          totalValue: 240,
+          reservedQuantity: 0,
+        },
+        movement: { id: "sm1", status: "POSTED" },
+      });
+
+      const { POST } = await import("@/app/api/sales-invoices/[id]/post/route");
+      const req = new Request("http://localhost/api/sales-invoices/inv1/post", {
+        method: "POST",
+      });
+      const res = await POST(req as never, {
+        params: Promise.resolve({ id: "inv1" }),
+      });
+      expect(res.status).toBe(500);
+      const json = await res.json();
+      expect(json.error).toContain("عدم تناسق في حسابات الفاتورة");
+    });
+  });
+
+  // Credit limit & discount tests for CREATE
+  it("POST rejects CREDIT invoice when credit limit exceeded", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.customer.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "cus1",
+      creditLimit: 100,
+      currentBalance: 80,
+    });
+    (prisma.warehouse.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "wh1",
+    });
+    (prisma.product.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: "p1", name: "Product A", code: "PA001", prices: [] },
+    ]);
+
+    const { POST } = await import("@/app/api/sales-invoices/route");
+    const req = new Request("http://localhost/api/sales-invoices", {
+      method: "POST",
+      body: JSON.stringify({
+        companyId: "c1",
+        customerId: "cus1",
+        warehouseId: "wh1",
+        currency: "IQD",
+        paymentType: "CREDIT",
+        lines: [{ productId: "p1", quantity: 3, unitPrice: 50 }],
+      }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain("تجاوز حد الائتمان");
+  });
+
+  it("POST allows CREDIT invoice when within credit limit", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.customer.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "cus1",
+      creditLimit: 500,
+      currentBalance: 80,
+    });
+    (prisma.warehouse.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "wh1",
+    });
+    (prisma.product.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: "p1", name: "Product A", code: "PA001", prices: [] },
+    ]);
+    (prisma.invoice.count as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+    (prisma.invoice.create as ReturnType<typeof vi.fn>).mockImplementation(
+      (args: { data: Record<string, unknown> }) => ({
+        id: "inv1",
+        companyId: "c1",
+        invoiceNumber: "INV-c1-0001",
+        invoiceDate: new Date(),
+        customer: null,
+        warehouse: null,
+        currency: "IQD",
+        exchangeRateValue: 0,
+        paymentType: args.data.paymentType,
+        totalBeforeTax: args.data.totalBeforeTax,
+        taxAmount: args.data.taxAmount,
+        discountAmount: args.data.discountAmount,
+        discountPercent: args.data.discountPercent,
+        totalAfterTax: args.data.totalAfterTax,
+        totalInUsd: args.data.totalInUsd,
+        paid: args.data.paid,
+        remaining: args.data.remaining,
+        status: "DRAFT",
+        notes: null,
+        createdAt: new Date(),
+        items: [],
+      }),
+    );
+
+    const { POST } = await import("@/app/api/sales-invoices/route");
+    const req = new Request("http://localhost/api/sales-invoices", {
+      method: "POST",
+      body: JSON.stringify({
+        companyId: "c1",
+        customerId: "cus1",
+        warehouseId: "wh1",
+        currency: "IQD",
+        paymentType: "CREDIT",
+        lines: [{ productId: "p1", quantity: 1, unitPrice: 50 }],
+      }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(201);
+    const json = await res.json();
+    expect(json.data.remaining).toBe(50);
+  });
+
+  it("POST allows CREDIT invoice with unlimited credit limit (0)", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.customer.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "cus1",
+      creditLimit: 0,
+      currentBalance: 999,
+    });
+    (prisma.warehouse.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "wh1",
+    });
+    (prisma.product.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: "p1", name: "Product A", code: "PA001", prices: [] },
+    ]);
+    (prisma.invoice.count as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+    (prisma.invoice.create as ReturnType<typeof vi.fn>).mockImplementation(
+      (args: { data: Record<string, unknown> }) => ({
+        id: "inv1",
+        companyId: "c1",
+        invoiceNumber: "INV-c1-0001",
+        invoiceDate: new Date(),
+        customer: null,
+        warehouse: null,
+        currency: "IQD",
+        exchangeRateValue: 0,
+        paymentType: args.data.paymentType,
+        totalBeforeTax: args.data.totalBeforeTax,
+        taxAmount: args.data.taxAmount,
+        discountAmount: args.data.discountAmount,
+        discountPercent: args.data.discountPercent,
+        totalAfterTax: args.data.totalAfterTax,
+        totalInUsd: args.data.totalInUsd,
+        paid: args.data.paid,
+        remaining: args.data.remaining,
+        status: "DRAFT",
+        notes: null,
+        createdAt: new Date(),
+        items: [],
+      }),
+    );
+
+    const { POST } = await import("@/app/api/sales-invoices/route");
+    const req = new Request("http://localhost/api/sales-invoices", {
+      method: "POST",
+      body: JSON.stringify({
+        companyId: "c1",
+        customerId: "cus1",
+        warehouseId: "wh1",
+        currency: "IQD",
+        paymentType: "CREDIT",
+        lines: [{ productId: "p1", quantity: 5, unitPrice: 100 }],
+      }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(201);
+  });
+
+  it("POST rejects when total discount exceeds subtotal", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.customer.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "cus1",
+    });
+    (prisma.warehouse.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "wh1",
+    });
+    (prisma.product.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: "p1", name: "Product A", code: "PA001", prices: [] },
+    ]);
+
+    const { POST } = await import("@/app/api/sales-invoices/route");
+    const req = new Request("http://localhost/api/sales-invoices", {
+      method: "POST",
+      body: JSON.stringify({
+        companyId: "c1",
+        customerId: "cus1",
+        warehouseId: "wh1",
+        currency: "IQD",
+        paymentType: "CASH",
+        discountPercent: 100,
+        discountAmount: 10,
+        lines: [{ productId: "p1", quantity: 1, unitPrice: 10 }],
+      }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain(
+      "إجمالي الخصم لا يمكن أن يتجاوز المجموع الفرعي",
+    );
+  });
+
+  it("POST rejects when line discount exceeds line subtotal", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.customer.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "cus1",
+    });
+    (prisma.warehouse.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "wh1",
+    });
+    (prisma.product.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: "p1", name: "Product A", code: "PA001", prices: [] },
+    ]);
+
+    const { POST } = await import("@/app/api/sales-invoices/route");
+    const req = new Request("http://localhost/api/sales-invoices", {
+      method: "POST",
+      body: JSON.stringify({
+        companyId: "c1",
+        customerId: "cus1",
+        warehouseId: "wh1",
+        currency: "IQD",
+        paymentType: "CASH",
+        lines: [
+          { productId: "p1", quantity: 1, unitPrice: 10, discountAmount: 15 },
+        ],
+      }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain(
+      "خصم البند لا يمكن أن يتجاوز المجموع الفرعي للبند",
+    );
+  });
+
+  // Credit limit tests for UPDATE
+  it("PATCH rejects CREDIT invoice when credit limit exceeded", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.invoice.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "inv1",
+      companyId: "c1",
+      status: "DRAFT",
+      totalAfterTax: 100,
+      paid: 0,
+      remaining: 100,
+      exchangeRateValue: 1,
+      discountPercent: 0,
+      discountAmount: 0,
+      paymentType: "CREDIT",
+      currency: "IQD",
+      customerId: "cus1",
+      items: [],
+    });
+    (prisma.customer.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "cus1",
+      creditLimit: 100,
+      currentBalance: 80,
+    });
+    (prisma.customer.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "cus1",
+      creditLimit: 100,
+      currentBalance: 80,
+    });
+
+    const { PATCH } = await import("@/app/api/sales-invoices/[id]/route");
+    const req = new Request("http://localhost/api/sales-invoices/inv1", {
+      method: "PATCH",
+      body: JSON.stringify({
+        paymentType: "CREDIT",
+        lines: [{ productId: "p1", quantity: 3, unitPrice: 50 }],
+      }),
+    });
+    const res = await PATCH(req as never, {
+      params: Promise.resolve({ id: "inv1" }),
+    });
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain("تجاوز حد الائتمان");
+  });
+
+  it("PATCH allows CREDIT invoice when within credit limit", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.invoice.findUnique as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({
+        id: "inv1",
+        companyId: "c1",
+        status: "DRAFT",
+        totalAfterTax: 100,
+        paid: 0,
+        remaining: 100,
+        exchangeRateValue: 1,
+        discountPercent: 0,
+        discountAmount: 0,
+        paymentType: "CREDIT",
+        currency: "IQD",
+        customerId: "cus1",
+        items: [],
+      })
+      .mockResolvedValueOnce({
+        id: "inv1",
+        companyId: "c1",
+        invoiceNumber: "INV-001",
+        invoiceDate: new Date(),
+        customer: null,
+        warehouse: null,
+        currency: "IQD",
+        exchangeRateValue: 0,
+        paymentType: "CREDIT",
+        totalBeforeTax: 50,
+        taxAmount: 0,
+        discountAmount: 0,
+        discountPercent: 0,
+        totalAfterTax: 50,
+        totalInUsd: 0,
+        paid: 0,
+        remaining: 50,
+        status: "DRAFT",
+        notes: null,
+        createdAt: new Date(),
+        items: [],
+      });
+    (prisma.product.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: "p1", name: "Product A", code: "PA001" },
+    ]);
+    (prisma.customer.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "cus1",
+      creditLimit: 500,
+      currentBalance: 80,
+    });
+    (prisma.customer.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "cus1",
+      creditLimit: 500,
+      currentBalance: 80,
+    });
+    (
+      prisma.invoiceItem.deleteMany as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({});
+    (prisma.invoice.update as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "inv1",
+      companyId: "c1",
+      invoiceNumber: "INV-001",
+      invoiceDate: new Date(),
+      customer: null,
+      warehouse: null,
+      currency: "IQD",
+      exchangeRateValue: 0,
+      paymentType: "CREDIT",
+      totalBeforeTax: 50,
+      taxAmount: 0,
+      discountAmount: 0,
+      discountPercent: 0,
+      totalAfterTax: 50,
+      totalInUsd: 0,
+      paid: 0,
+      remaining: 50,
+      status: "DRAFT",
+      notes: null,
+      createdAt: new Date(),
+      items: [],
+    });
+
+    const { PATCH } = await import("@/app/api/sales-invoices/[id]/route");
+    const req = new Request("http://localhost/api/sales-invoices/inv1", {
+      method: "PATCH",
+      body: JSON.stringify({
+        lines: [{ productId: "p1", quantity: 1, unitPrice: 50 }],
+      }),
+    });
+    const res = await PATCH(req as never, {
+      params: Promise.resolve({ id: "inv1" }),
+    });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.data.remaining).toBe(50);
   });
 });

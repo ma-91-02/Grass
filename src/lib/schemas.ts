@@ -277,14 +277,27 @@ export type StockTransferLineData = z.infer<typeof stockTransferLineSchema>;
 export type StockAdjustmentFormData = z.infer<typeof stockAdjustmentFormSchema>;
 export type StockAdjustmentLineData = z.infer<typeof stockAdjustmentLineSchema>;
 export type ExchangeRateFormData = z.infer<typeof exchangeRateFormSchema>;
-export const salesInvoiceLineSchema = z.object({
-  productId: z.string().min(1, "المادة مطلوبة"),
-  quantity: z.coerce.number().int().min(1, "الكمية يجب أن تكون أكبر من 0"),
-  unitPrice: z.coerce.number().min(0, "السعر يجب أن يكون 0 أو أكثر"),
-  discountPercent: z.coerce.number().min(0).max(100).default(0),
-  discountAmount: z.coerce.number().min(0).default(0),
-  notes: z.string().optional().nullable(),
-});
+export const salesInvoiceLineSchema = z
+  .object({
+    productId: z.string().min(1, "المادة مطلوبة"),
+    quantity: z.coerce.number().int().min(1, "الكمية يجب أن تكون أكبر من 0"),
+    unitPrice: z.coerce.number().min(0, "السعر يجب أن يكون 0 أو أكثر"),
+    discountPercent: z.coerce.number().min(0).max(100).default(0),
+    discountAmount: z.coerce.number().min(0).default(0),
+    notes: z.string().optional().nullable(),
+  })
+  .refine(
+    (data) => {
+      const subtotal = data.quantity * data.unitPrice;
+      const totalDiscount =
+        subtotal * (data.discountPercent / 100) + data.discountAmount;
+      return totalDiscount <= subtotal;
+    },
+    {
+      message: "خصم البند لا يمكن أن يتجاوز المجموع الفرعي للبند",
+      path: ["discountAmount"],
+    },
+  );
 
 export const salesInvoiceFormSchema = z.object({
   companyId: z.string().min(1, "الشركة مطلوبة"),

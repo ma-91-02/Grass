@@ -217,6 +217,44 @@ export async function POST(
       const totalAfterTax = Number(lockedInvoice.totalAfterTax ?? 0);
       const paid = Number(lockedInvoice.paid ?? 0);
       const remaining = Number(lockedInvoice.remaining ?? 0);
+      const subtotal = Number(lockedInvoice.totalBeforeTax ?? 0);
+      const totalDiscount = Number(lockedInvoice.discountAmount ?? 0);
+
+      // --- Server-side total consistency guards ---
+      if (totalAfterTax < 0) {
+        throw new Error("المجموع الإجمالي لا يمكن أن يكون سالباً");
+      }
+      if (paid < 0 || remaining < 0) {
+        throw new Error("المبلغ المدفوع أو المتبقي لا يمكن أن يكون سالباً");
+      }
+      if (paid > totalAfterTax) {
+        throw new Error("المبلغ المدفوع لا يمكن أن يتجاوز المجموع الإجمالي");
+      }
+      if (remaining !== totalAfterTax - paid) {
+        throw new Error("عدم تناسق في حسابات الفاتورة");
+      }
+
+      // --- Discount hardening ---
+      if (totalDiscount > subtotal) {
+        throw new Error("إجمالي الخصم لا يمكن أن يتجاوز المجموع الفرعي");
+      }
+
+      // --- Credit limit re-check inside transaction ---
+      if (lockedInvoice.customerId && remaining > 0) {
+        await tx.$queryRaw`SELECT id FROM "Customer" WHERE id = ${lockedInvoice.customerId} FOR UPDATE`;
+        const customer = await tx.customer.findUnique({
+          where: { id: lockedInvoice.customerId },
+        });
+        if (customer && Number(customer.creditLimit ?? 0) > 0) {
+          const currentBalance = Number(customer.currentBalance ?? 0);
+          const projectedBalance = currentBalance + remaining;
+          if (projectedBalance > Number(customer.creditLimit)) {
+            throw new Error(
+              `تجاوز حد الائتمان: الرصيد الحالي ${currentBalance} + ${remaining} = ${projectedBalance}، الحد الأقصى ${customer.creditLimit}`,
+            );
+          }
+        }
+      }
 
       // --- Inventory: create OUT movements and deduct stock ---
       let totalCogs = 0;

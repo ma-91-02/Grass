@@ -643,13 +643,11 @@ describe("sales-returns [id]/post route", () => {
       auditLog: { create: vi.fn().mockResolvedValue({ id: "al1" }) },
       salesReturn: {
         findUnique: vi.fn().mockResolvedValue(mockReturnDraft),
-        update: vi
-          .fn()
-          .mockResolvedValue({
-            ...mockReturnDraft,
-            status: "POSTED",
-            postedAt: new Date(),
-          }),
+        update: vi.fn().mockResolvedValue({
+          ...mockReturnDraft,
+          status: "POSTED",
+          postedAt: new Date(),
+        }),
       },
       invoice: {
         findMany: vi.fn().mockResolvedValue(mockInvoice.items),
