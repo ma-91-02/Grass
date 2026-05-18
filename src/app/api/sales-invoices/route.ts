@@ -24,6 +24,22 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const companyId = searchParams.get("companyId");
+  const customerId = searchParams.get("customerId");
+  const warehouseId = searchParams.get("warehouseId");
+  const status = searchParams.get("status");
+  const paymentType = searchParams.get("paymentType");
+  const fromParam = searchParams.get("from");
+  const toParam = searchParams.get("to");
+  const search = searchParams.get("search");
+  const pageParam = searchParams.get("page");
+  const limitParam = searchParams.get("limit");
+
+  // Pagination normalization
+  let page = parseInt(pageParam || "1", 10);
+  let limit = parseInt(limitParam || "20", 10);
+  if (Number.isNaN(page) || page < 1) page = 1;
+  if (Number.isNaN(limit) || limit < 1) limit = 1;
+  if (limit > 100) limit = 100;
 
   const dbUser = await prisma.user.findUnique({
     where: { id: user.userId },
@@ -43,25 +59,67 @@ export async function GET(request: NextRequest) {
     whereClause.companyId = dbUser.companyId;
   }
 
-  const invoices = await prisma.invoice.findMany({
-    where: whereClause,
-    include: {
-      customer: {
-        select: { id: true, name: true, code: true },
+  if (customerId) {
+    whereClause.customerId = customerId;
+  }
+  if (warehouseId) {
+    whereClause.warehouseId = warehouseId;
+  }
+  if (status) {
+    whereClause.status = status;
+  }
+  if (paymentType) {
+    whereClause.paymentType = paymentType;
+  }
+
+  const fromDate = fromParam ? new Date(fromParam) : undefined;
+  const toDate = toParam ? new Date(toParam) : undefined;
+  if (fromDate && toDate) {
+    whereClause.invoiceDate = { gte: fromDate, lte: toDate };
+  } else if (fromDate) {
+    whereClause.invoiceDate = { gte: fromDate };
+  } else if (toDate) {
+    whereClause.invoiceDate = { lte: toDate };
+  }
+
+  // Search on invoiceNumber or customerName
+  if (search) {
+    whereClause.OR = [
+      { invoiceNumber: { contains: search, mode: "insensitive" } },
+      {
+        customer: {
+          name: { contains: search, mode: "insensitive" },
+        },
       },
-      warehouse: {
-        select: { id: true, name: true, code: true },
-      },
-      items: {
-        include: {
-          product: {
-            select: { id: true, name: true, code: true },
+    ];
+  }
+
+  const skip = (page - 1) * limit;
+
+  const [invoices, total] = await Promise.all([
+    prisma.invoice.findMany({
+      where: whereClause,
+      include: {
+        customer: {
+          select: { id: true, name: true, code: true },
+        },
+        warehouse: {
+          select: { id: true, name: true, code: true },
+        },
+        items: {
+          include: {
+            product: {
+              select: { id: true, name: true, code: true },
+            },
           },
         },
       },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.invoice.count({ where: whereClause }),
+  ]);
 
   const data = invoices.map((inv) => ({
     id: inv.id,
@@ -103,7 +161,24 @@ export async function GET(request: NextRequest) {
     })),
   }));
 
-  return successResponse(data);
+  // Summary from the current page only (consistent with other endpoints)
+  const summary = {
+    totalInvoices: total,
+    totalAmount: data.reduce((sum, inv) => sum + inv.totalAfterTax, 0),
+    totalPaid: data.reduce((sum, inv) => sum + inv.paid, 0),
+    totalRemaining: data.reduce((sum, inv) => sum + inv.remaining, 0),
+  };
+
+  return successResponse({
+    data,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+    summary,
+  });
 }
 
 export async function POST(request: NextRequest) {

@@ -176,14 +176,18 @@ describe("sales-invoices route", () => {
         items: [],
       },
     ]);
+    (prisma.invoice.count as ReturnType<typeof vi.fn>).mockResolvedValue(1);
 
     const { GET } = await import("@/app/api/sales-invoices/route");
     const req = new Request("http://localhost/api/sales-invoices?companyId=c1");
     const res = await GET(req as never);
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.data).toHaveLength(1);
-    expect(json.data[0].companyId).toBe("c1");
+    expect(json.data.data).toHaveLength(1);
+    expect(json.data.data[0].companyId).toBe("c1");
+    expect(json.data.pagination.total).toBe(1);
+    expect(json.data.summary.totalInvoices).toBe(1);
+    expect(json.data.summary.totalAmount).toBe(100);
   });
 
   it("GET list rejects access to different company", async () => {
@@ -203,6 +207,159 @@ describe("sales-invoices route", () => {
     );
     const res = await GET(req as never);
     expect(res.status).toBe(403);
+  });
+
+  it("GET list supports pagination and returns summary", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.invoice.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+      {
+        id: "inv1",
+        companyId: "c1",
+        invoiceNumber: "INV-001",
+        invoiceDate: new Date(),
+        customer: null,
+        warehouse: null,
+        currency: "IQD",
+        exchangeRateValue: 0,
+        paymentType: "CASH",
+        totalBeforeTax: 100,
+        taxAmount: 0,
+        discountAmount: 0,
+        discountPercent: 0,
+        totalAfterTax: 100,
+        totalInUsd: 0,
+        paid: 100,
+        remaining: 0,
+        status: "DRAFT",
+        notes: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        items: [],
+      },
+      {
+        id: "inv2",
+        companyId: "c1",
+        invoiceNumber: "INV-002",
+        invoiceDate: new Date(),
+        customer: { id: "cus1", name: "Customer A", code: "C001" },
+        warehouse: null,
+        currency: "IQD",
+        exchangeRateValue: 0,
+        paymentType: "CREDIT",
+        totalBeforeTax: 200,
+        taxAmount: 0,
+        discountAmount: 0,
+        discountPercent: 0,
+        totalAfterTax: 200,
+        totalInUsd: 0,
+        paid: 0,
+        remaining: 200,
+        status: "DRAFT",
+        notes: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        items: [],
+      },
+    ]);
+    (prisma.invoice.count as ReturnType<typeof vi.fn>).mockResolvedValue(5);
+
+    const { GET } = await import("@/app/api/sales-invoices/route");
+    const req = new Request(
+      "http://localhost/api/sales-invoices?companyId=c1&page=1&limit=2",
+    );
+    const res = await GET(req as never);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.data.data).toHaveLength(2);
+    expect(json.data.pagination.page).toBe(1);
+    expect(json.data.pagination.limit).toBe(2);
+    expect(json.data.pagination.total).toBe(5);
+    expect(json.data.pagination.totalPages).toBe(3);
+    expect(json.data.summary.totalInvoices).toBe(5);
+    expect(json.data.summary.totalAmount).toBe(300);
+    expect(json.data.summary.totalPaid).toBe(100);
+    expect(json.data.summary.totalRemaining).toBe(200);
+  });
+
+  it("GET list normalizes invalid pagination params", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.invoice.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (prisma.invoice.count as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+
+    const { GET } = await import("@/app/api/sales-invoices/route");
+    const req = new Request(
+      "http://localhost/api/sales-invoices?companyId=c1&page=-1&limit=999",
+    );
+    const res = await GET(req as never);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.data.pagination.page).toBe(1);
+    expect(json.data.pagination.limit).toBe(100);
+  });
+
+  it("GET list filters by customerId and status", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "test@test.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.invoice.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+      {
+        id: "inv1",
+        companyId: "c1",
+        invoiceNumber: "INV-001",
+        invoiceDate: new Date(),
+        customer: { id: "cus1", name: "Customer A", code: "C001" },
+        warehouse: null,
+        currency: "IQD",
+        exchangeRateValue: 0,
+        paymentType: "CASH",
+        totalBeforeTax: 100,
+        taxAmount: 0,
+        discountAmount: 0,
+        discountPercent: 0,
+        totalAfterTax: 100,
+        totalInUsd: 0,
+        paid: 100,
+        remaining: 0,
+        status: "POSTED",
+        notes: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        items: [],
+      },
+    ]);
+    (prisma.invoice.count as ReturnType<typeof vi.fn>).mockResolvedValue(1);
+
+    const { GET } = await import("@/app/api/sales-invoices/route");
+    const req = new Request(
+      "http://localhost/api/sales-invoices?companyId=c1&customerId=cus1&status=POSTED",
+    );
+    const res = await GET(req as never);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.data.data).toHaveLength(1);
+    expect(json.data.data[0].status).toBe("POSTED");
   });
 
   // POST tests

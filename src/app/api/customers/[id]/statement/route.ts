@@ -12,6 +12,7 @@ import {
   notFoundError,
 } from "@/lib/api-response";
 import { PERMISSIONS } from "@/lib/permissions";
+import { Currency } from "@/generated/prisma/enums";
 
 export async function GET(
   request: NextRequest,
@@ -33,9 +34,20 @@ export async function GET(
   const { searchParams } = new URL(request.url);
   const fromParam = searchParams.get("from");
   const toParam = searchParams.get("to");
+  const currencyParam = searchParams.get("currency");
+  const pageParam = searchParams.get("page");
+  const limitParam = searchParams.get("limit");
+
+  // Pagination normalization
+  let page = parseInt(pageParam || "1", 10);
+  let limit = parseInt(limitParam || "50", 10);
+  if (Number.isNaN(page) || page < 1) page = 1;
+  if (Number.isNaN(limit) || limit < 1) limit = 1;
+  if (limit > 200) limit = 200;
 
   const fromDate = fromParam ? new Date(fromParam) : undefined;
   const toDate = toParam ? new Date(toParam) : undefined;
+  const currency = currencyParam || undefined;
 
   const customer = await prisma.customer.findUnique({
     where: { id },
@@ -51,12 +63,15 @@ export async function GET(
     return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
   }
 
-  // Fetch posted invoices and collections for the period, scoped to customer currency
+  // Determine currency scope: param overrides customer default
+  const scopeCurrency = currency || customer.currency;
+
+  // Fetch posted invoices and collections for the period, scoped to selected currency
   const invoices = await prisma.invoice.findMany({
     where: {
       customerId: id,
       status: "POSTED",
-      currency: customer.currency,
+      currency: scopeCurrency as Currency | undefined,
       ...(fromDate && { invoiceDate: { gte: fromDate } }),
       ...(toDate && { invoiceDate: { lte: toDate } }),
     },
@@ -76,7 +91,7 @@ export async function GET(
   const collections = await prisma.customerCollection.findMany({
     where: {
       customerId: id,
-      currency: customer.currency,
+      currency: scopeCurrency as Currency | undefined,
       ...(fromDate && { collectionDate: { gte: fromDate } }),
       ...(toDate && { collectionDate: { lte: toDate } }),
     },
@@ -150,20 +165,25 @@ export async function GET(
     .filter((t) => t.type === "COLLECTION")
     .reduce((sum, t) => sum + t.credit, 0);
 
+  // Apply pagination to transactions
+  const totalTransactions = transactions.length;
+  const skip = (page - 1) * limit;
+  const paginatedTransactions = transactions.slice(skip, skip + limit);
+
   return successResponse({
     customer: {
       id: customer.id,
       name: customer.name,
       code: customer.code,
       currentBalance: Number(customer.currentBalance ?? 0),
-      currency: customer.currency,
+      currency: scopeCurrency,
       company: customer.company,
     },
     period: {
       from: fromDate?.toISOString() || null,
       to: toDate?.toISOString() || null,
     },
-    transactions: transactions.map((t) => ({
+    transactions: paginatedTransactions.map((t) => ({
       id: t.id,
       date: t.date,
       type: t.type,
@@ -174,6 +194,12 @@ export async function GET(
       currency: t.currency,
       balance: t.balance,
     })),
+    pagination: {
+      page,
+      limit,
+      total: totalTransactions,
+      totalPages: Math.ceil(totalTransactions / limit),
+    },
     summary: {
       totalInvoiced,
       totalCollected,

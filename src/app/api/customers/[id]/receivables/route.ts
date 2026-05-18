@@ -65,13 +65,27 @@ export async function GET(
     0,
   );
 
+  const creditLimit = Number(customer.creditLimit ?? 0);
+  const currentBalance = Number(customer.currentBalance ?? 0);
+  const availableCredit =
+    creditLimit > 0 ? Math.max(0, creditLimit - currentBalance) : null;
+
+  // Overdue: POSTED invoices with remaining > 0 and invoiceDate > 30 days ago
+  const now = new Date();
+  const overdueThreshold = new Date(now.setDate(now.getDate() - 30));
+  const overdueCount = customer.invoices.filter(
+    (inv) =>
+      Number(inv.remaining) > 0 && new Date(inv.invoiceDate) < overdueThreshold,
+  ).length;
+
   return successResponse({
     customer: {
       id: customer.id,
       name: customer.name,
       code: customer.code,
-      currentBalance: Number(customer.currentBalance ?? 0),
-      creditLimit: Number(customer.creditLimit ?? 0),
+      currentBalance,
+      creditLimit,
+      availableCredit,
       currency: customer.currency,
       company: customer.company,
     },
@@ -88,6 +102,7 @@ export async function GET(
     summary: {
       invoiceCount: customer.invoices.length,
       totalReceivable,
+      overdueCount,
     },
   });
 }

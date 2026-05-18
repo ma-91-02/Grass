@@ -28,10 +28,21 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const companyId = searchParams.get("companyId");
+  const customerId = searchParams.get("customerId");
   const originalInvoiceId = searchParams.get("originalInvoiceId");
   const status = searchParams.get("status");
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const limit = parseInt(searchParams.get("limit") || "20", 10);
+  const fromParam = searchParams.get("from");
+  const toParam = searchParams.get("to");
+  const search = searchParams.get("search");
+  const pageParam = searchParams.get("page");
+  const limitParam = searchParams.get("limit");
+
+  // Pagination normalization
+  let page = parseInt(pageParam || "1", 10);
+  let limit = parseInt(limitParam || "20", 10);
+  if (Number.isNaN(page) || page < 1) page = 1;
+  if (Number.isNaN(limit) || limit < 1) limit = 1;
+  if (limit > 100) limit = 100;
 
   const where: Record<string, unknown> = {};
 
@@ -50,11 +61,41 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  if (customerId) {
+    where.customerId = customerId;
+  }
   if (originalInvoiceId) {
     where.originalInvoiceId = originalInvoiceId;
   }
   if (status) {
     where.status = status;
+  }
+
+  const fromDate = fromParam ? new Date(fromParam) : undefined;
+  const toDate = toParam ? new Date(toParam) : undefined;
+  if (fromDate && toDate) {
+    where.returnDate = { gte: fromDate, lte: toDate };
+  } else if (fromDate) {
+    where.returnDate = { gte: fromDate };
+  } else if (toDate) {
+    where.returnDate = { lte: toDate };
+  }
+
+  // Search on returnNumber, original invoiceNumber, or customerName
+  if (search) {
+    where.OR = [
+      { returnNumber: { contains: search, mode: "insensitive" } },
+      {
+        originalInvoice: {
+          invoiceNumber: { contains: search, mode: "insensitive" },
+        },
+      },
+      {
+        customer: {
+          name: { contains: search, mode: "insensitive" },
+        },
+      },
+    ];
   }
 
   const skip = (page - 1) * limit;
@@ -81,43 +122,52 @@ export async function GET(request: NextRequest) {
     prisma.salesReturn.count({ where }),
   ]);
 
-  return successResponse({
-    data: returns.map((r) => ({
-      id: r.id,
-      returnNumber: r.returnNumber,
-      companyId: r.companyId,
-      originalInvoiceId: r.originalInvoiceId,
-      originalInvoiceNumber: r.originalInvoice?.invoiceNumber,
-      originalInvoiceStatus: r.originalInvoice?.status,
-      customerId: r.customerId,
-      customerName: r.customer?.name,
-      warehouseId: r.warehouseId,
-      warehouseName: r.warehouse?.name,
-      returnDate: r.returnDate,
-      currency: r.currency,
-      totalAmount: Number(r.totalAmount),
-      totalCogs: Number(r.totalCogs),
-      status: r.status,
-      postedAt: r.postedAt,
-      notes: r.notes,
-      createdAt: r.createdAt,
-      lines: r.lines.map((l) => ({
-        id: l.id,
-        productId: l.productId,
-        productName: l.product?.name,
-        quantity: l.quantity,
-        unitPriceSnapshot: Number(l.unitPriceSnapshot),
-        averageCostSnapshot: Number(l.averageCostSnapshot),
-        lineTotal: Number(l.lineTotal),
-        notes: l.notes,
-      })),
+  const data = returns.map((r) => ({
+    id: r.id,
+    returnNumber: r.returnNumber,
+    companyId: r.companyId,
+    originalInvoiceId: r.originalInvoiceId,
+    originalInvoiceNumber: r.originalInvoice?.invoiceNumber,
+    originalInvoiceStatus: r.originalInvoice?.status,
+    customerId: r.customerId,
+    customerName: r.customer?.name,
+    warehouseId: r.warehouseId,
+    warehouseName: r.warehouse?.name,
+    returnDate: r.returnDate,
+    currency: r.currency,
+    totalAmount: Number(r.totalAmount),
+    totalCogs: Number(r.totalCogs),
+    status: r.status,
+    postedAt: r.postedAt,
+    notes: r.notes,
+    createdAt: r.createdAt,
+    lines: r.lines.map((l) => ({
+      id: l.id,
+      productId: l.productId,
+      productName: l.product?.name,
+      quantity: l.quantity,
+      unitPriceSnapshot: Number(l.unitPriceSnapshot),
+      averageCostSnapshot: Number(l.averageCostSnapshot),
+      lineTotal: Number(l.lineTotal),
+      notes: l.notes,
     })),
+  }));
+
+  const summary = {
+    totalReturns: total,
+    totalAmount: data.reduce((sum, r) => sum + r.totalAmount, 0),
+    totalCogs: data.reduce((sum, r) => sum + r.totalCogs, 0),
+  };
+
+  return successResponse({
+    data,
     pagination: {
       page,
       limit,
       total,
       totalPages: Math.ceil(total / limit),
     },
+    summary,
   });
 }
 

@@ -36,13 +36,28 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const customerId = searchParams.get("customerId");
   const companyId = searchParams.get("companyId");
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const limit = parseInt(searchParams.get("limit") || "20", 10);
+  const invoiceId = searchParams.get("invoiceId");
+  const fromParam = searchParams.get("from");
+  const toParam = searchParams.get("to");
+  const search = searchParams.get("search");
+  const pageParam = searchParams.get("page");
+  const limitParam = searchParams.get("limit");
+
+  // Pagination normalization
+  let page = parseInt(pageParam || "1", 10);
+  let limit = parseInt(limitParam || "20", 10);
+  if (Number.isNaN(page) || page < 1) page = 1;
+  if (Number.isNaN(limit) || limit < 1) limit = 1;
+  if (limit > 100) limit = 100;
 
   const where: Record<string, unknown> = {};
 
   if (customerId) {
     where.customerId = customerId;
+  }
+
+  if (invoiceId) {
+    where.invoiceId = invoiceId;
   }
 
   if (companyId) {
@@ -59,6 +74,32 @@ export async function GET(request: NextRequest) {
     if (userRecord?.companyId) {
       where.companyId = userRecord.companyId;
     }
+  }
+
+  const fromDate = fromParam ? new Date(fromParam) : undefined;
+  const toDate = toParam ? new Date(toParam) : undefined;
+  if (fromDate && toDate) {
+    where.collectionDate = { gte: fromDate, lte: toDate };
+  } else if (fromDate) {
+    where.collectionDate = { gte: fromDate };
+  } else if (toDate) {
+    where.collectionDate = { lte: toDate };
+  }
+
+  // Search on customerName or invoiceNumber
+  if (search) {
+    where.OR = [
+      {
+        customer: {
+          name: { contains: search, mode: "insensitive" },
+        },
+      },
+      {
+        invoice: {
+          invoiceNumber: { contains: search, mode: "insensitive" },
+        },
+      },
+    ];
   }
 
   const skip = (page - 1) * limit;
@@ -78,28 +119,36 @@ export async function GET(request: NextRequest) {
     prisma.customerCollection.count({ where }),
   ]);
 
+  const data = collections.map((c) => ({
+    id: c.id,
+    customerId: c.customerId,
+    customerName: c.customer?.name,
+    customerCode: c.customer?.code,
+    invoiceId: c.invoiceId,
+    invoiceNumber: c.invoice?.invoiceNumber,
+    paymentAccountId: c.paymentAccountId,
+    paymentAccountName: c.paymentAccount?.name,
+    amount: Number(c.amount),
+    currency: c.currency,
+    collectionDate: c.collectionDate,
+    notes: c.notes,
+    createdAt: c.createdAt,
+  }));
+
+  const summary = {
+    totalCollections: total,
+    totalAmount: data.reduce((sum, c) => sum + c.amount, 0),
+  };
+
   return successResponse({
-    data: collections.map((c) => ({
-      id: c.id,
-      customerId: c.customerId,
-      customerName: c.customer?.name,
-      customerCode: c.customer?.code,
-      invoiceId: c.invoiceId,
-      invoiceNumber: c.invoice?.invoiceNumber,
-      paymentAccountId: c.paymentAccountId,
-      paymentAccountName: c.paymentAccount?.name,
-      amount: Number(c.amount),
-      currency: c.currency,
-      collectionDate: c.collectionDate,
-      notes: c.notes,
-      createdAt: c.createdAt,
-    })),
+    data,
     pagination: {
       page,
       limit,
       total,
       totalPages: Math.ceil(total / limit),
     },
+    summary,
   });
 }
 

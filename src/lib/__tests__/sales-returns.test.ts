@@ -263,6 +263,37 @@ describe("sales-returns route", () => {
     const json = await res.json();
     expect(json.data.data).toHaveLength(1);
     expect(json.data.data[0].returnNumber).toBe("RET-00001");
+    expect(json.data.pagination.total).toBe(1);
+    expect(json.data.summary.totalReturns).toBe(1);
+    expect(json.data.summary.totalAmount).toBe(50);
+    expect(json.data.summary.totalCogs).toBe(30);
+  });
+
+  it("GET list normalizes invalid pagination params", async () => {
+    (getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "u1",
+      email: "t@t.com",
+      name: "Test",
+      roles: ["user"],
+      permissions: [],
+    });
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (canAccessCompany as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (prisma.salesReturn.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(
+      [],
+    );
+    (prisma.salesReturn.count as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+
+    const { GET } = await import("@/app/api/sales-returns/route");
+    const res = await GET(
+      new Request(
+        "http://localhost/api/sales-returns?companyId=c1&page=-1&limit=999",
+      ) as never,
+    );
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.data.pagination.page).toBe(1);
+    expect(json.data.pagination.limit).toBe(100);
   });
 
   // POST create DRAFT
