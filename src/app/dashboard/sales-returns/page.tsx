@@ -38,7 +38,7 @@ export default function SalesReturnsPage() {
       const res = await fetch(`/api/sales-returns?${params.toString()}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل تحميل المرتجعات");
-      return json.data as SalesReturn[];
+      return (json.data?.data || []) as SalesReturn[];
     },
     enabled: !!userCompanyId,
   });

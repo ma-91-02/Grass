@@ -21,9 +21,11 @@ export default function NewCollectionPage() {
   const [paymentAccountId, setPaymentAccountId] = useState("");
   const [amount, setAmount] = useState(0);
   const [currency, setCurrency] = useState("IQD");
-  const [collectionDate, setCollectionDate] = useState(() =>
-    new Date().toISOString().slice(0, 10),
-  );
+  const [collectionDate, setCollectionDate] = useState("");
+
+  useEffect(() => {
+    setCollectionDate(new Date().toISOString().slice(0, 10));
+  }, []);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -58,7 +60,7 @@ export default function NewCollectionPage() {
       const res = await fetch(`/api/sales-invoices?${params.toString()}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
-      return json.data;
+      return json.data?.data || [];
     },
     enabled: !!userCompanyId,
   });

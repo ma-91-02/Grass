@@ -36,7 +36,7 @@ export default function CollectionsPage() {
       const res = await fetch(`/api/customer-collections?${params.toString()}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل تحميل التحصيلات");
-      return json.data as Collection[];
+      return (json.data?.data || []) as Collection[];
     },
     enabled: !!userCompanyId,
   });

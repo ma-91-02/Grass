@@ -25,9 +25,12 @@ export default function NewSalesReturnPage() {
 
   const [originalInvoiceId, setOriginalInvoiceId] = useState("");
   const [currency, setCurrency] = useState("IQD");
-  const [returnDate, setReturnDate] = useState(() =>
-    new Date().toISOString().slice(0, 10),
-  );
+  const [returnDate, setReturnDate] = useState("");
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setReturnDate(new Date().toISOString().slice(0, 10));
+  }, []);
   const [notes, setNotes] = useState("");
   const [lines, setLines] = useState<Line[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -49,7 +52,7 @@ export default function NewSalesReturnPage() {
       const res = await fetch(`/api/sales-invoices?${params.toString()}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
-      return json.data;
+      return json.data?.data || [];
     },
     enabled: !!userCompanyId,
   });
@@ -57,8 +60,6 @@ export default function NewSalesReturnPage() {
   const selectedInvoice = invoices.find(
     (inv: { id: string }) => inv.id === originalInvoiceId,
   );
-
-
 
   const updateLine = (
     index: number,

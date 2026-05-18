@@ -45,7 +45,7 @@ export default function SalesInvoicesPage() {
       const res = await fetch(`/api/sales-invoices?${params.toString()}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل تحميل الفواتير");
-      return json.data as Invoice[];
+      return (json.data?.data || []) as Invoice[];
     },
     enabled: !!userCompanyId,
   });

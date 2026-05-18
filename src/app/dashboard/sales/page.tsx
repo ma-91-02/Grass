@@ -1,6 +1,5 @@
 "use client";
 
-
 import { Receipt, DollarSign, RotateCcw, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 

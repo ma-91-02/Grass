@@ -76,13 +76,16 @@ export default function NewSalesInvoicePage() {
   });
 
   const { data: products = [] } = useQuery({
-    queryKey: ["products"],
+    queryKey: ["products", userCompanyId],
     queryFn: async () => {
-      const res = await fetch("/api/products");
+      const params = new URLSearchParams();
+      if (userCompanyId) params.append("companyId", userCompanyId);
+      const res = await fetch(`/api/products?${params.toString()}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
       return json.data;
     },
+    enabled: !!userCompanyId,
   });
 
   const addLine = () => {
