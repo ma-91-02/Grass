@@ -58,7 +58,10 @@ export default function NewUserPage() {
       toast("تم إنشاء المستخدم بنجاح", "success");
       router.push("/dashboard/users");
     },
-    onError: (err: Error) => toast(err.message, "error"),
+    onError: (err: Error) => {
+      toast(err.message, "error");
+      setSubmitting(false);
+    },
   });
 
   const handleSubmit = () => {
