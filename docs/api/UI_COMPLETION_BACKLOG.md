@@ -389,7 +389,7 @@
 
 #### Task UI-004
 **Title:** Journal Entries Create UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** CRITICAL  
 **Related APIs:**
 - `POST /api/journal-entries`

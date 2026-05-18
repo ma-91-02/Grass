@@ -62,7 +62,7 @@
 
 ### UI Binding 1.3 — Journal Entries Create & Post
 **Endpoints المطلوب ربطها:**
-- `POST /api/journal-entries` — إنشاء قيد يومي ❌
+- `POST /api/journal-entries` — إنشاء قيد يومي ✅ (COMPLETED)
 - `POST /api/journal-entries/{id}/post` — ترحيل قيد ❌
 - `POST /api/journal-entries/{id}/reverse` — عكس قيد ❌
 - `PATCH /api/journal-entries/{id}` — تحديث مسودة قيد ❌

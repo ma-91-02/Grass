@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable, type Column } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,7 @@ interface JournalLine {
 }
 
 export default function JournalEntriesPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
@@ -138,7 +140,12 @@ export default function JournalEntriesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="القيود اليومية" description="عرض القيود المحاسبية" />
+      <PageHeader
+        title="القيود اليومية"
+        description="عرض القيود المحاسبية"
+        actionLabel="قيد جديد"
+        onAction={() => router.push("/dashboard/journal-entries/new")}
+      />
 
       <Card>
         <CardContent className="p-4">
