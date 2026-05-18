@@ -380,7 +380,7 @@
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ PATCH endpoint
 - UI_BINDING_ROADMAP.md: إزالة المهمة
-**Commit Hash:** `0e4378e`
+**Commit Hash:** `43da015`
 **Date:** 2026-05-18
 
 ---
