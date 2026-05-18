@@ -47,15 +47,16 @@
 
 ---
 
-### UI Binding 1.2 — Sales Invoice Edit
+### ✅ UI Binding 1.2 — Sales Invoice Edit (مكتمل)
 **Endpoints المطلوب ربطها:**
-- `PATCH /api/sales-invoices/{id}` — تحديث مسودة فاتورة بيع ❌
+- `PATCH /api/sales-invoices/{id}` — تحديث مسودة فاتورة بيع ✅ (COMPLETED)
 
 **الصفحات المطلوبة:**
-- `/dashboard/sales-invoices/[id]/edit/page.tsx` — صفحة تعديل مسودة
+- `/dashboard/sales-invoices/[id]/edit/page.tsx` — صفحة تعديل مسودة ✅ (COMPLETED)
 
 **Priority:** CRITICAL
 **السبب:** المسودات لا يمكن تعديلها، يجب حذفها وإعادة إنشائها.
+**تاريخ الإنجاز:** 2026-05-18
 
 ---
 

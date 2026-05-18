@@ -286,7 +286,7 @@
 
 #### Task UI-001
 **Title:** Sales Invoice Edit UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** CRITICAL  
 **Related APIs:**
 - `GET /api/sales-invoices/{id}`
@@ -378,9 +378,10 @@
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
-- API_REGISTRY.md: UI Status = CONNECTED للـ GET/DELETE/PDF endpoints
+- API_REGISTRY.md: UI Status = CONNECTED للـ PATCH endpoint
 - UI_BINDING_ROADMAP.md: إزالة المهمة
-**Commit Hash:**
+**Commit Hash:** `0e4378e`
+**Date:** 2026-05-18
 
 ---
 

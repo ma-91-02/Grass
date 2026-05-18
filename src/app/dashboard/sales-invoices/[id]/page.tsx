@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
-import { ArrowLeft, Printer, Send, Trash2 } from "lucide-react";
+import { ArrowLeft, Printer, Send, Trash2, Edit } from "lucide-react";
 
 interface InvoiceItem {
   id: string;
@@ -174,6 +174,15 @@ export default function SalesInvoiceDetailPage() {
             >
               <Printer className="h-4 w-4" />
               طباعة
+            </Button>
+          )}
+          {invoice.status === "DRAFT" && (
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/dashboard/sales-invoices/${id}/edit`)}
+            >
+              <Edit className="h-4 w-4" />
+              تعديل
             </Button>
           )}
           {invoice.status === "DRAFT" && (

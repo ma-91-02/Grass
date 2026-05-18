@@ -231,7 +231,7 @@
 | SalesInvoices | GET | `/api/sales-invoices` | قائمة فواتير البيع | DONE | CONNECTED | `/dashboard/sales-invoices` | CRITICAL | 0 | — |
 | SalesInvoices | POST | `/api/sales-invoices` | إنشاء فاتورة بيع | DONE | CONNECTED | `/dashboard/sales-invoices/new` | CRITICAL | 0 | تم إصلاح warehouses query |
 | SalesInvoices | GET | `/api/sales-invoices/{id}` | تفاصيل فاتورة | DONE | CONNECTED | `/dashboard/sales-invoices/[id]` | CRITICAL | 0 | — |
-| SalesInvoices | PATCH | `/api/sales-invoices/{id}` | تحديث مسودة | DONE | NO_UI | — | HIGH | 1.2 | لا يوجد edit page |
+| SalesInvoices | PATCH | `/api/sales-invoices/{id}` | تحديث مسودة | DONE | CONNECTED | `/dashboard/sales-invoices/[id]/edit` | HIGH | 1.2 | تم إنشاء edit page |
 | SalesInvoices | DELETE | `/api/sales-invoices/{id}` | حذف مسودة | DONE | CONNECTED | `/dashboard/sales-invoices/[id]` | CRITICAL | 0 | — |
 | SalesInvoices | POST | `/api/sales-invoices/{id}/post` | ترحيل فاتورة | DONE | CONNECTED | `/dashboard/sales-invoices/[id]` | CRITICAL | 0 | — |
 | SalesInvoices | GET | `/api/sales-invoices/{id}/print` | طباعة فاتورة | DONE | CONNECTED | `/dashboard/sales-invoices/[id]` | CRITICAL | 0 | — |
