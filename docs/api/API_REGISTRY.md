@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 128 |
-| CONNECTED | 60 |
+| CONNECTED | 61 |
 | PARTIAL | 31 |
-| NO_UI | 27 |
+| NO_UI | 26 |
 | BACKEND_ONLY | 10 |
 
 ---
@@ -165,7 +165,7 @@
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | StockMovements | GET | `/api/stock-movements` | قائمة حركات المخزن | DONE | CONNECTED | `/dashboard/stock-movements` | MEDIUM | 2.2 | قائمة مع فلترة حسب المخزن/النوع/الحالة + بحث |
 | StockMovements | POST | `/api/stock-movements` | إنشاء حركة مخزن | DONE | NO_UI | — | MEDIUM | 2.2 | — |
-| StockMovements | GET | `/api/stock-movements/{id}` | تفاصيل حركة | DONE | NO_UI | — | MEDIUM | 2.2 | زر View موجود لكن detail page غير منشأ |
+| StockMovements | GET | `/api/stock-movements/{id}` | تفاصيل حركة | DONE | CONNECTED | `/dashboard/stock-movements/[id]` | MEDIUM | 2.2 | عرض معلومات الحركة + المادة + المخزن + المرجع |
 | StockMovements | PATCH | `/api/stock-movements/{id}` | تحديث حركة | DONE | NO_UI | — | MEDIUM | 2.2 | — |
 | StockMovements | DELETE | `/api/stock-movements/{id}` | حذف حركة | DONE | NO_UI | — | MEDIUM | 2.2 | — |
 | StockMovements | POST | `/api/stock-movements/{id}/post` | ترحيل حركة | DONE | NO_UI | — | MEDIUM | 2.2 | — |

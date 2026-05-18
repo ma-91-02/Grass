@@ -615,32 +615,30 @@
 
 ---
 #### Task UI-011
-**Title:** Stock Movements Create UI  
-**Status:** `TODO`  
+**Title:** Stock Movement Detail UI  
+**Status:** `DONE`  
 **Priority:** HIGH  
 **Related APIs:**
-- `POST /api/stock-movements`
-- `GET /api/warehouses`
-- `GET /api/products`
+- `GET /api/stock-movements/{id}`
 **Target UI Pages:**
-- `/dashboard/stock-movements/new/page.tsx`
+- `/dashboard/stock-movements/[id]/page.tsx`
 **Scope:**
-- إنشاء حركة مخزن جديدة (دخول/خروج)
-- اختيار مخزن ومادة وكمية ونوع حركة
+- عرض تفاصيل حركة مخزن
+- معلومات المادة والمخزن والكمية والتكلفة
 **Forbidden:**
 - تعديل backend stock logic
 **Acceptance Criteria:**
-- إنشاء حركة مخزن
-- اختيار المخزن والمادة
-- إدخال الكمية ونوع الحركة (IN/OUT)
-- حفظ كمسودة
+- عرض تفاصيل الحركة
+- حالة الحركة (DRAFT/POSTED/CANCELLED)
+- المرجع إن وجد
+- زر رجوع للقائمة
 **Required Checks:**
 - npm run lint
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
-- API_REGISTRY.md: UI Status = CONNECTED للـ POST endpoint
-- UI_BINDING_ROADMAP.md: إزالة المهمة
+- API_REGISTRY.md: UI Status = CONNECTED للـ GET detail endpoint
+- UI_BINDING_ROADMAP.md: تحديث UI Binding 2.2
 **Commit Hash:**
 
 ---

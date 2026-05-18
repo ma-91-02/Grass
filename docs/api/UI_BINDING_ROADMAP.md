@@ -113,12 +113,14 @@
 ### UI Binding 2.2 — Stock Movements & Adjustments
 **Endpoints المطلوب ربطها:**
 - `GET /api/stock-movements` — قائمة حركات المخزن ✅ (COMPLETED)
+- `GET /api/stock-movements/{id}` — تفاصيل حركة ✅ (COMPLETED)
 - `POST /api/stock-movements` — إنشاء حركة ❌
 - `GET /api/stock-adjustments` — قائمة تسويات المخزن ❌
 - `POST /api/stock-adjustments` — إنشاء تسوية ❌
 
 **الصفحات المطلوبة:**
 - `/dashboard/stock-movements/page.tsx` — قائمة ✅ (COMPLETED — list + filters)
+- `/dashboard/stock-movements/[id]/page.tsx` — تفاصيل ✅ (COMPLETED)
 - `/dashboard/stock-adjustments/page.tsx` — قائمة + create + detail + post ❌
 
 **Priority:** MEDIUM
