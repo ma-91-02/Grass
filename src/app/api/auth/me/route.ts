@@ -35,5 +35,6 @@ export async function GET() {
     name: session.user.name,
     roles: session.user.roles,
     permissions,
+    companyId: dbUser.companyId,
   });
 }

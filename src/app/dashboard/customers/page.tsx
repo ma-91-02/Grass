@@ -88,11 +88,15 @@ export default function CustomersPage() {
   );
 
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
+  const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
-      .then((d) => setUserPermissions(d.data?.permissions || []))
+      .then((d) => {
+        setUserPermissions(d.data?.permissions || []);
+        setUserCompanyId(d.data?.companyId || null);
+      })
       .catch(() => {});
   }, []);
 
@@ -607,14 +611,17 @@ export default function CustomersPage() {
               defaultValues={
                 editCustomer
                   ? {
+                      code: editCustomer.code,
                       name: editCustomer.name,
                       phone: editCustomer.phone || "",
                       whatsapp: editCustomer.whatsapp || "",
+                      email: "",
                       address: editCustomer.address || "",
                       governorate: editCustomer.governorate || "",
                       customerType: editCustomer.customerType,
                       customerCategoryId: editCustomer.customerCategoryId || "",
                       notes: editCustomer.notes || "",
+                      creditLimit: 0,
                       openingBalanceIqd:
                         editCustomer.accounts.find((a) => a.currency === "IQD")
                           ?.balance || 0,
@@ -622,13 +629,34 @@ export default function CustomersPage() {
                         editCustomer.accounts.find((a) => a.currency === "USD")
                           ?.balance || 0,
                     }
-                  : undefined
+                  : {
+                      companyId: userCompanyId || "",
+                      code: "",
+                      name: "",
+                      phone: "",
+                      whatsapp: "",
+                      email: "",
+                      address: "",
+                      governorate: "",
+                      customerType: "INDIVIDUAL",
+                      customerCategoryId: "",
+                      notes: "",
+                      creditLimit: 0,
+                      openingBalanceIqd: 0,
+                      openingBalanceUsd: 0,
+                    }
               }
               onSubmit={async (data) => {
+                const payload = userCompanyId
+                  ? { ...data, companyId: userCompanyId }
+                  : data;
                 if (editCustomer) {
-                  updateCustomerMutation.mutate({ id: editCustomer.id, data });
+                  updateCustomerMutation.mutate({
+                    id: editCustomer.id,
+                    data: payload,
+                  });
                 } else {
-                  createCustomerMutation.mutate(data);
+                  createCustomerMutation.mutate(payload);
                 }
               }}
               categories={categories}

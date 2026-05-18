@@ -65,10 +65,23 @@ export function CustomerForm({
         </h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <Input
+            label="كود العميل"
+            error={errors.code?.message}
+            {...register("code")}
+            required
+          />
+          <Input
             label="الاسم"
             error={errors.name?.message}
             {...register("name")}
             required
+          />
+          <Input
+            label="البريد الإلكتروني"
+            type="email"
+            error={errors.email?.message}
+            {...register("email")}
+            dir="ltr"
           />
           <Select
             label="نوع العميل"
@@ -124,6 +137,13 @@ export function CustomerForm({
             label="الملاحظات"
             error={errors.notes?.message}
             {...register("notes")}
+          />
+          <Input
+            label="حد الائتمان"
+            type="number"
+            min={0}
+            error={errors.creditLimit?.message}
+            {...register("creditLimit")}
           />
         </div>
       </div>
