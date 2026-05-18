@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 128 |
-| CONNECTED | 57 |
+| CONNECTED | 60 |
 | PARTIAL | 31 |
-| NO_UI | 30 |
+| NO_UI | 27 |
 | BACKEND_ONLY | 10 |
 
 ---
@@ -280,10 +280,10 @@
 | Module | Method | Endpoint | Purpose | Backend Status | UI Status | UI Page | Priority | Phase | Notes |
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | Accounts | GET | `/api/accounts` | قائمة شجرة الحسابات | DONE | CONNECTED | `/dashboard/accounts` | HIGH | 1.4 | شجرة هرمية مع توسيع/طي |
-| Accounts | POST | `/api/accounts` | إنشاء حساب | DONE | CONNECTED | `/dashboard/accounts` | HIGH | 1.4 | — |
+| Accounts | POST | `/api/accounts` | إنشاء حساب | DONE | CONNECTED | `/dashboard/accounts` | HIGH | 1.4 | مودال إنشاء مع parent/type/currency |
 | Accounts | GET | `/api/accounts/{id}` | تفاصيل حساب | DONE | NO_UI | — | HIGH | 1.4 | — |
-| Accounts | PATCH | `/api/accounts/{id}` | تحديث حساب | DONE | NO_UI | — | HIGH | 1.4 | — |
-| Accounts | DELETE | `/api/accounts/{id}` | حذف حساب | DONE | NO_UI | — | HIGH | 1.4 | — |
+| Accounts | PATCH | `/api/accounts/{id}` | تحديث حساب | DONE | CONNECTED | `/dashboard/accounts` | HIGH | 1.4 | مودال تعديل (name/parent/isPosting/description) |
+| Accounts | DELETE | `/api/accounts/{id}` | حذف حساب | DONE | CONNECTED | `/dashboard/accounts` | HIGH | 1.4 | ConfirmDialog + عرض رسالة الرفض من backend |
 | Accounts | GET | `/api/accounts/tree` | شجرة الحسابات | DONE | NO_UI | — | HIGH | 1.4 | مستخدمة كمرجع، الـ UI يبني tree من list |
 
 ---
@@ -361,9 +361,9 @@
 
 | Status | Count |
 |--------|-------|
-| CONNECTED | 57 |
+| CONNECTED | 60 |
 | PARTIAL | 31 |
-| NO_UI | 30 |
+| NO_UI | 27 |
 | BACKEND_ONLY | 10 |
 | UNKNOWN | 0 |
 | BROKEN | 0 |

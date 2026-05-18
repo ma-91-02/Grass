@@ -519,35 +519,43 @@
 
 #### Task UI-008
 **Title:** Accounts Tree UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** HIGH  
 **Related APIs:**
 - `GET /api/accounts/tree`
+- `POST /api/accounts`
+- `PATCH /api/accounts/{id}`
+- `DELETE /api/accounts/{id}`
 **Target UI Pages:**
-- `/dashboard/accounts/page.tsx` (tab أو view منفصل)
+- `/dashboard/accounts/page.tsx`
 **Scope:**
 - عرض شجرة الحسابات هرميًا
 - توسيع/طي الفروع
+- إنشاء وتعديل وحذف حساب من الواجهة
 **Forbidden:**
 - تعديل backend tree logic
 **Acceptance Criteria:**
 - عرض شجرة الحسابات
 - عرض الرئيسي + الفرعي
 - توسيع/طي العقد
+- إنشاء حساب جديد
+- تعديل اسم وأب وترحيل
+- حذف حساب مع عرض رسالة الرفض
 **Required Checks:**
 - npm run lint
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
-- API_REGISTRY.md: UI Status = CONNECTED للـ TREE endpoint
-- UI_BINDING_ROADMAP.md: إزالة المهمة
+- API_REGISTRY.md: UI Status = CONNECTED للـ POST/PATCH/DELETE endpoints
+- UI_BINDING_ROADMAP.md: تحديث UI Binding 1.4
 **Commit Hash:**
+**Date:** 2026-05-18
 
 ---
 
 #### Task UI-009
 **Title:** Accounts Create/Edit UI  
-**Status:** `TODO`  
+**Status:** `DONE — دُمجت في UI-008`  
 **Priority:** HIGH  
 **Related APIs:**
 - `POST /api/accounts`
