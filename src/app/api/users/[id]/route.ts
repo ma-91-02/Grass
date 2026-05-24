@@ -5,6 +5,7 @@ import {
   hashPassword,
   logAudit,
   requireDbPermission,
+  isSystemOwnerById,
 } from "@/lib/auth";
 import {
   successResponse,
@@ -32,6 +33,8 @@ export async function GET(
 
   if (!found) return notFoundError();
 
+  const isOwner = await isSystemOwnerById(id);
+
   return successResponse({
     id: found.id,
     name: found.name,
@@ -39,6 +42,7 @@ export async function GET(
     isActive: found.isActive,
     phone: found.phone,
     roles: found.roles.map((r) => r.role.name),
+    isSystemOwner: isOwner,
   });
 }
 
@@ -57,6 +61,13 @@ export async function PATCH(
 
   const existing = await prisma.user.findUnique({ where: { id } });
   if (!existing) return notFoundError();
+
+  // Prevent modifying system owner's critical fields
+  if (await isSystemOwnerById(id)) {
+    if (isActive !== undefined || roleIds !== undefined) {
+      return errorResponse("لا يمكن تعديل صلاحيات أو حالة مالك النظام");
+    }
+  }
 
   const updateData: Record<string, unknown> = {};
   if (name) updateData.name = name;
@@ -109,6 +120,10 @@ export async function DELETE(
     include: { roles: { include: { role: true } } },
   });
   if (!target) return notFoundError();
+
+  if (await isSystemOwnerById(id)) {
+    return errorResponse("لا يمكن حذف مالك النظام");
+  }
 
   if (currentUser.userId === id) {
     return errorResponse("لا يمكنك حذف نفسك");

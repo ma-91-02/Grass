@@ -25,6 +25,7 @@ interface UserDetail {
   isActive: boolean;
   phone: string | null;
   roles: string[];
+  isSystemOwner?: boolean;
 }
 
 export default function UserDetailPage() {
@@ -148,6 +149,8 @@ export default function UserDetailPage() {
   }, [user, updateMutation]);
 
   const isSelfAction = isCurrentUser;
+  const isOwner = user?.isSystemOwner || false;
+  const ownerLocked = isOwner && !isSelfAction;
 
   if (isLoading || isLoadingAuth) {
     return (
@@ -217,6 +220,11 @@ export default function UserDetailPage() {
             >
               {user.isActive ? "نشط" : "غير نشط"}
             </Badge>
+            {user.isSystemOwner && (
+              <Badge className="bg-amber-100 text-amber-800">
+                مالك النظام
+              </Badge>
+            )}
           </div>
           <p className="text-sm text-gray-500">{user.email}</p>
         </div>
@@ -285,7 +293,8 @@ export default function UserDetailPage() {
               variant="outline"
               size="sm"
               onClick={openEditRoles}
-              disabled={updateMutation.isPending}
+              disabled={updateMutation.isPending || isOwner}
+              title={isOwner ? "لا يمكن تعديل صلاحيات أو حالة مالك النظام" : undefined}
             >
               تعديل الأدوار
             </Button>
@@ -319,13 +328,15 @@ export default function UserDetailPage() {
               type="button"
               variant={user.isActive ? "outline" : "primary"}
               onClick={() => setToggleOpen(true)}
-              disabled={updateMutation.isPending || isSelfAction}
+              disabled={updateMutation.isPending || isSelfAction || isOwner}
               title={
-                isSelfAction
-                  ? "لا يمكنك تغيير حالة حسابك"
-                  : user.isActive
-                    ? "تعطيل المستخدم"
-                    : "تفعيل المستخدم"
+                isOwner
+                  ? "لا يمكن تعديل صلاحيات أو حالة مالك النظام"
+                  : isSelfAction
+                    ? "لا يمكنك تغيير حالة حسابك"
+                    : user.isActive
+                      ? "تعطيل المستخدم"
+                      : "تفعيل المستخدم"
               }
             >
               {user.isActive ? "تعطيل" : "تفعيل"}
@@ -334,9 +345,13 @@ export default function UserDetailPage() {
               type="button"
               variant="danger"
               onClick={() => setDeleteOpen(true)}
-              disabled={deleteMutation.isPending || isSelfAction}
+              disabled={deleteMutation.isPending || isSelfAction || isOwner}
               title={
-                isSelfAction ? "لا يمكنك حذف حسابك" : "حذف المستخدم"
+                isOwner
+                  ? "لا يمكن حذف مالك النظام"
+                  : isSelfAction
+                    ? "لا يمكنك حذف حسابك"
+                    : "حذف المستخدم"
               }
             >
               حذف
