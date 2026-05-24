@@ -103,15 +103,26 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const id = params.id as string;
   const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
+    setIsLoadingAuth(true);
+    setAuthError(null);
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => {
-        if (d.success && d.data?.companyId) {
-          setUserCompanyId(d.data.companyId);
-        }
-      });
+        if (!d.success) throw new Error(d.error || "فشل تحميل بيانات الجلسة");
+        if (!d.data?.companyId)
+          throw new Error("لم يتم العثور على شركة مرتبطة بالمستخدم");
+        setUserCompanyId(d.data.companyId);
+      })
+      .catch((err) => {
+        setAuthError(
+          err instanceof Error ? err.message : "تعذر تحميل بيانات الشركة",
+        );
+      })
+      .finally(() => setIsLoadingAuth(false));
   }, []);
 
   const {
@@ -335,7 +346,15 @@ export default function ProductDetailPage() {
           <CardTitle>رصيد المخزون</CardTitle>
         </CardHeader>
         <CardContent>
-          {balances.length === 0 ? (
+          {authError ? (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-red-600">
+              {authError}
+            </div>
+          ) : isLoadingAuth ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            </div>
+          ) : balances.length === 0 ? (
             <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center text-gray-500">
               لا يوجد رصيد لهذه المادة
             </div>
@@ -423,7 +442,15 @@ export default function ProductDetailPage() {
           <CardTitle>حركات المخزون</CardTitle>
         </CardHeader>
         <CardContent>
-          {movements.length === 0 ? (
+          {authError ? (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-red-600">
+              {authError}
+            </div>
+          ) : isLoadingAuth ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            </div>
+          ) : movements.length === 0 ? (
             <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center text-gray-500">
               لا توجد حركات مخزون لهذه المادة
             </div>
