@@ -34,30 +34,53 @@ interface FormData {
   notes: string;
 }
 
-const emptyForm: FormData = {
+const emptyForm = (dateStr: string): FormData => ({
   fromWarehouseId: "",
   toWarehouseId: "",
   productId: "",
   quantity: "1",
   unitCost: "",
   currency: "IQD",
-  transferDate: new Date().toISOString().split("T")[0],
+  transferDate: dateStr,
   notes: "",
-};
+});
 
 export default function StockTransferCreatePage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [form, setForm] = useState<FormData>(emptyForm);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [form, setForm] = useState<FormData>(emptyForm(""));
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
   useEffect(() => {
+    setIsLoadingAuth(true);
+    setAuthError(null);
     fetch("/api/auth/me")
       .then((r) => r.json())
-      .then((d) => setUserCompanyId(d.data?.companyId || null))
-      .catch(() => {});
+      .then((d) => {
+        const cid = d.data?.companyId || null;
+        if (!cid) {
+          setAuthError("لم يتم العثور على شركة مرتبطة بالمستخدم");
+        }
+        setUserCompanyId(cid);
+      })
+      .catch(() => {
+        setAuthError("تعذر تحميل بيانات الشركة");
+      })
+      .finally(() => setIsLoadingAuth(false));
   }, []);
+
+  useEffect(() => {
+    if (!isLoadingAuth && !authError && userCompanyId) {
+      setForm((prev) =>
+        prev.transferDate === ""
+          ? { ...prev, transferDate: new Date().toISOString().split("T")[0] }
+          : prev,
+      );
+    }
+  }, [isLoadingAuth, authError, userCompanyId]);
 
   const { data: warehouses } = useQuery({
     queryKey: ["warehouses", userCompanyId],
@@ -114,9 +137,9 @@ export default function StockTransferCreatePage() {
       if (!json.success) throw new Error(json.error || "فشل إنشاء التحويل");
       return json.data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast("تم إنشاء التحويل بنجاح", "success");
-      router.push(`/dashboard/warehouse-transfers/${data.id}`);
+      router.push("/dashboard/warehouse-transfers");
     },
     onError: (err: Error) => {
       toast(err.message, "error");
@@ -160,12 +183,27 @@ export default function StockTransferCreatePage() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>بيانات التحويل</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+      {isLoadingAuth && (
+        <Card>
+          <CardContent className="flex items-center justify-center py-12">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </CardContent>
+        </Card>
+      )}
+
+      {authError && !isLoadingAuth && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-red-600">
+          {authError}
+        </div>
+      )}
+
+      {!isLoadingAuth && !authError && (
+        <Card>
+          <CardHeader>
+            <CardTitle>بيانات التحويل</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label className="mb-1 block text-sm">المخزن المصدر *</Label>
@@ -332,6 +370,7 @@ export default function StockTransferCreatePage() {
           </form>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }
