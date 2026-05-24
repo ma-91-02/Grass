@@ -22,6 +22,7 @@ import {
   ScrollText,
   Wallet,
   ChevronDown,
+  Ruler,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -75,6 +76,11 @@ const menuItems = [
     title: "تصنيفات المواد",
     href: "/dashboard/categories",
     icon: Package,
+  },
+  {
+    title: "وحدات القياس",
+    href: "/dashboard/units",
+    icon: Ruler,
   },
   {
     title: "المخازن",

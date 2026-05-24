@@ -132,17 +132,18 @@
 
 ---
 
-### UI Binding 2.3 — Units Management
+### ✅ UI Binding 2.3 — Units Management (مكتمل)
 **Endpoints المطلوب ربطها:**
-- `GET /api/units` — قائمة الوحدات
-- `POST /api/units` — إنشاء وحدة
-- `PATCH /api/units/{id}` — تحديث وحدة
-- `DELETE /api/units/{id}` — حذف وحدة
+- `GET /api/units` — قائمة الوحدات ✅ (COMPLETED)
+- `POST /api/units` — إنشاء وحدة ✅ (COMPLETED)
+- `PATCH /api/units/{id}` — تحديث وحدة ✅ (COMPLETED)
+- `DELETE /api/units/{id}` — حذف وحدة ✅ (COMPLETED)
 
 **الصفحات المطلوبة:**
-- `/dashboard/units/page.tsx` — قائمة + create + edit + delete
+- `/dashboard/units/page.tsx` — قائمة + create + edit + delete ✅ (COMPLETED)
 
 **Priority:** MEDIUM
+**تاريخ الإنجاز:** 2026-05-24
 
 ---
 

@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-24
+> آخر تحديث: 2026-05-24 (UI-019)
 
 ---
 
@@ -139,11 +139,11 @@
 
 | Module | Method | Endpoint | Purpose | Backend Status | UI Status | UI Page | Priority | Phase | Notes |
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
-| Units | GET | `/api/units` | قائمة وحدات القياس | DONE | PARTIAL | `/dashboard/products` (dropdown) | MEDIUM | 2.3 | لا يوجد صفحة إدارة وحدات; تم إصلاح تحميل الوحدات مع companyId scope |
-| Units | POST | `/api/units` | إنشاء وحدة | DONE | NO_UI | — | MEDIUM | 2.3 | — |
+| Units | GET | `/api/units` | قائمة وحدات القياس | DONE | CONNECTED | `/dashboard/units`, `/dashboard/products` (dropdown) | MEDIUM | 2.3 | تم إنشاء صفحة إدارة وحدات القياس 2026-05-24 |
+| Units | POST | `/api/units` | إنشاء وحدة | DONE | CONNECTED | `/dashboard/units` | MEDIUM | 2.3 | — |
 | Units | GET | `/api/units/{id}` | تفاصيل وحدة | DONE | NO_UI | — | MEDIUM | 2.3 | — |
-| Units | PATCH | `/api/units/{id}` | تحديث وحدة | DONE | NO_UI | — | MEDIUM | 2.3 | — |
-| Units | DELETE | `/api/units/{id}` | حذف وحدة | DONE | NO_UI | — | MEDIUM | 2.3 | — |
+| Units | PATCH | `/api/units/{id}` | تحديث وحدة | DONE | CONNECTED | `/dashboard/units` | MEDIUM | 2.3 | — |
+| Units | DELETE | `/api/units/{id}` | حذف وحدة | DONE | CONNECTED | `/dashboard/units` | MEDIUM | 2.3 | إذا الوحدة مستخدمة في مواد يتم تعطيلها بدلاً من الحذف |
 
 ---
 
@@ -361,9 +361,9 @@
 
 | Status | Count |
 |--------|-------|
-| CONNECTED | 61 |
-| PARTIAL | 31 |
-| NO_UI | 26 |
+| CONNECTED | 65 |
+| PARTIAL | 30 |
+| NO_UI | 23 |
 | BACKEND_ONLY | 10 |
 | UNKNOWN | 0 |
 | BROKEN | 0 |

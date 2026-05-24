@@ -256,7 +256,14 @@ export function ProductForm({
           {units.length === 0 ? (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-center text-sm text-amber-700">
               <input type="hidden" {...register("unitId")} />
-              لا توجد وحدات قياس. أضف وحدة أولًا من صفحة الوحدات.
+              لا توجد وحدات قياس.
+              <br />
+              <a
+                href="/dashboard/units"
+                className="mt-1 inline-block text-blue-600 underline hover:text-blue-800"
+              >
+                الانتقال إلى صفحة وحدات القياس
+              </a>
               {errors.unitId?.message && (
                 <p className="mt-1 text-xs text-red-600">
                   {errors.unitId.message}

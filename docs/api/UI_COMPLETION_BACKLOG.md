@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-18
+> آخر تحديث: 2026-05-24
 
 ---
 
@@ -884,7 +884,7 @@
 
 #### Task UI-019
 **Title:** Units Management UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** MEDIUM  
 **Related APIs:**
 - `GET /api/units`
@@ -902,7 +902,7 @@
 - عرض الوحدات
 - إنشاء وحدة جديدة
 - تعديل وحدة
-- حذف وحدة
+- حذف وحدة (مع تعطيل تلقائي إذا مستخدمة في مواد)
 **Required Checks:**
 - npm run lint
 - npm run typecheck
@@ -910,7 +910,7 @@
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ endpoints
 - UI_BINDING_ROADMAP.md: إزالة المهمة
-**Commit Hash:**
+**Commit Hash:** `pending`
 
 ---
 
@@ -1248,7 +1248,7 @@
 
 | Task ID | Status | Commit Hash | Date |
 |---------|--------|-------------|------|
-| — | — | — | — |
+| UI-019 | DONE | pending | 2026-05-24 |
 
 ---
 
