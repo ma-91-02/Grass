@@ -178,10 +178,10 @@
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | StockTransfers | GET | `/api/stock-transfers` | قائمة تحويلات المخزن | DONE | NO_UI | — | MEDIUM | 2.1 | placeholder فقط |
 | StockTransfers | POST | `/api/stock-transfers` | إنشاء تحويل | DONE | CONNECTED | `/dashboard/warehouse-transfers/new` | MEDIUM | 2.1 | form إنشاء تحويل مخزن (مصدر/هدف/مادة/كمية) |
-| StockTransfers | GET | `/api/stock-transfers/{id}` | تفاصيل تحويل | DONE | NO_UI | — | MEDIUM | 2.1 | — |
+| StockTransfers | GET | `/api/stock-transfers/{id}` | تفاصيل تحويل | DONE | CONNECTED | `/dashboard/warehouse-transfers/[id]` | MEDIUM | 2.1 | عرض معلومات + بنود + ملخص |
 | StockTransfers | PATCH | `/api/stock-transfers/{id}` | تحديث تحويل | DONE | NO_UI | — | MEDIUM | 2.1 | — |
-| StockTransfers | DELETE | `/api/stock-transfers/{id}` | حذف تحويل | DONE | NO_UI | — | MEDIUM | 2.1 | — |
-| StockTransfers | POST | `/api/stock-transfers/{id}/post` | ترحيل تحويل | DONE | NO_UI | — | MEDIUM | 2.1 | — |
+| StockTransfers | DELETE | `/api/stock-transfers/{id}` | حذف تحويل | DONE | CONNECTED | `/dashboard/warehouse-transfers/[id]` | MEDIUM | 2.1 | ConfirmDialog + فقط للمسودات |
+| StockTransfers | POST | `/api/stock-transfers/{id}/post` | ترحيل تحويل | DONE | CONNECTED | `/dashboard/warehouse-transfers/[id]` | MEDIUM | 2.1 | ConfirmDialog + فقط للمسودات |
 
 ---
 

@@ -746,7 +746,7 @@
 
 #### Task UI-015
 **Title:** Stock Transfers Detail/Post UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** MEDIUM  
 **Related APIs:**
 - `GET /api/stock-transfers/{id}`
@@ -754,24 +754,28 @@
 - `DELETE /api/stock-transfers/{id}`
 **Target UI Pages:**
 - `/dashboard/warehouse-transfers/[id]/page.tsx`
+- `/dashboard/warehouse-transfers/new/page.tsx` (redirect إلى detail)
 **Scope:**
-- صفحة تفاصيل تحويل
-- زر ترحيل للمسودات
-- زر حذف للمسودات
+- صفحة تفاصيل تحويل مع بنود وملخص
+- زر ترحيل للمسودات فقط (ConfirmDialog)
+- زر حذف للمسودات فقط (ConfirmDialog)
+- redirect من صفحة الإنشاء إلى التفاصيل
 **Forbidden:**
 - تعديل backend transfer logic
 **Acceptance Criteria:**
-- عرض تفاصيل التحويل
-- زر ترحيل للمسودات
-- زر حذف للمسودات
+- عرض تفاصيل التحويل + البنود + ملخص
+- زر ترحيل للمسودات فقط
+- زر حذف للمسودات فقط
+- refetch بعد post/delete
+- redirect آمن بعد create/delete
 **Required Checks:**
 - npm run lint
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
-- API_REGISTRY.md: UI Status = CONNECTED للـ endpoints
-- UI_BINDING_ROADMAP.md: إزالة المهمة
-**Commit Hash:**
+- API_REGISTRY.md: UI Status = CONNECTED للـ GET/POST/DELETE endpoints
+- UI_BINDING_ROADMAP.md: تحديث UI Binding 2.1
+**Commit Hash:
 
 ---
 

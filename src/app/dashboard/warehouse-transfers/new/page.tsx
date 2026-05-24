@@ -137,9 +137,9 @@ export default function StockTransferCreatePage() {
       if (!json.success) throw new Error(json.error || "فشل إنشاء التحويل");
       return json.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast("تم إنشاء التحويل بنجاح", "success");
-      router.push("/dashboard/warehouse-transfers");
+      router.push(`/dashboard/warehouse-transfers/${data.id}`);
     },
     onError: (err: Error) => {
       toast(err.message, "error");

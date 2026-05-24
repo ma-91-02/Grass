@@ -99,13 +99,14 @@
 **Endpoints المطلوب ربطها:**
 - `GET /api/stock-transfers` — قائمة التحويلات ❌
 - `POST /api/stock-transfers` — إنشاء تحويل ✅ (COMPLETED)
-- `GET /api/stock-transfers/{id}` — تفاصيل تحويل ❌
+- `GET /api/stock-transfers/{id}` — تفاصيل تحويل ✅ (COMPLETED)
 - `PATCH /api/stock-transfers/{id}` — تحديث تحويل ❌
-- `POST /api/stock-transfers/{id}/post` — ترحيل تحويل ❌
+- `POST /api/stock-transfers/{id}/post` — ترحيل تحويل ✅ (COMPLETED)
 
 **الصفحات المطلوبة:**
 - `/dashboard/warehouse-transfers/page.tsx` — قائمة ❌ (placeholder)
 - `/dashboard/warehouse-transfers/new/page.tsx` — إنشاء تحويل ✅ (COMPLETED)
+- `/dashboard/warehouse-transfers/[id]/page.tsx` — تفاصيل + ترحيل + حذف ✅ (COMPLETED)
 
 **Priority:** MEDIUM
 
