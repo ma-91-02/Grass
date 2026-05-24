@@ -50,12 +50,25 @@ export default function StockBalancesPage() {
   const [warehouseFilter, setWarehouseFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<StockStatus>("all");
   const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   useEffect(() => {
+    setIsLoadingAuth(true);
+    setAuthError(null);
     fetch("/api/auth/me")
       .then((r) => r.json())
-      .then((d) => setUserCompanyId(d.data?.companyId || null))
-      .catch(() => {});
+      .then((d) => {
+        const cid = d.data?.companyId || null;
+        if (!cid) {
+          setAuthError("لم يتم العثور على شركة مرتبطة بالمستخدم");
+        }
+        setUserCompanyId(cid);
+      })
+      .catch(() => {
+        setAuthError("تعذر تحميل بيانات الشركة");
+      })
+      .finally(() => setIsLoadingAuth(false));
   }, []);
 
   const {
@@ -194,7 +207,23 @@ export default function StockBalancesPage() {
         description="عرض الكميات والتكاليف لكل مادة في كل مخزن"
       />
 
-      {/* Summary Cards */}
+      {isLoadingAuth && (
+        <Card>
+          <CardContent className="flex items-center justify-center py-12">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </CardContent>
+        </Card>
+      )}
+
+      {authError && !isLoadingAuth && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-red-600">
+          {authError}
+        </div>
+      )}
+
+      {!isLoadingAuth && !authError && (
+        <>
+          {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="flex items-center gap-4 p-4">
@@ -311,6 +340,8 @@ export default function StockBalancesPage() {
         loading={isLoading}
         error={error instanceof Error ? error.message : null}
       />
+        </>
+      )}
     </div>
   );
 }
