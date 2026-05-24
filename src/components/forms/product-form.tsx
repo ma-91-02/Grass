@@ -98,6 +98,7 @@ export function ProductForm({
       piecesPerCarton: 0,
       purchasePrice: 0,
       purchaseCurrency: "IQD",
+      productType: "STOCK",
       prices: defaultPrices,
       ...defaultValues,
     },
@@ -233,6 +234,7 @@ export function ProductForm({
         <h3 className="mb-3 text-sm font-semibold text-dark border-b border-border pb-2">
           البيانات الأساسية
         </h3>
+        <input type="hidden" {...register("productType")} value="STOCK" />
         <div className="grid gap-4 sm:grid-cols-2">
           <Input
             label="اسم المادة"

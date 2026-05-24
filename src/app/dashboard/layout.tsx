@@ -47,7 +47,8 @@ export default function DashboardLayout({
 
   if (!user) return null;
 
-  const userRole = user.roles?.[0] || "مستخدم";
+  const userDisplayRole = (user as { displayRole?: string }).displayRole;
+  const userRole = userDisplayRole || user.roles?.[0] || "مستخدم";
 
   return (
     <div className="flex h-screen overflow-hidden bg-warm">
