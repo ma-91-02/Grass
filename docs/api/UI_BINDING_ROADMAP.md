@@ -93,6 +93,18 @@
 
 ---
 
+### ⏳ UI Binding 1.5 — Sales Returns Edit (PARTIAL)
+**Endpoints المطلوب ربطها:**
+- `PATCH /api/sales-returns/{id}` — تحديث مرتجع ❌ (Backend PATCH غير موجود — لم يُنفذ بعد)
+
+**الصفحات المطلوبة:**
+- `/dashboard/sales-returns/[id]/edit/page.tsx` ✅ (COMPLETED — لكن الحفظ سيفشل لأن PATCH غير موجود)
+
+**Priority:** MEDIUM
+**السبب:** الـ UI موجود (UI-022) لكن PATCH endpoint لم يُنفذ بعد. لا يمكن تعديل مسودة مرتجع بيع بدون backend.
+
+---
+
 ## Phase 2.0 — Operations (أسبوع 2)
 
 ### UI Binding 2.1 — Stock Transfers

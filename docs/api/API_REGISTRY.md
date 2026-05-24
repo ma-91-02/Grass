@@ -249,7 +249,7 @@
 | SalesReturns | GET | `/api/sales-returns/{id}` | تفاصيل مرتجع | DONE | CONNECTED | `/dashboard/sales-returns/[id]` | HIGH | 0 | — |
 | SalesReturns | POST | `/api/sales-returns/{id}/post` | ترحيل مرتجع | DONE | CONNECTED | `/dashboard/sales-returns/[id]` | HIGH | 0 | — |
 | SalesReturns | GET | `/api/sales-returns/{id}/print` | طباعة مرتجع | DONE | CONNECTED | `/dashboard/sales-returns/[id]` | HIGH | 0 | — |
-| SalesReturns | PATCH | `/api/sales-returns/{id}` | تحديث مرتجع | DONE | NO_UI | — | MEDIUM | 1.3 | لا يوجد edit page |
+| SalesReturns | PATCH | `/api/sales-returns/{id}` | تحديث مرتجع | PLANNED | PARTIAL | `/dashboard/sales-returns/[id]/edit` | MEDIUM | 1.3 | الصفحة موجودة (UI-022) لكن PATCH endpoint لم يُنفذ بعد — الحفظ سيؤدي إلى خطأ 405. ربط PARTIAL. |
 
 ---
 
@@ -364,8 +364,8 @@
 | Status | Count |
 |--------|-------|
 | CONNECTED | 65 |
-| PARTIAL | 30 |
-| NO_UI | 23 |
+| PARTIAL | 31 |
+| NO_UI | 22 |
 | BACKEND_ONLY | 10 |
 | UNKNOWN | 0 |
 | BROKEN | 0 |

@@ -983,7 +983,7 @@
 
 #### Task UI-022
 **Title:** Sales Return Edit UI  
-**Status:** `TODO`  
+**Status:** `PARTIAL`  
 **Priority:** MEDIUM  
 **Related APIs:**
 - `PATCH /api/sales-returns/{id}`
@@ -994,17 +994,18 @@
 **Forbidden:**
 - تعديل backend return logic
 **Acceptance Criteria:**
-- فتح صفحة تعديل للمسودة
-- تعديل البنود والكميات
-- حفظ التعديلات
+- فتح صفحة تعديل للمسودة ✅
+- تعديل البنود والكميات ✅ (واجهة جاهزة)
+- حفظ التعديلات ❌ (PATCH endpoint غير موجود — يرجع 405)
 **Required Checks:**
 - npm run lint
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
-- API_REGISTRY.md: UI Status = CONNECTED للـ PATCH endpoint
-- UI_BINDING_ROADMAP.md: إزالة المهمة
+- API_REGISTRY.md: UI Status = PARTIAL للـ PATCH endpoint
+- UI_BINDING_ROADMAP.md: إضافة UI Binding 1.5
 **Commit Hash:**
+**Notes:** PATCH /api/sales-returns/{id} غير موجود في backend. الصفحة تم إنشاؤها بالكامل لكن حفظ التعديلات سيفشل لأن API endpoint لم يُنفذ بعد. يجب إنشاء PATCH endpoint (مهمة backend منفصلة) لإكمال الربط. تم إضافة تحذير في الصفحة عند فشل الحفظ. لم يتم إضافة زر تعديل في صفحة التفاصيل (زر ميت) — سيبقى NO_UI حتى ينفذ PATCH. لا يوجد validation في السعر لأن PATCH لا يدعم تعديل unitPriceSnapshot. الكمية فقط قابلة للتعديل.
 
 ---
 
@@ -1257,6 +1258,7 @@
 | UI-019 | DONE | 88b2636 | 2026-05-24 |
 | UI-020 | DONE | 6c5dce4 | 2026-05-24 |
 | UI-021 | DONE | e91cc81 | 2026-05-24 |
+| UI-022 | PARTIAL | | 2026-05-24 |
 
 ---
 
