@@ -713,7 +713,7 @@
 
 #### Task UI-014
 **Title:** Stock Transfers Create UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** MEDIUM  
 **Related APIs:**
 - `POST /api/stock-transfers`
@@ -721,6 +721,7 @@
 - `GET /api/products`
 **Target UI Pages:**
 - `/dashboard/warehouse-transfers/new/page.tsx`
+- `/dashboard/warehouse-transfers/page.tsx` (زر "تحويل مخزن جديد")
 **Scope:**
 - إنشاء تحويل مخزن
 - اختيار مخزن مصدر ومخزن هدف ومادة وكمية
@@ -737,8 +738,8 @@
 - npm run build
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ POST endpoint
-- UI_BINDING_ROADMAP.md: إزالة المهمة
-**Commit Hash:**
+- UI_BINDING_ROADMAP.md: تحديث UI Binding 2.1
+**Commit Hash:
 
 ---
 

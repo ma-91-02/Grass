@@ -97,14 +97,15 @@
 
 ### UI Binding 2.1 — Stock Transfers
 **Endpoints المطلوب ربطها:**
-- `GET /api/stock-transfers` — قائمة التحويلات
-- `POST /api/stock-transfers` — إنشاء تحويل
-- `GET /api/stock-transfers/{id}` — تفاصيل تحويل
-- `PATCH /api/stock-transfers/{id}` — تحديث تحويل
-- `POST /api/stock-transfers/{id}/post` — ترحيل تحويل
+- `GET /api/stock-transfers` — قائمة التحويلات ❌
+- `POST /api/stock-transfers` — إنشاء تحويل ✅ (COMPLETED)
+- `GET /api/stock-transfers/{id}` — تفاصيل تحويل ❌
+- `PATCH /api/stock-transfers/{id}` — تحديث تحويل ❌
+- `POST /api/stock-transfers/{id}/post` — ترحيل تحويل ❌
 
 **الصفحات المطلوبة:**
-- `/dashboard/warehouse-transfers/page.tsx` — قائمة + create + detail + post
+- `/dashboard/warehouse-transfers/page.tsx` — قائمة ❌ (placeholder)
+- `/dashboard/warehouse-transfers/new/page.tsx` — إنشاء تحويل ✅ (COMPLETED)
 
 **Priority:** MEDIUM
 

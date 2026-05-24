@@ -177,7 +177,7 @@
 | Module | Method | Endpoint | Purpose | Backend Status | UI Status | UI Page | Priority | Phase | Notes |
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | StockTransfers | GET | `/api/stock-transfers` | قائمة تحويلات المخزن | DONE | NO_UI | — | MEDIUM | 2.1 | placeholder فقط |
-| StockTransfers | POST | `/api/stock-transfers` | إنشاء تحويل | DONE | NO_UI | — | MEDIUM | 2.1 | — |
+| StockTransfers | POST | `/api/stock-transfers` | إنشاء تحويل | DONE | CONNECTED | `/dashboard/warehouse-transfers/new` | MEDIUM | 2.1 | form إنشاء تحويل مخزن (مصدر/هدف/مادة/كمية) |
 | StockTransfers | GET | `/api/stock-transfers/{id}` | تفاصيل تحويل | DONE | NO_UI | — | MEDIUM | 2.1 | — |
 | StockTransfers | PATCH | `/api/stock-transfers/{id}` | تحديث تحويل | DONE | NO_UI | — | MEDIUM | 2.1 | — |
 | StockTransfers | DELETE | `/api/stock-transfers/{id}` | حذف تحويل | DONE | NO_UI | — | MEDIUM | 2.1 | — |
