@@ -977,7 +977,7 @@
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ endpoints الثلاثة
 - UI_BINDING_ROADMAP.md: تحديث UI Binding 4.2
-**Commit Hash:** `TO_BE_REPLACED`
+**Commit Hash:** `e91cc81`
 
 ---
 
@@ -1256,7 +1256,7 @@
 |---------|--------|-------------|------|
 | UI-019 | DONE | 88b2636 | 2026-05-24 |
 | UI-020 | DONE | 6c5dce4 | 2026-05-24 |
-| UI-021 | DONE | TO_BE_REPLACED | 2026-05-24 |
+| UI-021 | DONE | e91cc81 | 2026-05-24 |
 
 ---
 
