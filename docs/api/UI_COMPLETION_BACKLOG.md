@@ -681,30 +681,32 @@
 ---
 
 #### Task UI-013
-**Title:** Stock Transfers List UI  
-**Status:** `TODO`  
+**Title:** Stock Balances Filters & Detail Polish  
+**Status:** `DONE`  
 **Priority:** MEDIUM  
 **Related APIs:**
-- `GET /api/stock-transfers`
+- `GET /api/stock-balances`
 **Target UI Pages:**
-- `/dashboard/warehouse-transfers/page.tsx`
+- `/dashboard/stock-balances/page.tsx`
 **Scope:**
-- استبدال placeholder بقائمة حقيقية
-- عرض التحويلات بين المخازن
+- تحسين صفحة أرصدة المخزن
+- summary cards + فلاتر + badges + search
 **Forbidden:**
-- تعديل backend transfer logic
+- تعديل backend stock logic
 **Acceptance Criteria:**
-- عرض قائمة التحويلات
-- عرض المخزن المصدر والهدف
-- فلترة حسب الحالة
+- summary cards (مواد/كمية/نفاد/سالب)
+- فلاتر (مخزن + حالة مخزون + بحث)
+- badges حالة المخزون (متوفر/منخفض/نفاد/سالب)
+- row count indicator
+- clear filters button
 **Required Checks:**
 - npm run lint
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
-- API_REGISTRY.md: UI Status = CONNECTED للـ GET endpoint
-- UI_BINDING_ROADMAP.md: إزالة المهمة
-**Commit Hash:**
+- API_REGISTRY.md: تحديث Notes للـ GET endpoint
+- UI_BINDING_ROADMAP.md: تحديث
+**Commit Hash:
 
 ---
 

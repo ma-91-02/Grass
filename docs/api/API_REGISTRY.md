@@ -202,7 +202,7 @@
 
 | Module | Method | Endpoint | Purpose | Backend Status | UI Status | UI Page | Priority | Phase | Notes |
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
-| StockBalances | GET | `/api/stock-balances` | أرصدة المخزن | DONE | CONNECTED | `/dashboard/stock-balances` | HIGH | 0 | — |
+| StockBalances | GET | `/api/stock-balances` | أرصدة المخزن | DONE | CONNECTED | `/dashboard/stock-balances` | HIGH | 0 | summary cards + filters + stock status badges + search |
 
 ---
 
