@@ -782,7 +782,7 @@
 
 #### Task UI-016
 **Title:** Stock Adjustments List UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** MEDIUM  
 **Related APIs:**
 - `GET /api/stock-adjustments`
@@ -790,18 +790,22 @@
 - `/dashboard/stock-adjustments/page.tsx`
 **Scope:**
 - قائمة تسويات المخزن
+- فلترة + بحث + badges
 **Forbidden:**
 - تعديل backend adjustment logic
 **Acceptance Criteria:**
 - عرض قائمة التسويات
-- فلترة حسب المخزن
+- فلترة حسب المخزن والحالة
+- بحث برقم التسوية أو المخزن
+- row count indicator
+- لا أزرار تؤدي إلى 404
 **Required Checks:**
 - npm run lint
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ GET endpoint
-- UI_BINDING_ROADMAP.md: إزالة المهمة
+- UI_BINDING_ROADMAP.md: تحديث UI Binding 2.2
 **Commit Hash:**
 
 ---

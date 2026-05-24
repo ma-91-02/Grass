@@ -189,7 +189,7 @@
 
 | Module | Method | Endpoint | Purpose | Backend Status | UI Status | UI Page | Priority | Phase | Notes |
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
-| StockAdjustments | GET | `/api/stock-adjustments` | قائمة تسويات المخزن | DONE | NO_UI | — | MEDIUM | 2.2 | — |
+| StockAdjustments | GET | `/api/stock-adjustments` | قائمة تسويات المخزن | DONE | CONNECTED | `/dashboard/stock-adjustments` | MEDIUM | 2.2 | قائمة مع فلترة + بحث + badges |
 | StockAdjustments | POST | `/api/stock-adjustments` | إنشاء تسوية | DONE | NO_UI | — | MEDIUM | 2.2 | — |
 | StockAdjustments | GET | `/api/stock-adjustments/{id}` | تفاصيل تسوية | DONE | NO_UI | — | MEDIUM | 2.2 | — |
 | StockAdjustments | PATCH | `/api/stock-adjustments/{id}` | تحديث تسوية | DONE | NO_UI | — | MEDIUM | 2.2 | — |
