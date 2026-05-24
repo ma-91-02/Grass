@@ -126,6 +126,7 @@
 - `/dashboard/stock-movements/new/page.tsx` — إنشاء تسوية ✅ (COMPLETED)
 - `/dashboard/stock-adjustments/page.tsx` — قائمة ✅ (COMPLETED)
 - `/dashboard/stock-adjustments/new/page.tsx` — إنشاء تسوية ✅ (COMPLETED)
+- `/dashboard/stock-adjustments/[id]/page.tsx` — تفاصيل + ترحيل + حذف ✅ (COMPLETED)
 
 **Priority:** MEDIUM
 

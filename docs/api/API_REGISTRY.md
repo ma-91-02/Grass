@@ -191,10 +191,10 @@
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | StockAdjustments | GET | `/api/stock-adjustments` | قائمة تسويات المخزن | DONE | CONNECTED | `/dashboard/stock-adjustments` | MEDIUM | 2.2 | قائمة مع فلترة + بحث + badges |
 | StockAdjustments | POST | `/api/stock-adjustments` | إنشاء تسوية | DONE | CONNECTED | `/dashboard/stock-adjustments/new` | MEDIUM | 2.2 | form إنشاء تسوية مع بنود متعددة |
-| StockAdjustments | GET | `/api/stock-adjustments/{id}` | تفاصيل تسوية | DONE | NO_UI | — | MEDIUM | 2.2 | — |
+| StockAdjustments | GET | `/api/stock-adjustments/{id}` | تفاصيل تسوية | DONE | CONNECTED | `/dashboard/stock-adjustments/[id]` | MEDIUM | 2.2 | عرض معلومات + بنود + ملخص |
 | StockAdjustments | PATCH | `/api/stock-adjustments/{id}` | تحديث تسوية | DONE | NO_UI | — | MEDIUM | 2.2 | — |
-| StockAdjustments | DELETE | `/api/stock-adjustments/{id}` | حذف تسوية | DONE | NO_UI | — | MEDIUM | 2.2 | — |
-| StockAdjustments | POST | `/api/stock-adjustments/{id}/post` | ترحيل تسوية | DONE | NO_UI | — | MEDIUM | 2.2 | — |
+| StockAdjustments | DELETE | `/api/stock-adjustments/{id}` | حذف تسوية | DONE | CONNECTED | `/dashboard/stock-adjustments/[id]` | MEDIUM | 2.2 | ConfirmDialog + فقط للمسودات |
+| StockAdjustments | POST | `/api/stock-adjustments/{id}/post` | ترحيل تسوية | DONE | CONNECTED | `/dashboard/stock-adjustments/[id]` | MEDIUM | 2.2 | ConfirmDialog + فقط للمسودات |
 
 ---
 

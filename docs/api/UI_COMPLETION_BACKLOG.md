@@ -847,7 +847,7 @@
 
 #### Task UI-018
 **Title:** Stock Adjustments Detail/Post UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** MEDIUM  
 **Related APIs:**
 - `GET /api/stock-adjustments/{id}`
@@ -855,21 +855,28 @@
 - `DELETE /api/stock-adjustments/{id}`
 **Target UI Pages:**
 - `/dashboard/stock-adjustments/[id]/page.tsx`
+- `/dashboard/stock-adjustments/new/page.tsx` (redirect إلى detail)
+- `/dashboard/stock-adjustments/page.tsx` (زر عرض تفاصيل)
 **Scope:**
-- تفاصيل + ترحيل + حذف
+- صفحة تفاصيل تسوية مع بنود وملخص
+- زر ترحيل للمسودات فقط (ConfirmDialog)
+- زر حذف للمسودات فقط (ConfirmDialog)
+- redirect آمن من الإنشاء إلى التفاصيل
 **Forbidden:**
 - تعديل backend adjustment logic
 **Acceptance Criteria:**
-- عرض التفاصيل
-- زر ترحيل للمسودات
-- زر حذف للمسودات
+- عرض التفاصيل + البنود + ملخص
+- زر ترحيل للمسودات فقط
+- زر حذف للمسودات فقط
+- refetch بعد post/delete
+- زر عرض تفاصيل في القائمة
 **Required Checks:**
 - npm run lint
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
-- API_REGISTRY.md: UI Status = CONNECTED للـ endpoints
-- UI_BINDING_ROADMAP.md: إزالة المهمة
+- API_REGISTRY.md: UI Status = CONNECTED للـ GET/POST/DELETE endpoints
+- UI_BINDING_ROADMAP.md: تحديث UI Binding 2.2
 **Commit Hash:**
 
 ---

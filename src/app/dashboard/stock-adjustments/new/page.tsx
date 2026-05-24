@@ -149,9 +149,9 @@ export default function StockAdjustmentCreatePage() {
         throw new Error(json.error || "فشل إنشاء التسوية");
       return json.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast("تم إنشاء التسوية بنجاح", "success");
-      router.push("/dashboard/stock-adjustments");
+      router.push(`/dashboard/stock-adjustments/${data.id}`);
     },
     onError: (err: Error) => {
       toast(err.message, "error");

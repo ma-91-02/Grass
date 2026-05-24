@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Search } from "lucide-react";
+import { Search, Eye } from "lucide-react";
 
 interface StockAdjustment {
   id: string;
@@ -260,6 +260,14 @@ export default function StockAdjustmentsPage() {
             data={filtered}
             loading={isLoading}
             error={error instanceof Error ? error.message : null}
+            extraActions={[
+              {
+                label: "عرض التفاصيل",
+                onClick: (a) =>
+                  router.push(`/dashboard/stock-adjustments/${a.id}`),
+                icon: <Eye className="h-4 w-4" />,
+              },
+            ]}
           />
         </>
       )}
