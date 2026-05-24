@@ -706,7 +706,8 @@
 **Documentation Updates:**
 - API_REGISTRY.md: تحديث Notes للـ GET endpoint
 - UI_BINDING_ROADMAP.md: تحديث
-**Commit Hash:
+**Commit Hash:** `49c5fb4`
+**Date:** 2026-05-18
 
 ---
 
