@@ -202,17 +202,20 @@
 
 ---
 
-### UI Binding 4.2 — Users & Roles Detail
+### ✅ UI Binding 4.2 — User Detail (مكتمل)
 **Endpoints المطلوب ربطها:**
-- `GET /api/users/{id}` — تفاصيل مستخدم
-- `DELETE /api/users/{id}` — حذف مستخدم
-- `GET /api/permissions` — قائمة الصلاحيات (لـ roles editor)
+- `GET /api/users/{id}` — تفاصيل مستخدم ✅ (COMPLETED)
+- `PATCH /api/users/{id}` — تعديل roles + isActive ✅ (COMPLETED)
+- `DELETE /api/users/{id}` — حذف مستخدم ✅ (COMPLETED — مع حماية self-deletion وآخر System Admin)
 
 **الصفحات المطلوبة:**
-- `/dashboard/users/[id]/page.tsx` — تفاصيل مستخدم
-- `/dashboard/roles/[id]/page.tsx` — تفاصيل دور مع صلاحيات
+- `/dashboard/users/[id]/page.tsx` — تفاصيل مستخدم ✅ (COMPLETED — info + roles edit + toggle + delete)
+
+**الباقي (لم يُنفذ):**
+- `/dashboard/roles/[id]/page.tsx` — تفاصيل دور مع صلاحيات (لم يُنفذ بعد)
 
 **Priority:** LOW
+**تاريخ الإنجاز:** 2026-05-24
 
 ---
 
@@ -263,8 +266,9 @@
 ### 🟢 Low (إداري / مستقبلي)
 12. Companies & Branches
 13. Inventory Valuation & Audit
-14. Detail pages بقية الوحدات
-15. Roles & Permissions Editor
+14. ✅ User Detail (مكتمل)
+15. Detail pages بقية الوحدات
+16. Roles & Permissions Editor
 
 ---
 

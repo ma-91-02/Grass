@@ -947,33 +947,37 @@
 
 #### Task UI-021
 **Title:** User Detail/Edit UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** MEDIUM  
 **Related APIs:**
 - `GET /api/users/{id}`
 - `PATCH /api/users/{id}`
 - `DELETE /api/users/{id}`
+- `GET /api/roles`
 **Target UI Pages:**
 - `/dashboard/users/[id]/page.tsx`
 **Scope:**
 - صفحة تفاصيل مستخدم
-- تعديل الصلاحيات والأدوار
+- تعديل الأدوار
+- تعديل الحالة تفعيل/تعطيل
 - حذف مستخدم
 **Forbidden:**
 - تعديل backend user logic
 **Acceptance Criteria:**
-- عرض تفاصيل المستخدم
-- تعديل الأدوار
-- تعديل الحالة (تفعيل/تعطيل)
-- حذف مستخدم
+- عرض تفاصيل المستخدم ✅
+- تعديل الأدوار ✅ (عبر dialog مع checkboxes لكل role)
+- تعديل الحالة ✅ (تفعيل/تعطيل مع ConfirmDialog)
+- حذف مستخدم ✅ (مع ConfirmDialog + return to list)
+- حماية self-deletion ✅ (API يمنع + UI يعطل الزر مع tooltip)
+- حماية آخر System Admin ✅ (API يمنع)
 **Required Checks:**
 - npm run lint
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
-- API_REGISTRY.md: UI Status = CONNECTED للـ endpoints
-- UI_BINDING_ROADMAP.md: إزالة المهمة
-**Commit Hash:**
+- API_REGISTRY.md: UI Status = CONNECTED للـ endpoints الثلاثة
+- UI_BINDING_ROADMAP.md: تحديث UI Binding 4.2
+**Commit Hash:** `TO_BE_REPLACED`
 
 ---
 
@@ -1252,6 +1256,7 @@
 |---------|--------|-------------|------|
 | UI-019 | DONE | 88b2636 | 2026-05-24 |
 | UI-020 | DONE | 6c5dce4 | 2026-05-24 |
+| UI-021 | DONE | TO_BE_REPLACED | 2026-05-24 |
 
 ---
 

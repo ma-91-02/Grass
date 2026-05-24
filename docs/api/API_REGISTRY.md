@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-24 (UI-019)
+> آخر تحديث: 2026-05-24 (UI-021)
 
 ---
 
@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 128 |
-| CONNECTED | 62 |
-| PARTIAL | 31 |
-| NO_UI | 25 |
+| CONNECTED | 65 |
+| PARTIAL | 30 |
+| NO_UI | 23 |
 | BACKEND_ONLY | 10 |
 
 ---
@@ -34,9 +34,11 @@
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | Users | GET | `/api/users` | قائمة المستخدمين | DONE | CONNECTED | `/dashboard/users` | CRITICAL | 1.1 | — |
 | Users | POST | `/api/users` | إنشاء مستخدم | DONE | CONNECTED | `/dashboard/users/new` | CRITICAL | 1.1 | — |
-| Users | GET | `/api/users/{id}` | تفاصيل مستخدم | DONE | NO_UI | — | LOW | 4.2 | لا يوجد detail page |
-| Users | PATCH | `/api/users/{id}` | تحديث مستخدم | DONE | PARTIAL | `/dashboard/users` | CRITICAL | 1.1 | toggle فقط، لا يوجد edit page كامل |
-| Users | DELETE | `/api/users/{id}` | حذف مستخدم | DONE | NO_UI | — | LOW | 4.2 | لا يوجد زر حذف |
+| Users | GET | `/api/users/{id}` | تفاصيل مستخدم | DONE | CONNECTED | `/dashboard/users/[id]` | LOW | 4.2 | Detail page مع roles + edit + toggle + delete |
+
+| Users | PATCH | `/api/users/{id}` | تحديث مستخدم | DONE | CONNECTED | `/dashboard/users/[id]` | CRITICAL | 1.1 | Detail page مع تحديث roles و isActive |
+
+| Users | DELETE | `/api/users/{id}` | حذف مستخدم | DONE | CONNECTED | `/dashboard/users/[id]` | LOW | 4.2 | Detail page مع زر حذف + ConfirmDialog |
 
 ---
 

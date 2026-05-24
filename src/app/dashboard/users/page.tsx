@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
 
@@ -152,22 +152,31 @@ export default function UsersPage() {
                       {new Date(user.createdAt).toLocaleDateString("ar-IQ")}
                     </td>
                     <td className="p-4 text-center">
-                      <button
-                        onClick={() =>
-                          toggleMutation.mutate({
-                            id: user.id,
-                            isActive: !user.isActive,
-                          })
-                        }
-                        className={`rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
-                          user.isActive
-                            ? "text-red-600 hover:bg-red-50"
-                            : "text-green-600 hover:bg-green-50"
-                        }`}
-                        disabled={toggleMutation.isPending}
-                      >
-                        {user.isActive ? "تعطيل" : "تفعيل"}
-                      </button>
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => router.push(`/dashboard/users/${user.id}`)}
+                          className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-blue-600"
+                          title="عرض"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() =>
+                            toggleMutation.mutate({
+                              id: user.id,
+                              isActive: !user.isActive,
+                            })
+                          }
+                          className={`rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
+                            user.isActive
+                              ? "text-red-600 hover:bg-red-50"
+                              : "text-green-600 hover:bg-green-50"
+                          }`}
+                          disabled={toggleMutation.isPending}
+                        >
+                          {user.isActive ? "تعطيل" : "تفعيل"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
