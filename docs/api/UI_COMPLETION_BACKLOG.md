@@ -941,7 +941,7 @@
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ GET endpoint
 - UI_BINDING_ROADMAP.md: إزالة المهمة
-**Commit Hash:** `TO_BE_REPLACED`**
+**Commit Hash:** `6c5dce4`**
 
 ---
 
@@ -1251,7 +1251,7 @@
 | Task ID | Status | Commit Hash | Date |
 |---------|--------|-------------|------|
 | UI-019 | DONE | 88b2636 | 2026-05-24 |
-| UI-020 | DONE | TO_BE_REPLACED | 2026-05-24 |
+| UI-020 | DONE | 6c5dce4 | 2026-05-24 |
 
 ---
 
