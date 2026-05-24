@@ -75,7 +75,7 @@ export default function UnitsPage() {
       .finally(() => setIsLoadingAuth(false));
   }, []);
 
-  const { data: units = [], isLoading } = useQuery({
+  const { data: units = [], isLoading, error } = useQuery({
     queryKey: ["units", userCompanyId],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -283,7 +283,7 @@ export default function UnitsPage() {
         columns={columns}
         data={filtered}
         loading={isLoading}
-        error={null}
+        error={error instanceof Error ? error.message : null}
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="بحث بالاسم أو الكود..."
