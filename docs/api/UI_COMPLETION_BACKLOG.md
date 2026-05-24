@@ -910,7 +910,7 @@
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ endpoints
 - UI_BINDING_ROADMAP.md: إزالة المهمة
-**Commit Hash:** `pending`
+**Commit Hash:** `88b2636`
 
 ---
 
@@ -1248,7 +1248,7 @@
 
 | Task ID | Status | Commit Hash | Date |
 |---------|--------|-------------|------|
-| UI-019 | DONE | pending | 2026-05-24 |
+| UI-019 | DONE | 88b2636 | 2026-05-24 |
 
 ---
 
