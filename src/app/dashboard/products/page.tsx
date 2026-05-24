@@ -105,7 +105,9 @@ export default function ProductsPage() {
   const { data: categories = [] } = useQuery({
     queryKey: ["categories", userCompanyId],
     queryFn: async () => {
-      const res = await fetch("/api/categories");
+      const params = new URLSearchParams();
+      if (userCompanyId) params.append("companyId", userCompanyId);
+      const res = await fetch(`/api/categories?${params.toString()}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل تحميل المجموعات");
       return json.data as Category[];
@@ -113,10 +115,12 @@ export default function ProductsPage() {
     enabled: !!userCompanyId,
   });
 
-  const { data: units = [], isLoading: unitsLoading } = useQuery({
+  const { data: units = [] } = useQuery({
     queryKey: ["units", userCompanyId],
     queryFn: async () => {
-      const res = await fetch("/api/units");
+      const params = new URLSearchParams();
+      if (userCompanyId) params.append("companyId", userCompanyId);
+      const res = await fetch(`/api/units?${params.toString()}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل تحميل الوحدات");
       return json.data as { id: string; name: string }[];
@@ -318,8 +322,8 @@ export default function ProductsPage() {
       <PageHeader
         title="المواد"
         description="إدارة المواد والمنتجات"
-        actionLabel={canCreate && !(units.length === 0 && !unitsLoading) ? "مادة جديدة" : undefined}
-        onAction={canCreate && !(units.length === 0 && !unitsLoading) ? openAdd : undefined}
+        actionLabel={canCreate ? "مادة جديدة" : undefined}
+        onAction={canCreate ? openAdd : undefined}
       />
 
       <DataTable
