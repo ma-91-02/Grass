@@ -89,6 +89,7 @@ export function ProductForm({
       productFormSchema,
     ) as unknown as import("react-hook-form").Resolver<ProductFormData>,
     defaultValues: {
+      companyId,
       name: "",
       code: "",
       barcode: "",
@@ -99,7 +100,7 @@ export function ProductForm({
       purchasePrice: 0,
       purchaseCurrency: "IQD",
       productType: "STOCK",
-      prices: defaultPrices,
+      prices: canEditPrices ? defaultPrices : [],
       ...defaultValues,
     },
   });
@@ -135,20 +136,39 @@ export function ProductForm({
       const converted: ProductFormData = {
         ...data,
         code: parseNumericInput(data.code),
+        productType: data.productType || "STOCK",
         purchasePrice: Number(
           parseNumericInput(String(data.purchasePrice ?? 0)),
         ),
         piecesPerCarton: Number(
           parseNumericInput(String(data.piecesPerCarton ?? 0)),
         ),
-        prices: data.prices?.map((p) => ({
-          ...p,
-          price: Number(parseNumericInput(String(p.price ?? 0))),
-        })),
+        prices: canEditPrices
+          ? data.prices?.map((p) => ({
+              ...p,
+              price: Number(parseNumericInput(String(p.price ?? 0))),
+            }))
+          : [],
       };
+      if (!canViewPurchasePrice) {
+        delete (converted as Record<string, unknown>).purchasePrice;
+        delete (converted as Record<string, unknown>).purchaseCurrency;
+      }
       await onSubmit(converted);
     },
-    [onSubmit],
+    [onSubmit, canEditPrices, canViewPurchasePrice],
+  );
+
+  const handleFormInvalid = useCallback(
+    (formErrors: Record<string, { message?: string }>) => {
+      const firstKey = Object.keys(formErrors)[0];
+      if (firstKey && formErrors[firstKey]?.message) {
+        toast(formErrors[firstKey].message!, "error");
+      } else {
+        toast("تعذر حفظ المادة. تحقق من الحقول المطلوبة.", "error");
+      }
+    },
+    [toast],
   );
 
   async function handleAddCategory() {
@@ -172,7 +192,7 @@ export function ProductForm({
       const newCat = json.data as Category;
       const updated = [...categories, newCat];
       onCategoriesChange?.(updated);
-      setValue("categoryId", newCat.id);
+      setValue("categoryId", newCat.id, { shouldValidate: true });
       setNewCategoryName("");
       setAddingCategory(false);
       toast("تم إنشاء المجموعة بنجاح", "success");
@@ -228,13 +248,20 @@ export function ProductForm({
   }
 
   return (
-    <form id="product-form" onSubmit={handleSubmit(handleFormSubmit)}>
+    <form id="product-form" onSubmit={handleSubmit(handleFormSubmit, handleFormInvalid)}>
       {/* القسم 1: البيانات الأساسية */}
       <div className="mb-6">
         <h3 className="mb-3 text-sm font-semibold text-dark border-b border-border pb-2">
           البيانات الأساسية
         </h3>
-        <input type="hidden" {...register("productType")} value="STOCK" />
+        {!companyId ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center text-red-600">
+            بيانات الشركة غير متوفرة، لا يمكن حفظ المادة.
+          </div>
+        ) : (
+          <><input type="hidden" {...register("companyId")} value={companyId} />
+        <input type="hidden" {...register("productType")} value="STOCK" /></>
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <Input
             label="اسم المادة"
