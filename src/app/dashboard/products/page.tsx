@@ -55,15 +55,27 @@ export default function ProductsPage() {
   const [toggleItem, setToggleItem] = useState<Product | null>(null);
   const [user, setUser] = useState<TokenPayload | null>(null);
   const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
+    setIsLoadingAuth(true);
+    setAuthError(null);
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => {
+        if (!d.success) throw new Error(d.error || "فشل تحميل بيانات الجلسة");
         setUser(d.data);
-        setUserCompanyId(d.data?.companyId || null);
+        if (!d.data?.companyId)
+          throw new Error("لم يتم العثور على شركة مرتبطة بالمستخدم");
+        setUserCompanyId(d.data.companyId);
       })
-      .catch(() => {});
+      .catch((err) => {
+        setAuthError(
+          err instanceof Error ? err.message : "تعذر تحميل بيانات الشركة",
+        );
+      })
+      .finally(() => setIsLoadingAuth(false));
   }, []);
 
   const userPermissions = user?.permissions || [];
@@ -91,22 +103,25 @@ export default function ProductsPage() {
   });
 
   const { data: categories = [] } = useQuery({
-    queryKey: ["categories"],
+    queryKey: ["categories", userCompanyId],
     queryFn: async () => {
       const res = await fetch("/api/categories");
       const json = await res.json();
+      if (!json.success) throw new Error(json.error || "فشل تحميل المجموعات");
       return json.data as Category[];
     },
+    enabled: !!userCompanyId,
   });
 
-  const { data: units = [] } = useQuery({
-    queryKey: ["units"],
+  const { data: units = [], isLoading: unitsLoading } = useQuery({
+    queryKey: ["units", userCompanyId],
     queryFn: async () => {
       const res = await fetch("/api/units");
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "فشل تحميل الوحدات");
       return json.data as { id: string; name: string }[];
     },
+    enabled: !!userCompanyId,
   });
 
   const filtered = products.filter(
@@ -282,13 +297,29 @@ export default function ProductsPage() {
     },
   ];
 
+  if (isLoadingAuth) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (authError) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+        <p className="font-medium text-red-600">{authError}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="المواد"
         description="إدارة المواد والمنتجات"
-        actionLabel={canCreate ? "مادة جديدة" : undefined}
-        onAction={canCreate ? openAdd : undefined}
+        actionLabel={canCreate && !(units.length === 0 && !unitsLoading) ? "مادة جديدة" : undefined}
+        onAction={canCreate && !(units.length === 0 && !unitsLoading) ? openAdd : undefined}
       />
 
       <DataTable
@@ -394,7 +425,7 @@ export default function ProductsPage() {
           units={units}
           companyId={userCompanyId || ""}
           onCategoriesChange={(updated) => {
-            qc.setQueryData(["categories"], updated);
+            qc.setQueryData(["categories", userCompanyId], updated);
           }}
           userPermissions={userPermissions}
         />

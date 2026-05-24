@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-18
+> آخر تحديث: 2026-05-24
 
 ---
 
@@ -116,9 +116,9 @@
 | Module | Method | Endpoint | Purpose | Backend Status | UI Status | UI Page | Priority | Phase | Notes |
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | Products | GET | `/api/products` | قائمة المواد | DONE | CONNECTED | `/dashboard/products` | CRITICAL | 0 | — |
-| Products | POST | `/api/products` | إنشاء مادة | DONE | CONNECTED | `/dashboard/products` | CRITICAL | 0 | تم إصلاح companyId و unitId |
+| Products | POST | `/api/products` | إنشاء مادة | DONE | CONNECTED | `/dashboard/products` | CRITICAL | 0 | تم إصلاح companyId و unitId; تم إصلاح تحميل الوحدات والمجموعات company-scoped |
 | Products | GET | `/api/products/{id}` | تفاصيل مادة | DONE | NO_UI | — | MEDIUM | 2.0 | لا يوجد detail page |
-| Products | PATCH | `/api/products/{id}` | تحديث مادة | DONE | CONNECTED | `/dashboard/products` | CRITICAL | 0 | تم إصلاح companyId و unitId |
+| Products | PATCH | `/api/products/{id}` | تحديث مادة | DONE | CONNECTED | `/dashboard/products` | CRITICAL | 0 | تم إصلاح companyId و unitId; تم إصلاح تحميل الوحدات والمجموعات company-scoped |
 | Products | DELETE | `/api/products/{id}` | حذف مادة | DONE | CONNECTED | `/dashboard/products` | CRITICAL | 0 | — |
 
 ---
@@ -127,8 +127,8 @@
 
 | Module | Method | Endpoint | Purpose | Backend Status | UI Status | UI Page | Priority | Phase | Notes |
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
-| ProductCategories | GET | `/api/categories` | قائمة تصنيفات المواد | DONE | CONNECTED | `/dashboard/categories`, `/dashboard/products` | HIGH | 0 | — |
-| ProductCategories | POST | `/api/categories` | إنشاء تصنيف | DONE | CONNECTED | `/components/forms/product-form.tsx` (inline) | HIGH | 0 | — |
+| ProductCategories | GET | `/api/categories` | قائمة تصنيفات المواد | DONE | CONNECTED | `/dashboard/categories`, `/dashboard/products` | HIGH | 0 | تم إصلاح cache key مع companyId scope |
+| ProductCategories | POST | `/api/categories` | إنشاء تصنيف | DONE | CONNECTED | `/components/forms/product-form.tsx` (inline) | HIGH | 0 | تم إصلاح persistence مع cache invalidation والتحقق من companyId |
 | ProductCategories | GET | `/api/categories/{id}` | تفاصيل تصنيف | DONE | NO_UI | — | LOW | 4.4 | — |
 | ProductCategories | PATCH | `/api/categories/{id}` | تحديث تصنيف | DONE | CONNECTED | `/dashboard/categories` | HIGH | 0 | — |
 | ProductCategories | DELETE | `/api/categories/{id}` | حذف تصنيف | DONE | CONNECTED | `/components/forms/product-form.tsx` (inline) | HIGH | 0 | — |
@@ -139,7 +139,7 @@
 
 | Module | Method | Endpoint | Purpose | Backend Status | UI Status | UI Page | Priority | Phase | Notes |
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
-| Units | GET | `/api/units` | قائمة وحدات القياس | DONE | PARTIAL | `/dashboard/products` (dropdown) | MEDIUM | 2.3 | لا يوجد صفحة إدارة وحدات |
+| Units | GET | `/api/units` | قائمة وحدات القياس | DONE | PARTIAL | `/dashboard/products` (dropdown) | MEDIUM | 2.3 | لا يوجد صفحة إدارة وحدات; تم إصلاح تحميل الوحدات مع companyId scope |
 | Units | POST | `/api/units` | إنشاء وحدة | DONE | NO_UI | — | MEDIUM | 2.3 | — |
 | Units | GET | `/api/units/{id}` | تفاصيل وحدة | DONE | NO_UI | — | MEDIUM | 2.3 | — |
 | Units | PATCH | `/api/units/{id}` | تحديث وحدة | DONE | NO_UI | — | MEDIUM | 2.3 | — |

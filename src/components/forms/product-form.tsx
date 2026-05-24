@@ -155,6 +155,10 @@ export function ProductForm({
       toast("الرجاء إدخال اسم المجموعة", "error");
       return;
     }
+    if (!companyId) {
+      toast("بيانات الشركة غير متوفرة", "error");
+      return;
+    }
     setAddingCategoryLoading(true);
     try {
       const res = await fetch("/api/categories", {
@@ -249,17 +253,23 @@ export function ProductForm({
             {...register("barcode")}
             dir="ltr"
           />
-          <Select
-            label="الوحدة"
-            options={units.map((u) => ({
-              value: u.id,
-              label: u.name,
-            }))}
-            placeholder="اختر الوحدة"
-            error={errors.unitId?.message}
-            {...register("unitId")}
-            required
-          />
+          {units.length === 0 ? (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-center text-sm text-amber-700">
+              لا توجد وحدات قياس. أضف وحدة أولًا من صفحة الوحدات.
+            </div>
+          ) : (
+            <Select
+              label="الوحدة"
+              options={units.map((u) => ({
+                value: u.id,
+                label: u.name,
+              }))}
+              placeholder="اختر الوحدة"
+              error={errors.unitId?.message}
+              {...register("unitId")}
+              required
+            />
+          )}
           <div className="space-y-1 sm:col-span-2">
             <div className="flex items-end gap-2">
               <div className="flex-1">
