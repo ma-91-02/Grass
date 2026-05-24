@@ -2,8 +2,9 @@
 set -euo pipefail
 
 BASE_URL="${1:-http://localhost:3000}"
-EMAIL="${2:-admin@grass.com}"
-PASSWORD="${3:-admin123}"
+EMAIL="${2:-}"
+PASSWORD="${3:-}"
+[ -z "$EMAIL" ] && { echo "Usage: $0 [base_url] <email> <password>"; exit 1; }
 
 # ---- helpers ----
 green() { printf "\033[32m✓ %s\033[0m\n" "$1"; }

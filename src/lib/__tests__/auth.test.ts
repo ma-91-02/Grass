@@ -39,7 +39,7 @@ describe("hashPassword and verifyPassword", () => {
 describe("loginSchema", () => {
   it("accepts valid login input", () => {
     const result = loginSchema.safeParse({
-      email: "admin@grass.com",
+      email: "user@example.com",
       password: "password123",
     });
     expect(result.success).toBe(true);
@@ -62,7 +62,7 @@ describe("loginSchema", () => {
 
   it("rejects missing password", () => {
     const result = loginSchema.safeParse({
-      email: "admin@grass.com",
+      email: "user@example.com",
     });
     expect(result.success).toBe(false);
   });
@@ -77,7 +77,7 @@ describe("loginSchema", () => {
 
   it("rejects empty password", () => {
     const result = loginSchema.safeParse({
-      email: "admin@grass.com",
+      email: "user@example.com",
       password: "",
     });
     expect(result.success).toBe(false);
@@ -183,21 +183,22 @@ describe("checkRateLimit", () => {
   });
 });
 
-describe("authenticateUser with valid admin credentials", () => {
-  it("verifies password against seed hash", async () => {
-    const hash = await hashPassword("admin123");
-    const valid = await verifyPassword("admin123", hash);
+describe("password hashing", () => {
+  it("verifies password against its hash", async () => {
+    const password = "TestPass123!";
+    const hash = await hashPassword(password);
+    const valid = await verifyPassword(password, hash);
     expect(valid).toBe(true);
   });
 
-  it("rejects wrong password for admin", async () => {
-    const hash = await hashPassword("admin123");
+  it("rejects wrong password", async () => {
+    const hash = await hashPassword("correct-password");
     const valid = await verifyPassword("wrongpass", hash);
     expect(valid).toBe(false);
   });
 
   it("handles empty password", async () => {
-    const hash = await hashPassword("admin123");
+    const hash = await hashPassword("some-password");
     const valid = await verifyPassword("", hash);
     expect(valid).toBe(false);
   });
@@ -209,14 +210,14 @@ describe("login success response shape", () => {
       user: {
         id: "test-id",
         name: "مدير النظام",
-        email: "admin@grass.com",
+        email: "admin@example.com",
         roles: ["مدير النظام"],
       },
       token: "test-token",
     });
     const body = await res.json();
     expect(body.success).toBe(true);
-    expect(body.data.user.email).toBe("admin@grass.com");
+    expect(body.data.user.email).toBe("admin@example.com");
     expect(body.data.user.roles).toContain("مدير النظام");
     expect(body.data.token).toBeTruthy();
   });

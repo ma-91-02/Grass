@@ -2,8 +2,9 @@
 set -euo pipefail
 
 BASE_URL="${1:-http://localhost:3000}"
-EMAIL="${2:-admin@grass.com}"
-PASSWORD="${3:-admin123}"
+EMAIL="${2:-}"
+PASSWORD="${3:-}"
+[ -z "$EMAIL" ] && { echo "Usage: $0 [base_url] <email> <password>"; exit 1; }
 PASS=0
 FAIL=0
 COMPANY_ID=""

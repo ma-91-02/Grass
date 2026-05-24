@@ -2,8 +2,9 @@
 set -euo pipefail
 
 BASE_URL="${1:-http://localhost:3000}"
-EMAIL="${2:-admin@grass.com}"
-PASSWORD="${3:-admin123}"
+EMAIL="${2:-}"
+PASSWORD="${3:-}"
+[ -z "$EMAIL" ] && { echo "Usage: $0 [base_url] <email> <password>"; exit 1; }
 PASS=0
 FAIL=0
 
@@ -44,7 +45,7 @@ fi
 echo "--- BAD LOGIN ---"
 BAD_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE_URL/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@grass.com","password":"wrong"}')
+  -d '{"email":"nonexistent@test.com","password":"wrong"}')
 if [ "$BAD_CODE" = "401" ]; then
   green "Bad password -> 401"
   PASS=$((PASS+1))

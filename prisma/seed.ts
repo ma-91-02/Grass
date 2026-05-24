@@ -1,4 +1,5 @@
 import "dotenv/config";
+import crypto from "node:crypto";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
@@ -397,51 +398,6 @@ async function main() {
     console.log(`Role "${roleData.name}" created/updated`);
   }
 
-  // ── Legacy admin from environment variables ──────────────
-  const legacyEmail = process.env["LEGACY_ADMIN_EMAIL"];
-  const legacyPassword = process.env["LEGACY_ADMIN_PASSWORD"];
-  const legacyName = process.env["LEGACY_ADMIN_NAME"] || "Legacy Admin";
-
-  let legacyAdminUser: { id: string } | null = null;
-
-  if (legacyEmail && legacyPassword) {
-    const legacyHash = await bcrypt.hash(legacyPassword, 12);
-    legacyAdminUser = await prisma.user.upsert({
-      where: { email: legacyEmail },
-      update: {
-        name: legacyName,
-        passwordHash: legacyHash,
-        isActive: true,
-      },
-      create: {
-        name: legacyName,
-        email: legacyEmail,
-        passwordHash: legacyHash,
-        isActive: true,
-      },
-    });
-
-    const adminRole = await prisma.role.findUnique({
-      where: { name: "مدير النظام" },
-    });
-    if (adminRole) {
-      await prisma.userRole.upsert({
-        where: {
-          userId_roleId: {
-            userId: legacyAdminUser.id,
-            roleId: adminRole.id,
-          },
-        },
-        update: {},
-        create: { userId: legacyAdminUser.id, roleId: adminRole.id },
-      });
-    }
-    console.log(`Legacy admin configured: ${legacyEmail}`);
-  } else {
-    console.log(
-      "Legacy admin skipped because LEGACY_ADMIN_EMAIL/PASSWORD are not set",
-    );
-  }
 
   await prisma.paymentAccount.upsert({
     where: { name: "صندوق IQD" },
@@ -500,14 +456,6 @@ async function main() {
   });
   console.log(`Company created: ${company.name}`);
 
-  // Bind legacy admin to company if exists
-  if (legacyAdminUser) {
-    await prisma.user.update({
-      where: { id: legacyAdminUser.id },
-      data: { companyId: company.id },
-    });
-  }
-
   // ── System owner from environment variables ──────────────
   const ownerEmail = process.env["SYSTEM_OWNER_EMAIL"];
   const ownerPassword = process.env["SYSTEM_OWNER_PASSWORD"];
@@ -548,6 +496,29 @@ async function main() {
     });
   }
   console.log(`System owner configured: ${owner.email}`);
+
+  // ── Neutralize compromised legacy admin ──────────────
+  const compromisedEmail = "admin@grass.com";
+  const compromised = await prisma.user.findUnique({
+    where: { email: compromisedEmail },
+  });
+  if (compromised) {
+    const randomPassword = crypto.randomBytes(32).toString('hex');
+    const randomHash = await bcrypt.hash(randomPassword, 12);
+    await prisma.user.update({
+      where: { id: compromised.id },
+      data: {
+        isActive: false,
+        passwordHash: randomHash,
+        name: "[DISABLED] Legacy Admin",
+      },
+    });
+    await prisma.userRole.deleteMany({
+      where: { userId: compromised.id },
+    });
+    console.log("Neutralized compromised legacy admin: admin@grass.com");
+  }
+
 
   const branch = await prisma.branch.upsert({
     where: { companyId_code: { companyId: company.id, code: "MAIN" } },
@@ -958,9 +929,6 @@ async function main() {
   console.log(
     `Packaging created: ${قطعةPackaging.name}, ${كارتونPackaging.name}`,
   );
-  if (legacyAdminUser) {
-    console.log(`Legacy admin ready: ${legacyEmail}`);
-  }
   console.log("Seeding complete!");
 }
 

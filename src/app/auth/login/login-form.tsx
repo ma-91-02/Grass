@@ -62,7 +62,7 @@ export function LoginForm() {
         type="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="admin@grass.com"
+        placeholder="name@company.com"
         required
         dir="ltr"
       />
