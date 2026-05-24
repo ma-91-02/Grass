@@ -118,14 +118,14 @@
 - `GET /api/stock-movements/{id}` — تفاصيل حركة ✅ (COMPLETED)
 - `POST /api/stock-movements` — إنشاء حركة ✅ (COMPLETED — create form)
 - `GET /api/stock-adjustments` — قائمة تسويات المخزن ✅ (COMPLETED)
-- `POST /api/stock-adjustments` — إنشاء تسوية ❌
+- `POST /api/stock-adjustments` — إنشاء تسوية ✅ (COMPLETED)
 
 **الصفحات المطلوبة:**
 - `/dashboard/stock-movements/page.tsx` — قائمة ✅ (COMPLETED — list + filters)
 - `/dashboard/stock-movements/[id]/page.tsx` — تفاصيل ✅ (COMPLETED)
 - `/dashboard/stock-movements/new/page.tsx` — إنشاء تسوية ✅ (COMPLETED)
 - `/dashboard/stock-adjustments/page.tsx` — قائمة ✅ (COMPLETED)
-- `/dashboard/stock-adjustments/new/page.tsx` — إنشاء تسوية ❌
+- `/dashboard/stock-adjustments/new/page.tsx` — إنشاء تسوية ✅ (COMPLETED)
 
 **Priority:** MEDIUM
 

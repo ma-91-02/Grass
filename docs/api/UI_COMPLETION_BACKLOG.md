@@ -813,7 +813,7 @@
 
 #### Task UI-017
 **Title:** Stock Adjustments Create UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** MEDIUM  
 **Related APIs:**
 - `POST /api/stock-adjustments`
@@ -821,8 +821,10 @@
 - `GET /api/products`
 **Target UI Pages:**
 - `/dashboard/stock-adjustments/new/page.tsx`
+- `/dashboard/stock-adjustments/page.tsx` (زر "تسوية جديدة")
 **Scope:**
 - إنشاء تسوية مخزن (زيادة/نقصان كمية)
+- بنود متعددة بسيطة (إضافة/حذف)
 **Forbidden:**
 - تعديل backend adjustment logic
 **Acceptance Criteria:**
@@ -830,13 +832,14 @@
 - اختيار مخزن ومادة
 - إدخال الكمية الجديدة أو الفرق
 - حفظ كمسودة
+- redirect آمن إلى القائمة
 **Required Checks:**
 - npm run lint
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ POST endpoint
-- UI_BINDING_ROADMAP.md: إزالة المهمة
+- UI_BINDING_ROADMAP.md: تحديث UI Binding 2.2
 **Commit Hash:**
 
 ---

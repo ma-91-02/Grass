@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable, type Column } from "@/components/shared/data-table";
 import { Card, CardContent } from "@/components/ui/card";
@@ -52,6 +53,7 @@ const typeBadge = (type: string) => {
 };
 
 export default function StockAdjustmentsPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [warehouseFilter, setWarehouseFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -175,6 +177,8 @@ export default function StockAdjustmentsPage() {
       <PageHeader
         title="تسويات المخزن"
         description="عرض تسويات المخزن (زيادة ونقص)"
+        actionLabel="تسوية جديدة"
+        onAction={() => router.push("/dashboard/stock-adjustments/new")}
       />
 
       {isLoadingAuth && (
