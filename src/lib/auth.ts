@@ -161,7 +161,29 @@ export async function logAudit(
 }
 
 /**
+ * Checks if a user is the system owner (single user from SYSTEM_OWNER_EMAIL env var).
+ * System owner bypasses ALL permission and company checks.
+ */
+export async function isSystemOwner(user: TokenPayload): Promise<boolean> {
+  const ownerEmail = process.env["SYSTEM_OWNER_EMAIL"];
+  if (!ownerEmail) return false;
+  return user.email === ownerEmail;
+}
+
+export async function isSystemOwnerById(userId: string): Promise<boolean> {
+  const ownerEmail = process.env["SYSTEM_OWNER_EMAIL"];
+  if (!ownerEmail) return false;
+  const dbUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true },
+  });
+  if (!dbUser) return false;
+  return dbUser.email === ownerEmail;
+}
+
+/**
  * Checks if a user can access a specific company.
+ * - System owner bypasses company restriction.
  * - Users with `SETTINGS_MANAGE` permission (global admins) can access any company.
  * - Users with a `companyId` set can only access that company.
  * - Users without `companyId` and without global admin permission are denied.
@@ -170,6 +192,9 @@ export async function canAccessCompany(
   user: TokenPayload,
   companyId: string,
 ): Promise<boolean> {
+  // System owner bypasses company restriction
+  if (await isSystemOwner(user)) return true;
+
   // Global admins (with SETTINGS_MANAGE) bypass company restriction
   const isGlobalAdmin = await checkDbPermission(
     user.userId,
@@ -190,6 +215,7 @@ export async function canAccessCompany(
 
 /**
  * Server-side permission check using the database.
+ * System owner bypasses all permission checks.
  * Use this for sensitive operations instead of JWT-based checkPermission
  * to avoid stale permission risks.
  */
@@ -197,5 +223,6 @@ export async function requireDbPermission(
   userId: string,
   permissionKey: string,
 ): Promise<boolean> {
+  if (await isSystemOwnerById(userId)) return true;
   return checkDbPermission(userId, permissionKey);
 }
