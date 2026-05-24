@@ -479,6 +479,47 @@ async function main() {
     data: { companyId: company.id },
   });
 
+  // ── System owner from environment variables ──────────────
+  const ownerEmail = process.env["SYSTEM_OWNER_EMAIL"];
+  const ownerPassword = process.env["SYSTEM_OWNER_PASSWORD"];
+  const ownerName = process.env["SYSTEM_OWNER_NAME"] || "System Owner";
+
+  if (!ownerEmail || !ownerPassword) {
+    throw new Error(
+      "SYSTEM_OWNER_EMAIL and SYSTEM_OWNER_PASSWORD are required. Add them to your .env file.",
+    );
+  }
+
+  const ownerPasswordHash = await bcrypt.hash(ownerPassword, 12);
+  const owner = await prisma.user.upsert({
+    where: { email: ownerEmail },
+    update: {
+      name: ownerName,
+      passwordHash: ownerPasswordHash,
+      isActive: true,
+      companyId: company.id,
+    },
+    create: {
+      name: ownerName,
+      email: ownerEmail,
+      passwordHash: ownerPasswordHash,
+      isActive: true,
+      companyId: company.id,
+    },
+  });
+
+  const ownerRole = await prisma.role.findUnique({
+    where: { name: "مدير النظام" },
+  });
+  if (ownerRole) {
+    await prisma.userRole.upsert({
+      where: { userId_roleId: { userId: owner.id, roleId: ownerRole.id } },
+      update: {},
+      create: { userId: owner.id, roleId: ownerRole.id },
+    });
+  }
+  console.log(`System owner configured: ${owner.email}`);
+
   const branch = await prisma.branch.upsert({
     where: { companyId_code: { companyId: company.id, code: "MAIN" } },
     update: { name: "الفرع الرئيسي", address: "بغداد" },
