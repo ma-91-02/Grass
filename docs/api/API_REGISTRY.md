@@ -249,7 +249,7 @@
 | SalesReturns | GET | `/api/sales-returns/{id}` | تفاصيل مرتجع | DONE | CONNECTED | `/dashboard/sales-returns/[id]` | HIGH | 0 | — |
 | SalesReturns | POST | `/api/sales-returns/{id}/post` | ترحيل مرتجع | DONE | CONNECTED | `/dashboard/sales-returns/[id]` | HIGH | 0 | — |
 | SalesReturns | GET | `/api/sales-returns/{id}/print` | طباعة مرتجع | DONE | CONNECTED | `/dashboard/sales-returns/[id]` | HIGH | 0 | — |
-| SalesReturns | PATCH | `/api/sales-returns/{id}` | تحديث مرتجع | PLANNED | PARTIAL | `/dashboard/sales-returns/[id]/edit` | MEDIUM | 1.3 | الصفحة موجودة (UI-022) لكن PATCH endpoint لم يُنفذ بعد — الحفظ سيؤدي إلى خطأ 405. ربط PARTIAL. |
+| SalesReturns | PATCH | `/api/sales-returns/{id}` | تحديث مسودة مرتجع | DONE | CONNECTED | `/dashboard/sales-returns/[id]/edit` | MEDIUM | 1.3 | تعديل notes و line.quantity و line.notes فقط. لا يسمح بإضافة/حذف lines. لا يسمح بتغيير productId. يراجع كمية الفاتورة الأصلية. يعيد حساب totalAmount و totalCogs. |
 
 ---
 

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
-import { ArrowLeft, Printer, Send } from "lucide-react";
+import { ArrowLeft, Pencil, Printer, Send } from "lucide-react";
 
 interface ReturnLine {
   id: string;
@@ -123,6 +123,12 @@ export default function SalesReturnDetailPage() {
               >
                 <Printer className="h-4 w-4" />
                 معاينة
+              </Button>
+              <Button
+                onClick={() => router.push(`/dashboard/sales-returns/${id}/edit`)}
+              >
+                <Pencil className="h-4 w-4" />
+                تعديل
               </Button>
               <Button
                 onClick={() => postMutation.mutate()}

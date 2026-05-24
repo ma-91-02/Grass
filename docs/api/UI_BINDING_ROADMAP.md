@@ -93,15 +93,15 @@
 
 ---
 
-### ⏳ UI Binding 1.5 — Sales Returns Edit (PARTIAL)
+### ✅ UI Binding 1.5 — Sales Returns Edit (CONNECTED)
 **Endpoints المطلوب ربطها:**
-- `PATCH /api/sales-returns/{id}` — تحديث مرتجع ❌ (Backend PATCH غير موجود — لم يُنفذ بعد)
+- `PATCH /api/sales-returns/{id}` — تحديث مرتجع ✅ (COMPLETED — تعديل notes, line.quantity, line.notes فقط)
 
 **الصفحات المطلوبة:**
-- `/dashboard/sales-returns/[id]/edit/page.tsx` ✅ (COMPLETED — لكن الحفظ سيفشل لأن PATCH غير موجود)
+- `/dashboard/sales-returns/[id]/edit/page.tsx` ✅ (COMPLETED)
 
 **Priority:** MEDIUM
-**السبب:** الـ UI موجود (UI-022) لكن PATCH endpoint لم يُنفذ بعد. لا يمكن تعديل مسودة مرتجع بيع بدون backend.
+**تاريخ الإنجاز:** 2026-05-24
 
 ---
 
