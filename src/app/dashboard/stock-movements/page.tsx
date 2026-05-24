@@ -194,6 +194,8 @@ export default function StockMovementsPage() {
       <PageHeader
         title="حركات المخزن"
         description="عرض حركات المواد في المخازن"
+        actionLabel="تسوية جديدة"
+        onAction={() => router.push("/dashboard/stock-movements/new")}
       />
 
       <Card>

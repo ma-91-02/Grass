@@ -645,31 +645,33 @@
 ---
 
 #### Task UI-012
-**Title:** Stock Movements Post UI  
-**Status:** `TODO`  
+**Title:** Stock Adjustment Create UI  
+**Status:** `DONE`  
 **Priority:** HIGH  
 **Related APIs:**
-- `POST /api/stock-movements/{id}/post`
-- `GET /api/stock-movements/{id}`
+- `POST /api/stock-movements`
+- `GET /api/warehouses`
+- `GET /api/products`
 **Target UI Pages:**
-- `/dashboard/stock-movements/[id]/page.tsx` (زر ترحيل)
+- `/dashboard/stock-movements/new/page.tsx`
+- `/dashboard/stock-movements/page.tsx` (زر "تسوية جديدة")
 **Scope:**
-- زر ترحيل حركة مخزن
-- فقط للمسودات
+- إنشاء حركة مخزن يدوية (تسوية زيادة/نقص أو وارد/صادر)
+- اختيار مخزن ومادة وكمية ونوع حركة
 **Forbidden:**
-- تعديل backend post logic
+- تعديل backend stock logic
 **Acceptance Criteria:**
-- زر "ترحيل" للمسودات
-- تأكيد قبل الترحيل
-- عرض رسالة نجاح
+- form إنشاء حركة مخزن
+- validation (مخزن + مادة + كمية > 0)
+- redirect إلى تفاصيل الحركة بعد النجاح
 **Required Checks:**
 - npm run lint
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ POST endpoint
-- UI_BINDING_ROADMAP.md: إزالة المهمة
-**Commit Hash:**
+- UI_BINDING_ROADMAP.md: تحديث UI Binding 2.2
+**Commit Hash:
 
 ---
 

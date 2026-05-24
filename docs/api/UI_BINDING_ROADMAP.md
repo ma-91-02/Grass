@@ -114,13 +114,14 @@
 **Endpoints المطلوب ربطها:**
 - `GET /api/stock-movements` — قائمة حركات المخزن ✅ (COMPLETED)
 - `GET /api/stock-movements/{id}` — تفاصيل حركة ✅ (COMPLETED)
-- `POST /api/stock-movements` — إنشاء حركة ❌
+- `POST /api/stock-movements` — إنشاء حركة ✅ (COMPLETED — create form)
 - `GET /api/stock-adjustments` — قائمة تسويات المخزن ❌
 - `POST /api/stock-adjustments` — إنشاء تسوية ❌
 
 **الصفحات المطلوبة:**
 - `/dashboard/stock-movements/page.tsx` — قائمة ✅ (COMPLETED — list + filters)
 - `/dashboard/stock-movements/[id]/page.tsx` — تفاصيل ✅ (COMPLETED)
+- `/dashboard/stock-movements/new/page.tsx` — إنشاء تسوية ✅ (COMPLETED)
 - `/dashboard/stock-adjustments/page.tsx` — قائمة + create + detail + post ❌
 
 **Priority:** MEDIUM
