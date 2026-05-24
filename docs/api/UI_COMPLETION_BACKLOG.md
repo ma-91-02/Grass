@@ -916,10 +916,12 @@
 
 #### Task UI-020
 **Title:** Product Detail UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** MEDIUM  
 **Related APIs:**
 - `GET /api/products/{id}`
+- `GET /api/stock-balances?productId=...`
+- `GET /api/stock-movements?productId=...`
 **Target UI Pages:**
 - `/dashboard/products/[id]/page.tsx`
 **Scope:**
@@ -939,7 +941,7 @@
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ GET endpoint
 - UI_BINDING_ROADMAP.md: إزالة المهمة
-**Commit Hash:**
+**Commit Hash:** `TO_BE_REPLACED`**
 
 ---
 
@@ -1249,6 +1251,7 @@
 | Task ID | Status | Commit Hash | Date |
 |---------|--------|-------------|------|
 | UI-019 | DONE | 88b2636 | 2026-05-24 |
+| UI-020 | DONE | TO_BE_REPLACED | 2026-05-24 |
 
 ---
 

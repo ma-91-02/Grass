@@ -117,7 +117,7 @@
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | Products | GET | `/api/products` | قائمة المواد | DONE | CONNECTED | `/dashboard/products` | CRITICAL | 0 | — |
 | Products | POST | `/api/products` | إنشاء مادة | DONE | CONNECTED | `/dashboard/products` | CRITICAL | 0 | تم إصلاح companyId و unitId; تم إصلاح تحميل الوحدات والمجموعات company-scoped |
-| Products | GET | `/api/products/{id}` | تفاصيل مادة | DONE | NO_UI | — | MEDIUM | 2.0 | لا يوجد detail page |
+| Products | GET | `/api/products/{id}` | تفاصيل مادة | DONE | CONNECTED | `/dashboard/products/[id]` | MEDIUM | 2.0 | Detail page مع أرصدة المخزون وحركات المخزون وأسعار البيع |
 | Products | PATCH | `/api/products/{id}` | تحديث مادة | DONE | CONNECTED | `/dashboard/products` | CRITICAL | 0 | تم إصلاح companyId و unitId; تم إصلاح تحميل الوحدات والمجموعات company-scoped |
 | Products | DELETE | `/api/products/{id}` | حذف مادة | DONE | CONNECTED | `/dashboard/products` | CRITICAL | 0 | — |
 

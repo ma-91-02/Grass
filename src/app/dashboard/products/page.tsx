@@ -14,7 +14,8 @@ import { formatCurrency } from "@/lib/utils";
 import { type CustomerType } from "@/types";
 import type { TokenPayload } from "@/lib/auth";
 import { PERMISSIONS } from "@/lib/permissions";
-import { Edit, Ban, CheckCircle, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Edit, Eye, Ban, CheckCircle, Trash2 } from "lucide-react";
 
 interface ProductPrice {
   id: string;
@@ -48,6 +49,7 @@ interface Category {
 export default function ProductsPage() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Product | null>(null);
@@ -338,6 +340,13 @@ export default function ProductsPage() {
         searchPlaceholder="بحث بالاسم أو الكود أو الباركود..."
         actions={(item: Product) => (
           <div className="flex items-center justify-center gap-1">
+            <button
+              onClick={() => router.push(`/dashboard/products/${item.id}`)}
+              className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-blue-600"
+              title="عرض"
+            >
+              <Eye className="h-4 w-4" />
+            </button>
             {canEdit && (
               <button
                 onClick={() => openEdit(item)}

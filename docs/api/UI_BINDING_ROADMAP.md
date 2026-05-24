@@ -216,9 +216,22 @@
 
 ---
 
+### ✅ UI Binding 4.3 — Product Detail (مكتمل)
+**Endpoints المطلوب ربطها:**
+- `GET /api/products/{id}` — تفاصيل مادة ✅ (COMPLETED)
+- `GET /api/stock-balances?productId=...` — رصيد المخزون (مستخدم من صفحة التفاصيل)
+- `GET /api/stock-movements?productId=...` — حركات المخزون (مستخدم من صفحة التفاصيل)
+
+**الصفحات المطلوبة:**
+- `/dashboard/products/[id]/page.tsx` — تفاصيل منتج ✅ (COMPLETED — basic info + prices + stock balance + movements)
+
+**Priority:** LOW
+**تاريخ الإنجاز:** 2026-05-24
+
+---
+
 ### UI Binding 4.3 — Detail Pages (بقية الوحدات)
 **الصفحات المطلوبة:**
-- `/dashboard/products/[id]/page.tsx` — تفاصيل منتج
 - `/dashboard/warehouses/[id]/page.tsx` — تفاصيل مخزن
 - `/dashboard/customers/suppliers/[id]/page.tsx` — تفاصيل مورد منفصل
 - `/dashboard/exchange-rates/[id]/page.tsx` — تفاصيل سعر صرف
@@ -237,7 +250,7 @@
 
 ### 🟠 High (يحسن الإنتاجية بشكل كبير)
 4. Accounts Chart & Tree
-5. Product Detail
+5. ✅ Product Detail (مكتمل)
 6. Warehouse Detail
 7. Collections Print
 
