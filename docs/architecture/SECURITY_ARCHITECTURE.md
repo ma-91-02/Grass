@@ -84,3 +84,10 @@ Required for:
 - Sessions can be revoked/downgraded.
 - Exports are logged.
 - Security events are traceable.
+
+## Legacy Admin Cleanup
+
+- Legacy admin credentials were removed.
+- One-time cleanup uses `COMPROMISED_LEGACY_ADMIN_EMAIL`.
+- No legacy admin email is hardcoded.
+- Initial demo data is created under SYSTEM_OWNER.

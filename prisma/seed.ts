@@ -370,7 +370,6 @@ async function main() {
     });
     permissionRecords[perm.key] = created.id;
   }
-  console.log(`Created ${PERMISSIONS.length} permissions`);
 
   for (const roleData of ROLES) {
     const role = await prisma.role.upsert({
@@ -459,7 +458,7 @@ async function main() {
   // ── System owner from environment variables ──────────────
   const ownerEmail = process.env["SYSTEM_OWNER_EMAIL"];
   const ownerPassword = process.env["SYSTEM_OWNER_PASSWORD"];
-  const ownerName = process.env["SYSTEM_OWNER_NAME"] || "System Owner";
+  const ownerName = process.env["SYSTEM_OWNER_NAME"] || "محمد الزرفي";
 
   if (!ownerEmail || !ownerPassword) {
     throw new Error(
@@ -497,28 +496,31 @@ async function main() {
   }
   console.log(`System owner configured: ${owner.email}`);
 
-  // ── Neutralize compromised legacy admin ──────────────
-  const compromisedEmail = "admin@grass.com";
-  const compromised = await prisma.user.findUnique({
-    where: { email: compromisedEmail },
-  });
-  if (compromised) {
-    const randomPassword = crypto.randomBytes(32).toString('hex');
-    const randomHash = await bcrypt.hash(randomPassword, 12);
-    await prisma.user.update({
-      where: { id: compromised.id },
-      data: {
-        isActive: false,
-        passwordHash: randomHash,
-        name: "[DISABLED] Legacy Admin",
-      },
+  // ── Neutralize compromised legacy admin (one-time) ────
+  const compromisedEmail = process.env["COMPROMISED_LEGACY_ADMIN_EMAIL"];
+  if (compromisedEmail) {
+    const compromised = await prisma.user.findUnique({
+      where: { email: compromisedEmail },
     });
-    await prisma.userRole.deleteMany({
-      where: { userId: compromised.id },
-    });
-    console.log("Neutralized compromised legacy admin: admin@grass.com");
+    if (compromised) {
+      const randomPassword = crypto.randomBytes(32).toString("hex");
+      const randomHash = await bcrypt.hash(randomPassword, 12);
+      await prisma.user.update({
+        where: { id: compromised.id },
+        data: {
+          isActive: false,
+          passwordHash: randomHash,
+          name: "[DISABLED] Legacy Admin",
+        },
+      });
+      await prisma.userRole.deleteMany({
+        where: { userId: compromised.id },
+      });
+      console.log(
+        `Neutralized compromised legacy admin: ${compromisedEmail}`,
+      );
+    }
   }
-
 
   const branch = await prisma.branch.upsert({
     where: { companyId_code: { companyId: company.id, code: "MAIN" } },
@@ -544,6 +546,82 @@ async function main() {
       address: "بغداد",
     },
   });
+
+  // ── Initial example data (idempotent, owner-scoped) ────
+
+  // Units
+  await prisma.unit.upsert({
+    where: { companyId_code: { companyId: company.id, code: "PC" } },
+    update: { name: "قطعة", symbol: "قطعة", type: "PIECE" },
+    create: { companyId: company.id, name: "قطعة", code: "PC", symbol: "قطعة", type: "PIECE" },
+  });
+  await prisma.unit.upsert({
+    where: { companyId_code: { companyId: company.id, code: "BOX" } },
+    update: { name: "كارتون", symbol: "كرتون", type: "BOX" },
+    create: { companyId: company.id, name: "كارتون", code: "BOX", symbol: "كرتون", type: "BOX" },
+  });
+
+  // Product categories
+  for (const cat of [
+    { name: "منظفات منزلية", code: "HOME-CLEAN" },
+    { name: "منظفات احترافية", code: "PRO-CLEAN" },
+    { name: "عناية السيارات", code: "CAR-CARE" },
+  ]) {
+    await prisma.productCategory.upsert({
+      where: { companyId_code: { companyId: company.id, code: cat.code } },
+      update: { name: cat.name },
+      create: { companyId: company.id, name: cat.name, code: cat.code },
+    });
+  }
+
+  // Demo customer
+  await prisma.customer.upsert({
+    where: { companyId_code: { companyId: company.id, code: "DEMO" } },
+    update: { name: "عميل تجريبي", createdById: owner.id },
+    create: {
+      companyId: company.id,
+      code: "DEMO",
+      name: "عميل تجريبي",
+      createdById: owner.id,
+    },
+  });
+
+  // Demo supplier
+  const existingSupplier = await prisma.supplier.findUnique({
+    where: { code: "DEMO" },
+  });
+  if (!existingSupplier) {
+    await prisma.supplier.create({
+      data: {
+        name: "مورد تجريبي",
+        code: "DEMO",
+        createdById: owner.id,
+      },
+    });
+  }
+
+  // Demo product (requires category and unit to exist)
+  const demoCategory = await prisma.productCategory.findFirst({
+    where: { companyId: company.id, code: "HOME-CLEAN" },
+  });
+  const demoUnit = await prisma.unit.findFirst({
+    where: { companyId: company.id, code: "PC" },
+  });
+  if (demoCategory && demoUnit) {
+    await prisma.product.upsert({
+      where: { companyId_code: { companyId: company.id, code: "DEMO" } },
+      update: { name: "مادة تجريبية", categoryId: demoCategory.id, unitId: demoUnit.id },
+      create: {
+        companyId: company.id,
+        code: "DEMO",
+        name: "مادة تجريبية",
+        categoryId: demoCategory.id,
+        unitId: demoUnit.id,
+        packaging: "قطعة",
+        productType: "STOCK",
+      },
+    });
+  }
 
   const fiscalYear = new Date().getFullYear();
   const periodName = `${fiscalYear}`;
@@ -926,9 +1004,7 @@ async function main() {
   }
   console.log(`Created ${chartOfAccounts.length} chart of accounts`);
 
-  console.log(
-    `Packaging created: ${قطعةPackaging.name}, ${كارتونPackaging.name}`,
-  );
+  console.log("Initial example data created");
   console.log("Seeding complete!");
 }
 
