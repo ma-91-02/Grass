@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-27 (UI-028)
+> آخر تحديث: 2026-05-27 (UI-029)
 
 ---
 
@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 128 |
-| CONNECTED | 80 |
+| CONNECTED | 82 |
 | PARTIAL | 30 |
-| NO_UI | 8 |
+| NO_UI | 6 |
 | BACKEND_ONLY | 10 |
 
 ---
@@ -270,8 +270,8 @@
 | JournalEntries | GET | `/api/journal-entries` | قائمة القيود اليومية | DONE | CONNECTED | `/dashboard/journal-entries` | CRITICAL | 0 | read-only list |
 | JournalEntries | POST | `/api/journal-entries` | إنشاء قيد | DONE | CONNECTED | `/dashboard/journal-entries/new` | CRITICAL | 1.3 | — |
 | JournalEntries | GET | `/api/journal-entries/{id}` | تفاصيل قيد | DONE | CONNECTED | `/dashboard/journal-entries/[id]` | CRITICAL | 0 | — |
-| JournalEntries | PATCH | `/api/journal-entries/{id}` | تحديث مسودة | DONE | NO_UI | — | CRITICAL | 1.3 | — |
-| JournalEntries | DELETE | `/api/journal-entries/{id}` | حذف مسودة | DONE | NO_UI | — | CRITICAL | 1.3 | — |
+| JournalEntries | PATCH | `/api/journal-entries/{id}` | تحديث مسودة | DONE | CONNECTED | `/dashboard/journal-entries/[id]/edit` | CRITICAL | 1.3 | تعديل كامل مع البنود |
+| JournalEntries | DELETE | `/api/journal-entries/{id}` | حذف مسودة | DONE | CONNECTED | `/dashboard/journal-entries/[id]` | CRITICAL | 1.3 | ConfirmDialog + للمسودات فقط |
 | JournalEntries | POST | `/api/journal-entries/{id}/post` | ترحيل قيد | DONE | CONNECTED | `/dashboard/journal-entries/[id]` | CRITICAL | 1.3 | — |
 | JournalEntries | POST | `/api/journal-entries/{id}/reverse` | عكس قيد | DONE | CONNECTED | `/dashboard/journal-entries/[id]` | CRITICAL | 1.3 | — |
 

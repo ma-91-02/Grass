@@ -60,16 +60,18 @@
 
 ---
 
-### UI Binding 1.3 — Journal Entries Create & Post
+### UI Binding 1.3 — Journal Entries Create & Post ✅ (COMPLETED)
 **Endpoints المطلوب ربطها:**
 - `POST /api/journal-entries` — إنشاء قيد يومي ✅ (COMPLETED)
 - `POST /api/journal-entries/{id}/post` — ترحيل قيد ✅ (COMPLETED)
 - `POST /api/journal-entries/{id}/reverse` — عكس قيد ✅ (COMPLETED)
-- `PATCH /api/journal-entries/{id}` — تحديث مسودة قيد ❌
+- `PATCH /api/journal-entries/{id}` — تحديث مسودة قيد ✅ (COMPLETED)
+- `DELETE /api/journal-entries/{id}` — حذف مسودة قيد ✅ (COMPLETED)
 
 **الصفحات المطلوبة:**
-- `/dashboard/journal-entries/new/page.tsx` — صفحة إنشاء قيد
-- `/dashboard/journal-entries/[id]/page.tsx` — صفحة تفاصيل قيد مع أزرار post/reverse/edit
+- `/dashboard/journal-entries/new/page.tsx` — صفحة إنشاء قيد ✅ (COMPLETED)
+- `/dashboard/journal-entries/[id]/page.tsx` — صفحة تفاصيل قيد مع أزرار post/reverse/edit/delete ✅ (COMPLETED)
+- `/dashboard/journal-entries/[id]/edit/page.tsx` — صفحة تعديل مسودة قيد ✅ (COMPLETED)
 
 **Priority:** CRITICAL
 **السبب:** القيود اليومية حجر الزاوية في النظام المحاسبي ولا يمكن إنشاؤها من الواجهة.

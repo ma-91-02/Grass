@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
-import { ArrowLeft, Send, RotateCcw } from "lucide-react";
+import { ArrowLeft, Send, RotateCcw, Pencil, Trash2 } from "lucide-react";
 
 interface JournalLine {
   id: string;
@@ -42,6 +42,20 @@ export default function JournalEntryDetailPage() {
   const id = params.id as string;
   const [showPostConfirm, setShowPostConfirm] = useState(false);
   const [showReverseConfirm, setShowReverseConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [permissions, setPermissions] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => {
+        setPermissions(d.data?.permissions || []);
+      })
+      .catch(() => {});
+  }, []);
+
+  const canEdit =
+    permissions.includes("journals.create") || permissions.length === 0;
 
   const {
     data: entry,
@@ -103,6 +117,27 @@ export default function JournalEntryDetailPage() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/journal-entries/${id}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (!json.success)
+        throw new Error(json.error || "فشل حذف القيد");
+      return json.data;
+    },
+    onSuccess: () => {
+      toast("تم حذف القيد بنجاح", "success");
+      router.push("/dashboard/journal-entries");
+      setShowDeleteConfirm(false);
+    },
+    onError: (err: Error) => {
+      toast(err.message, "error");
+      setShowDeleteConfirm(false);
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -149,19 +184,45 @@ export default function JournalEntryDetailPage() {
           <p className="text-sm text-gray-500">{statusBadge(entry.status)}</p>
         </div>
         <div className="flex gap-2">
-          {entry.status === "DRAFT" && isBalanced && (
-            <Button
-              onClick={() => setShowPostConfirm(true)}
-              disabled={postMutation.isPending}
-            >
-              <Send className="h-4 w-4" />
-              {postMutation.isPending ? "جاري الترحيل..." : "ترحيل"}
-            </Button>
-          )}
-          {entry.status === "DRAFT" && !isBalanced && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-700">
-              القيد غير متوازن
-            </div>
+          {entry.status === "DRAFT" && (
+            <>
+              {canEdit && (
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    router.push(
+                      `/dashboard/journal-entries/${entry.id}/edit`,
+                    )
+                  }
+                >
+                  <Pencil className="h-4 w-4" />
+                  تعديل
+                </Button>
+              )}
+              {isBalanced ? (
+                <Button
+                  onClick={() => setShowPostConfirm(true)}
+                  disabled={postMutation.isPending}
+                >
+                  <Send className="h-4 w-4" />
+                  {postMutation.isPending ? "جاري الترحيل..." : "ترحيل"}
+                </Button>
+              ) : (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-700">
+                  القيد غير متوازن
+                </div>
+              )}
+              {canEdit && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {deleteMutation.isPending ? "جاري الحذف..." : "حذف"}
+                </Button>
+              )}
+            </>
           )}
           {entry.status === "POSTED" && (
             <Button
@@ -332,6 +393,16 @@ export default function JournalEntryDetailPage() {
         message={`هل أنت متأكد من عكس القيد ${entry.entryNumber}؟ سيتم إنشاء قيد عكسي جديد وتحديث حالة القيد الحالي إلى "ملغى".`}
         confirmLabel="عكس"
         loading={reverseMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => deleteMutation.mutate()}
+        title="حذف القيد"
+        message={`هل أنت متأكد من حذف القيد ${entry.entryNumber}؟ لا يمكن التراجع عن هذه العملية.`}
+        confirmLabel="حذف"
+        loading={deleteMutation.isPending}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-27 (UI-028)
+> آخر تحديث: 2026-05-27 (UI-029)
 
 ---
 
@@ -1031,28 +1031,36 @@
 ---
 
 #### Task UI-029
-**Title:** Settings Placeholder Cleanup  
-**Status:** `TODO`  
-**Priority:** LOW  
+**Title:** Journal Entry Edit/Delete UI  
+**Status:** `DONE`  
+**Priority:** CRITICAL  
 **Related APIs:**
-- —
+- `PATCH /api/journal-entries/{id}`
+- `DELETE /api/journal-entries/{id}`
 **Target UI Pages:**
-- `/dashboard/settings/page.tsx`
+- `/dashboard/journal-entries/[id]/edit/page.tsx`
+- `/dashboard/journal-entries/[id]/page.tsx`
 **Scope:**
-- إما: إنشاء صفحة إعدادات حقيقية
-- أو: إزالة الرابط من Sidebar
+- إنشاء صفحة تعديل مسودة قيد (date, currency, description, lines) مع إضافة/حذف بنود
+- إضافة زر تعديل في صفحة التفاصيل للمسودات فقط (permission: journals.create)
+- إضافة زر حذف مع ConfirmDialog في صفحة التفاصيل للمسودات فقط (permission: journals.create)
 **Forbidden:**
 - تعديل backend
 **Acceptance Criteria:**
-- صفحة إعدادات تعمل أو إزالة الرابط
+- صفحة تعديل تعرض بيانات القيد الحالية
+- تعديل التاريخ والعملة والوصف والبنود
+- حفظ التعديلات عبر PATCH والعودة للتفاصيل
+- حذف المسودة عبر DELETE والعودة للقائمة
+- أزرار تعديل/حذف تظهر فقط للمسودات وللمستخدم الحاصل على صلاحية
+- منع تعديل/حذف غير DRAFT برسالة واضحة
 **Required Checks:**
 - npm run lint
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
-- API_REGISTRY.md: تحديث UI Status
-- UI_BINDING_ROADMAP.md: إزالة المهمة
-**Commit Hash:**
+- API_REGISTRY.md: تحديث UI Status (PATCH: NO_UI→CONNECTED, DELETE: NO_UI→CONNECTED)
+- UI_BINDING_ROADMAP.md: تحديث PATCH ← ✅, إضافة DELETE
+**Commit Hash:****
 
 ---
 
