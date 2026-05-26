@@ -516,9 +516,7 @@ async function main() {
       await prisma.userRole.deleteMany({
         where: { userId: compromised.id },
       });
-      console.log(
-        `Neutralized compromised legacy admin: ${compromisedEmail}`,
-      );
+      console.log("Compromised legacy admin cleanup completed");
     }
   }
 
