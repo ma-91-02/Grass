@@ -1060,7 +1060,7 @@
 **Documentation Updates:**
 - API_REGISTRY.md: تحديث UI Status (PATCH: NO_UI→CONNECTED, DELETE: NO_UI→CONNECTED)
 - UI_BINDING_ROADMAP.md: تحديث PATCH ← ✅, إضافة DELETE
-**Commit Hash:****
+**Commit Hash:** `ce81810`
 
 ---
 
