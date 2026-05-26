@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 128 |
-| CONNECTED | 75 |
+| CONNECTED | 78 |
 | PARTIAL | 30 |
-| NO_UI | 13 |
+| NO_UI | 10 |
 | BACKEND_ONLY | 10 |
 
 ---
@@ -220,9 +220,9 @@
 
 | Module | Method | Endpoint | Purpose | Backend Status | UI Status | UI Page | Priority | Phase | Notes |
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
-| InventoryAudit | GET | `/api/inventory/audit/issues` | كشف مشاكل المخزون | DONE | NO_UI | — | LOW | 3.3 | — |
-| InventoryAudit | GET | `/api/inventory/audit/reconciliation` | تسوية المخزون | DONE | NO_UI | — | LOW | 3.3 | — |
-| InventoryAudit | GET | `/api/inventory/audit/stock-card` | بطاقة مخزن | DONE | NO_UI | — | LOW | 3.3 | — |
+| InventoryAudit | GET | `/api/inventory/audit/issues` | كشف مشاكل المخزون | DONE | CONNECTED | `/dashboard/inventory/audit` | LOW | 3.3 | — |
+| InventoryAudit | GET | `/api/inventory/audit/reconciliation` | تسوية المخزون | DONE | CONNECTED | `/dashboard/inventory/audit` | LOW | 3.3 | — |
+| InventoryAudit | GET | `/api/inventory/audit/stock-card` | بطاقة مخزن | DONE | CONNECTED | `/dashboard/inventory/audit` | LOW | 3.3 | — |
 
 ---
 
