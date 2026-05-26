@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-26 (UI-024)
+> آخر تحديث: 2026-05-27 (UI-028)
 
 ---
 
@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 128 |
-| CONNECTED | 79 |
+| CONNECTED | 80 |
 | PARTIAL | 30 |
-| NO_UI | 9 |
+| NO_UI | 8 |
 | BACKEND_ONLY | 10 |
 
 ---
@@ -181,7 +181,7 @@
 | StockTransfers | GET | `/api/stock-transfers` | قائمة تحويلات المخزن | DONE | CONNECTED | `/dashboard/warehouse-transfers` | MEDIUM | 2.1 | — |
 | StockTransfers | POST | `/api/stock-transfers` | إنشاء تحويل | DONE | CONNECTED | `/dashboard/warehouse-transfers/new` | MEDIUM | 2.1 | form إنشاء تحويل مخزن (مصدر/هدف/مادة/كمية) |
 | StockTransfers | GET | `/api/stock-transfers/{id}` | تفاصيل تحويل | DONE | CONNECTED | `/dashboard/warehouse-transfers/[id]` | MEDIUM | 2.1 | عرض معلومات + بنود + ملخص |
-| StockTransfers | PATCH | `/api/stock-transfers/{id}` | تحديث تحويل | DONE | NO_UI | — | MEDIUM | 2.1 | — |
+| StockTransfers | PATCH | `/api/stock-transfers/{id}` | تحديث تحويل | DONE | CONNECTED | `/dashboard/warehouse-transfers/[id]/edit` | MEDIUM | 2.1 | تعديل المسودات فقط (من:إلى/تاريخ/ملاحظات) |
 | StockTransfers | DELETE | `/api/stock-transfers/{id}` | حذف تحويل | DONE | CONNECTED | `/dashboard/warehouse-transfers/[id]` | MEDIUM | 2.1 | ConfirmDialog + فقط للمسودات |
 | StockTransfers | POST | `/api/stock-transfers/{id}/post` | ترحيل تحويل | DONE | CONNECTED | `/dashboard/warehouse-transfers/[id]` | MEDIUM | 2.1 | ConfirmDialog + فقط للمسودات |
 

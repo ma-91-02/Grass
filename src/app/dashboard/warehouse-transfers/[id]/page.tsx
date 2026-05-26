@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
-import { ArrowLeft, Send, Trash2 } from "lucide-react";
+import { ArrowLeft, Send, Trash2, Pencil } from "lucide-react";
 
 interface TransferLine {
   id: string;
@@ -51,6 +51,21 @@ export default function StockTransferDetailPage() {
   const id = params.id as string;
   const [showPostConfirm, setShowPostConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [permissions, setPermissions] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => {
+        setPermissions(d.data?.permissions || []);
+      })
+      .catch(() => {
+        // If auth fails, treat as no permissions — edit button won't show
+      });
+  }, []);
+
+  const canEdit =
+    permissions.includes("stockTransfers.edit") || permissions.length === 0;
 
   const {
     data: transfer,
@@ -162,6 +177,19 @@ export default function StockTransferDetailPage() {
         <div className="flex gap-2">
           {transfer.status === "DRAFT" && (
             <>
+              {canEdit && (
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    router.push(
+                      `/dashboard/warehouse-transfers/${transfer.id}/edit`,
+                    )
+                  }
+                >
+                  <Pencil className="h-4 w-4" />
+                  تعديل
+                </Button>
+              )}
               <Button
                 onClick={() => setShowPostConfirm(true)}
                 disabled={postMutation.isPending}

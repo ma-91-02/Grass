@@ -112,13 +112,14 @@
 - `GET /api/stock-transfers` — قائمة التحويلات ✅ (CONNECTED)
 - `POST /api/stock-transfers` — إنشاء تحويل ✅ (COMPLETED)
 - `GET /api/stock-transfers/{id}` — تفاصيل تحويل ✅ (COMPLETED)
-- `PATCH /api/stock-transfers/{id}` — تحديث تحويل ❌ (NO_UI)
+- `PATCH /api/stock-transfers/{id}` — تحديث تحويل ✅ (COMPLETED)
 - `POST /api/stock-transfers/{id}/post` — ترحيل تحويل ✅ (COMPLETED)
 
 **الصفحات المطلوبة:**
 - `/dashboard/warehouse-transfers/page.tsx` — قائمة ✅ (CONNECTED)
 - `/dashboard/warehouse-transfers/new/page.tsx` — إنشاء تحويل ✅ (COMPLETED)
 - `/dashboard/warehouse-transfers/[id]/page.tsx` — تفاصيل + ترحيل + حذف ✅ (COMPLETED)
+- `/dashboard/warehouse-transfers/[id]/edit/page.tsx` — تعديل مسودة ✅ (COMPLETED)
 
 **Priority:** MEDIUM
 **تاريخ الإنجاز:** 2026-05-27

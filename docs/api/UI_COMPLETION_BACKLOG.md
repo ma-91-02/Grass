@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-24
+> آخر تحديث: 2026-05-27 (UI-028)
 
 ---
 
@@ -1001,27 +1001,31 @@
 ---
 
 #### Task UI-028
-**Title:** Reports Placeholder Cleanup  
-**Status:** `TODO`  
-**Priority:** LOW  
+**Title:** Stock Transfer Edit UI  
+**Status:** `DONE`  
+**Priority:** MEDIUM  
 **Related APIs:**
-- `GET /api/dashboard/stats`
+- `PATCH /api/stock-transfers/{id}`
 **Target UI Pages:**
-- `/dashboard/reports/page.tsx`
+- `/dashboard/warehouse-transfers/[id]/edit/page.tsx`
 **Scope:**
-- استبدال placeholder بتقرير حقيقي أو حذف الرابط
+- تعديل مسودة تحويل مخزن (fromWarehouseId, toWarehouseId, transferDate, notes)
+- إضافة زر تعديل في صفحة التفاصيل للمسودات فقط
 **Forbidden:**
 - تعديل backend
 **Acceptance Criteria:**
-- إما: إنشاء صفحة تقارير حقيقية
-- أو: إزالة الرابط من Sidebar
+- صفحة تعديل تعرض بيانات التحويل الحالية
+- تعديل المخزن المصدر والوجهة والتاريخ والملاحظات
+- حفظ التعديلات عبر PATCH والعودة للتفاصيل
+- زر تعديل يظهر فقط للمسودات وللمستخدم الحاصل على صلاحية
+- منع تعديل المسودة غير DRAFT برسالة واضحة
 **Required Checks:**
 - npm run lint
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
-- API_REGISTRY.md: تحديث UI Status
-- UI_BINDING_ROADMAP.md: إزالة المهمة
+- API_REGISTRY.md: تحديث UI Status (NO_UI → CONNECTED)
+- UI_BINDING_ROADMAP.md: تحديث حالة PATCH
 **Commit Hash:**
 
 ---
