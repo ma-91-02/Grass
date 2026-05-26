@@ -198,19 +198,23 @@
 
 ## Phase 4.0 — Admin & Advanced (أسبوع 4)
 
-### UI Binding 4.1 — Companies & Branches
+### ✅ UI Binding 4.1 — Companies (مكتمل)
 **Endpoints المطلوب ربطها:**
-- `GET /api/companies` — قائمة الشركات
-- `POST /api/companies` — إنشاء شركة
-- `GET /api/branches` — قائمة الفروع
-- `POST /api/branches` — إنشاء فرع
+- `GET /api/companies` — قائمة الشركات ✅ (COMPLETED)
+- `POST /api/companies` — إنشاء شركة ✅ (COMPLETED)
+- `GET /api/companies/{id}` — تفاصيل شركة ✅ (COMPLETED)
+- `PATCH /api/companies/{id}` — تحديث شركة ✅ (COMPLETED)
+- `DELETE /api/companies/{id}` — حذف شركة ✅ (COMPLETED)
 
 **الصفحات المطلوبة:**
-- `/dashboard/companies/page.tsx`
-- `/dashboard/branches/page.tsx`
+- `/dashboard/companies/page.tsx` ✅ (COMPLETED — list + create + edit + delete dialog)
+
+**الباقي (لم يُنفذ):**
+- `/dashboard/branches/page.tsx` — صفحة إدارة الفروع (مخطط لمهمة UI-024)
 
 **Priority:** LOW
 **السبب:** إداري، غالبًا يُعد مرة واحدة عند الإعداد.
+**تاريخ الإنجاز:** 2026-05-26
 
 ---
 

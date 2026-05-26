@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 128 |
-| CONNECTED | 65 |
+| CONNECTED | 70 |
 | PARTIAL | 30 |
-| NO_UI | 23 |
+| NO_UI | 18 |
 | BACKEND_ONLY | 10 |
 
 ---
@@ -55,11 +55,11 @@
 
 | Module | Method | Endpoint | Purpose | Backend Status | UI Status | UI Page | Priority | Phase | Notes |
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
-| Companies | GET | `/api/companies` | قائمة الشركات | DONE | NO_UI | — | LOW | 4.1 | لا توجد صفحة شركات |
-| Companies | POST | `/api/companies` | إنشاء شركة | DONE | NO_UI | — | LOW | 4.1 | — |
-| Companies | GET | `/api/companies/{id}` | تفاصيل شركة | DONE | NO_UI | — | LOW | 4.1 | — |
-| Companies | PATCH | `/api/companies/{id}` | تحديث شركة | DONE | NO_UI | — | LOW | 4.1 | — |
-| Companies | DELETE | `/api/companies/{id}` | حذف شركة | DONE | NO_UI | — | LOW | 4.1 | — |
+| Companies | GET | `/api/companies` | قائمة الشركات | DONE | CONNECTED | `/dashboard/companies` | LOW | 4.1 | — |
+| Companies | POST | `/api/companies` | إنشاء شركة | DONE | CONNECTED | `/dashboard/companies` | LOW | 4.1 | — |
+| Companies | GET | `/api/companies/{id}` | تفاصيل شركة | DONE | CONNECTED | `/dashboard/companies` | LOW | 4.1 | — |
+| Companies | PATCH | `/api/companies/{id}` | تحديث شركة | DONE | CONNECTED | `/dashboard/companies` | LOW | 4.1 | — |
+| Companies | DELETE | `/api/companies/{id}` | حذف شركة | DONE | CONNECTED | `/dashboard/companies` | LOW | 4.1 | — |
 
 ---
 
@@ -363,9 +363,9 @@
 
 | Status | Count |
 |--------|-------|
-| CONNECTED | 65 |
+| CONNECTED | 70 |
 | PARTIAL | 31 |
-| NO_UI | 22 |
+| NO_UI | 17 |
 | BACKEND_ONLY | 10 |
 | UNKNOWN | 0 |
 | BROKEN | 0 |

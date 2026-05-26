@@ -23,6 +23,7 @@ import {
   Wallet,
   ChevronDown,
   Ruler,
+  Building2,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -121,6 +122,11 @@ const menuItems = [
     title: "سجل النشاطات",
     href: "/dashboard/audit-logs",
     icon: FileText,
+  },
+  {
+    title: "الشركات",
+    href: "/dashboard/companies",
+    icon: Building2,
   },
   {
     title: "المستخدمين",

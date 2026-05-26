@@ -1015,7 +1015,7 @@
 
 #### Task UI-023
 **Title:** Companies UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** LOW  
 **Related APIs:**
 - `GET /api/companies`
@@ -1029,18 +1029,18 @@
 **Forbidden:**
 - تعديل backend company logic
 **Acceptance Criteria:**
-- عرض الشركات
-- إنشاء شركة
-- تعديل شركة
-- حذف شركة
+- عرض الشركات ✅
+- إنشاء شركة ✅ (Dialog Form)
+- تعديل شركة ✅ (Dialog Form مع تعبئة القيم الحالية)
+- حذف شركة ✅ (ConfirmDialog + تعطيل تلقائي إذا مرتبطة ببيانات)
 **Required Checks:**
 - npm run lint
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ endpoints
-- UI_BINDING_ROADMAP.md: إزالة المهمة
-**Commit Hash:**
+- UI_BINDING_ROADMAP.md: تحديث UI Binding 4.1
+**Commit Hash:** 
 
 ---
 
@@ -1259,6 +1259,7 @@
 | UI-020 | DONE | 6c5dce4 | 2026-05-24 |
 | UI-021 | DONE | e91cc81 | 2026-05-24 |
 | UI-022 | DONE | 387f9d2 | 2026-05-24 |
+| UI-023 | DONE |  | 2026-05-26 |
 
 ---
 
