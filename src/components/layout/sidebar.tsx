@@ -24,6 +24,7 @@ import {
   ChevronDown,
   Ruler,
   Building2,
+  BarChart3,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -102,6 +103,11 @@ const menuItems = [
     title: "تسويات المخزن",
     href: "/dashboard/stock-adjustments",
     icon: Boxes,
+  },
+  {
+    title: "تقييم المخزون",
+    href: "/dashboard/inventory/valuation",
+    icon: BarChart3,
   },
   {
     title: "سعر الصرف",

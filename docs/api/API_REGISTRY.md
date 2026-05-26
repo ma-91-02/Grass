@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 128 |
-| CONNECTED | 74 |
+| CONNECTED | 75 |
 | PARTIAL | 30 |
-| NO_UI | 14 |
+| NO_UI | 13 |
 | BACKEND_ONLY | 10 |
 
 ---
@@ -212,7 +212,7 @@
 
 | Module | Method | Endpoint | Purpose | Backend Status | UI Status | UI Page | Priority | Phase | Notes |
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
-| InventoryValuation | GET | `/api/inventory/valuation` | تقييم المخزون | DONE | NO_UI | — | LOW | 3.3 | — |
+| InventoryValuation | GET | `/api/inventory/valuation` | تقييم المخزون | DONE | CONNECTED | `/dashboard/inventory/valuation` | LOW | 3.3 | — |
 
 ---
 
