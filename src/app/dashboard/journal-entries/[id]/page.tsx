@@ -51,7 +51,9 @@ export default function JournalEntryDetailPage() {
       .then((d) => {
         setPermissions(d.data?.permissions || []);
       })
-      .catch(() => {});
+      .catch(() => {
+        toast("تعذر التحقق من الصلاحيات", "error");
+      });
   }, []);
 
   const canEdit =
