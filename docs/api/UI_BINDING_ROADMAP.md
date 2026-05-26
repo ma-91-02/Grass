@@ -118,7 +118,7 @@
 **الصفحات المطلوبة:**
 - `/dashboard/warehouse-transfers/page.tsx` — قائمة ✅ (CONNECTED)
 - `/dashboard/warehouse-transfers/new/page.tsx` — إنشاء تحويل ✅ (COMPLETED)
-- `/dashboard/warehouse-transfers/[id]/page.tsx` — تفاصيل + ترحيل + حذف ✅ (COMPLETED)
+- `/dashboard/warehouse-transfers/[id]/page.tsx` — تفاصيل + ترحيل + حذف + تعديل ✅ (COMPLETED)
 - `/dashboard/warehouse-transfers/[id]/edit/page.tsx` — تعديل مسودة ✅ (COMPLETED)
 
 **Priority:** MEDIUM

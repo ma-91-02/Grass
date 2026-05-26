@@ -1026,7 +1026,7 @@
 **Documentation Updates:**
 - API_REGISTRY.md: تحديث UI Status (NO_UI → CONNECTED)
 - UI_BINDING_ROADMAP.md: تحديث حالة PATCH
-**Commit Hash:**
+**Commit Hash:** `1953a81`
 
 ---
 
