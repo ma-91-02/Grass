@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 128 |
-| CONNECTED | 78 |
+| CONNECTED | 79 |
 | PARTIAL | 30 |
-| NO_UI | 10 |
+| NO_UI | 9 |
 | BACKEND_ONLY | 10 |
 
 ---
@@ -178,7 +178,7 @@
 
 | Module | Method | Endpoint | Purpose | Backend Status | UI Status | UI Page | Priority | Phase | Notes |
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
-| StockTransfers | GET | `/api/stock-transfers` | قائمة تحويلات المخزن | DONE | NO_UI | — | MEDIUM | 2.1 | placeholder فقط |
+| StockTransfers | GET | `/api/stock-transfers` | قائمة تحويلات المخزن | DONE | CONNECTED | `/dashboard/warehouse-transfers` | MEDIUM | 2.1 | — |
 | StockTransfers | POST | `/api/stock-transfers` | إنشاء تحويل | DONE | CONNECTED | `/dashboard/warehouse-transfers/new` | MEDIUM | 2.1 | form إنشاء تحويل مخزن (مصدر/هدف/مادة/كمية) |
 | StockTransfers | GET | `/api/stock-transfers/{id}` | تفاصيل تحويل | DONE | CONNECTED | `/dashboard/warehouse-transfers/[id]` | MEDIUM | 2.1 | عرض معلومات + بنود + ملخص |
 | StockTransfers | PATCH | `/api/stock-transfers/{id}` | تحديث تحويل | DONE | NO_UI | — | MEDIUM | 2.1 | — |

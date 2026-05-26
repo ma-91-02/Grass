@@ -26,6 +26,7 @@ import {
   Building2,
   BarChart3,
   Search,
+  ArrowLeftRight,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -104,6 +105,11 @@ const menuItems = [
     title: "تسويات المخزن",
     href: "/dashboard/stock-adjustments",
     icon: Boxes,
+  },
+  {
+    title: "تحويلات المخزن",
+    href: "/dashboard/warehouse-transfers",
+    icon: ArrowLeftRight,
   },
   {
     title: "تقييم المخزون",
