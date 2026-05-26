@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-24 (UI-021)
+> آخر تحديث: 2026-05-26 (UI-024)
 
 ---
 
@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 128 |
-| CONNECTED | 70 |
+| CONNECTED | 74 |
 | PARTIAL | 30 |
-| NO_UI | 18 |
+| NO_UI | 14 |
 | BACKEND_ONLY | 10 |
 
 ---
@@ -67,11 +67,11 @@
 
 | Module | Method | Endpoint | Purpose | Backend Status | UI Status | UI Page | Priority | Phase | Notes |
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
-| Branches | GET | `/api/branches` | قائمة الفروع | DONE | NO_UI | — | LOW | 4.1 | لا توجد صفحة فروع |
-| Branches | POST | `/api/branches` | إنشاء فرع | DONE | NO_UI | — | LOW | 4.1 | — |
-| Branches | GET | `/api/branches/{id}` | تفاصيل فرع | DONE | NO_UI | — | LOW | 4.1 | — |
-| Branches | PATCH | `/api/branches/{id}` | تحديث فرع | DONE | NO_UI | — | LOW | 4.1 | — |
-| Branches | DELETE | `/api/branches/{id}` | حذف فرع | DONE | NO_UI | — | LOW | 4.1 | — |
+| Branches | GET | `/api/branches` | قائمة الفروع | DONE | CONNECTED | `/dashboard/branches` | LOW | 4.1 | UI-024 |
+| Branches | POST | `/api/branches` | إنشاء فرع | DONE | CONNECTED | `/dashboard/branches` | LOW | 4.1 | UI-024 |
+| Branches | GET | `/api/branches/{id}` | تفاصيل فرع | DONE | CONNECTED | `/dashboard/branches` | LOW | 4.1 | UI-024 |
+| Branches | PATCH | `/api/branches/{id}` | تحديث فرع | DONE | CONNECTED | `/dashboard/branches` | LOW | 4.1 | UI-024 |
+| Branches | DELETE | `/api/branches/{id}` | حذف فرع | DONE | CONNECTED | `/dashboard/branches` | LOW | 4.1 | UI-024 |
 
 ---
 
@@ -363,9 +363,9 @@
 
 | Status | Count |
 |--------|-------|
-| CONNECTED | 70 |
+| CONNECTED | 74 |
 | PARTIAL | 31 |
-| NO_UI | 17 |
+| NO_UI | 13 |
 | BACKEND_ONLY | 10 |
 | UNKNOWN | 0 |
 | BROKEN | 0 |

@@ -129,6 +129,11 @@ const menuItems = [
     icon: Building2,
   },
   {
+    title: "الفروع",
+    href: "/dashboard/branches",
+    icon: Building2,
+  },
+  {
     title: "المستخدمين",
     href: "/dashboard/users",
     icon: UserCircle,

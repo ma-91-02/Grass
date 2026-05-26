@@ -1046,7 +1046,7 @@
 
 #### Task UI-024
 **Title:** Branches UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** LOW  
 **Related APIs:**
 - `GET /api/branches`
@@ -1060,18 +1060,18 @@
 **Forbidden:**
 - تعديل backend branch logic
 **Acceptance Criteria:**
-- عرض الفروع
-- إنشاء فرع
-- تعديل فرع
-- حذف فرع
+- عرض الفروع ✅
+- إنشاء فرع ✅ (Dialog Form مع companyId من /api/auth/me)
+- تعديل فرع ✅ (Dialog Form مع تعبئة القيم الحالية)
+- حذف فرع ✅ (ConfirmDialog + تعطيل تلقائي إذا مرتبط ببيانات)
 **Required Checks:**
 - npm run lint
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ endpoints
-- UI_BINDING_ROADMAP.md: إزالة المهمة
-**Commit Hash:**
+- UI_BINDING_ROADMAP.md: تحديث UI Binding 4.1
+**Commit Hash:** `f2fad9e`
 
 ---
 
@@ -1260,6 +1260,7 @@
 | UI-021 | DONE | e91cc81 | 2026-05-24 |
 | UI-022 | DONE | 387f9d2 | 2026-05-24 |
 | UI-023 | DONE | b2a86b8 | 2026-05-26 |
+| UI-024 | DONE | f2fad9e | 2026-05-26 |
 
 ---
 
