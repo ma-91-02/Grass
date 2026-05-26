@@ -1071,7 +1071,7 @@
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ endpoints
 - UI_BINDING_ROADMAP.md: تحديث UI Binding 4.1
-**Commit Hash:** `f2fad9e`
+**Commit Hash:** `7b5315f`
 
 ---
 
@@ -1260,7 +1260,7 @@
 | UI-021 | DONE | e91cc81 | 2026-05-24 |
 | UI-022 | DONE | 387f9d2 | 2026-05-24 |
 | UI-023 | DONE | b2a86b8 | 2026-05-26 |
-| UI-024 | DONE | f2fad9e | 2026-05-26 |
+| UI-024 | DONE | 7b5315f | 2026-05-26 |
 
 ---
 
