@@ -929,6 +929,17 @@ export default function CustomersPage() {
             searchPlaceholder="بحث بالاسم..."
             actions={(item: CustomerCategory) => (
               <div className="flex items-center justify-center gap-1">
+                <button
+                  onClick={() =>
+                    router.push(
+                      `/dashboard/customer-categories/${item.id}`,
+                    )
+                  }
+                  className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-primary"
+                  title="عرض التفاصيل"
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
                 {userPermissions.includes("customerCategories.edit") && (
                   <button
                     onClick={() => {

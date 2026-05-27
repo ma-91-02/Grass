@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-27 (UI-038 — تفاصيل تصنيف المادة)
+> آخر تحديث: 2026-05-27 (UI-039 — تفاصيل قسم العميل)
 
 ---
 
@@ -1368,13 +1368,46 @@
 
 ---
 
+#### Task UI-039
+**Title:** Customer Category Detail UI
+**Status:** `DONE`
+**Priority:** LOW
+**Related APIs:**
+- `GET /api/customer-categories/{id}`
+**Target UI Pages:**
+- `/dashboard/customer-categories/[id]/page.tsx`
+- `/dashboard/customers/page.tsx` (categories tab — زر عرض)
+**Scope:**
+- صفحة تفاصيل قسم عميل read-only
+- زر Eye من تبويب أقسام العملاء
+- ربط GET /api/customer-categories/{id}
+**Forbidden:**
+- تعديل backend
+**Acceptance Criteria:**
+- زر عرض يظهر لكل قسم في التبويب
+- صفحة تفاصيل تعرض name/description/isActive/customerCount/system data
+- خطأ في التحميل يظهر رسالة واضحة
+- زر رجوع لقائمة العملاء
+**Required Checks:**
+- npm run lint
+- npm run typecheck
+- npm run build
+**Documentation Updates:**
+- API_REGISTRY.md: GET /api/customer-categories/{id}: NO_UI → CONNECTED
+- UI_BINDING_ROADMAP.md: تحديث المتبقي NO_UI (1→0)
+- UI_COMPLETION_BACKLOG.md: UI-039 → DONE
+**Commit Hash:** ``
+**Date:** 2026-05-27
+
+---
+
 | الأولوية | العدد |
 |----------|-------|
 | CRITICAL | 6 |
 | HIGH | 7 |
 | MEDIUM | 10 |
-| LOW | 9 |
-| **الإجمالي** | **32** |
+| LOW | 10 |
+| **الإجمالي** | **33** |
 
 ---
 
@@ -1402,6 +1435,7 @@
 | UI-036 | DONE | 0e748f4 | 2026-05-27 |
 | UI-037 | DONE | 6a08f89 | 2026-05-27 |
 | UI-038 | DONE | 20e4673 | 2026-05-27 |
+| UI-039 | DONE |  | 2026-05-27 |
 
 ---
 

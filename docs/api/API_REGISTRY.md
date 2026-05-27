@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-27 (UI-038 — تفاصيل تصنيف المادة)
+> آخر تحديث: 2026-05-27 (UI-039 — تفاصيل قسم العميل)
 
 ---
 
@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 129 |
-| CONNECTED | 125 |
+| CONNECTED | 126 |
 | PARTIAL | 0 |
-| NO_UI | 1 |
+| NO_UI | 0 |
 | BACKEND_ONLY | 3 |
 
 ---
@@ -107,7 +107,7 @@
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | CustomerCategories | GET | `/api/customer-categories` | قائمة أقسام العملاء | DONE | CONNECTED | `/dashboard/customers` (categories tab) | HIGH | 0 | — |
 | CustomerCategories | POST | `/api/customer-categories` | إنشاء قسم | DONE | CONNECTED | `/dashboard/customers` (categories tab) | HIGH | 0 | — |
-| CustomerCategories | GET | `/api/customer-categories/{id}` | تفاصيل قسم | DONE | NO_UI | — | LOW | 4.4 | — |
+| CustomerCategories | GET | `/api/customer-categories/{id}` | تفاصيل قسم | DONE | CONNECTED | `/dashboard/customer-categories/[id]` | LOW | 4.4 | UI-039 — عرض name/description/isActive/customerCount/system data |
 | CustomerCategories | PATCH | `/api/customer-categories/{id}` | تحديث قسم | DONE | CONNECTED | `/dashboard/customers` (categories tab) | HIGH | 0 | — |
 | CustomerCategories | DELETE | `/api/customer-categories/{id}` | حذف قسم | DONE | CONNECTED | `/dashboard/customers` (categories tab) | HIGH | 0 | — |
 
@@ -365,9 +365,9 @@
 
 | Status | Count |
 |--------|-------|
-| CONNECTED | 125 |
+| CONNECTED | 126 |
 | PARTIAL | 0 |
-| NO_UI | 1 |
+| NO_UI | 0 |
 | BACKEND_ONLY | 3 |
 | UNKNOWN | 0 |
 | BROKEN | 0 |
