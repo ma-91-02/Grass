@@ -1,7 +1,7 @@
 # UI Binding Roadmap — Grass ERP
 
 > خارطة ربط الواجهة الأمامية بالـ APIs حسب الأولوية.
-> آخر تحديث: 2026-05-27 (UI-036 — تفاصيل وحدة القياس)
+> آخر تحديث: 2026-05-27 (UI-037 — تفاصيل وحذف الفترة المالية)
 
 ---
 
@@ -321,16 +321,14 @@
 
 تم التدقيق النهائي لـ API_REGISTRY.md:
 
-- **CONNECTED:** 122 (تصحيح من 88 — 31 endpoint لم تكن محدّثة في Executive Summary)
-- **NO_UI:** 4 (تصحيح من 0 — 4 detail/action endpoints لا تزال غير مربوطه)
+- **CONNECTED:** 124 (تصحيح من 88 — 31 endpoint لم تكن محدّثة في Executive Summary)
+- **NO_UI:** 2 (تصحيح من 0 — 2 detail/action endpoints لا تزال غير مربوطه)
 - **BACKEND_ONLY:** 3 (تصحيح من 10 — 8 endpoints لم تكن صحيحة)
 - **PARTIAL:** 0 (تصحيح من 30 — لا يوجد endpoints مربوط جزئيًا)
 
-### المتبقي NO_UI (4 endpoints):
+### المتبقي NO_UI (2 endpoints):
 1. `GET /api/customer-categories/{id}` — تفاصيل قسم (LOW)
 2. `GET /api/categories/{id}` — تفاصيل تصنيف (LOW)
-3. `GET /api/fiscal-periods/{id}` — تفاصيل فترة (LOW)
-4. `DELETE /api/fiscal-periods/{id}` — حذف فترة (LOW)
 
 ### التغييرات:
 - `GET /api/customer-collections/{id}/print`: NO_UI → CONNECTED (مستخدم من صفحة القائمة)

@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-27 (UI-036 — تفاصيل وحدة القياس)
+> آخر تحديث: 2026-05-27 (UI-037 — تفاصيل وحذف الفترة المالية)
 
 ---
 
@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 129 |
-| CONNECTED | 122 |
+| CONNECTED | 124 |
 | PARTIAL | 0 |
-| NO_UI | 4 |
+| NO_UI | 2 |
 | BACKEND_ONLY | 3 |
 
 ---
@@ -296,9 +296,11 @@
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | FiscalPeriods | GET | `/api/fiscal-periods` | قائمة الفترات المالية | DONE | CONNECTED | `/dashboard/fiscal-periods` | HIGH | 0 | — |
 | FiscalPeriods | POST | `/api/fiscal-periods` | إنشاء فترة | DONE | CONNECTED | `/dashboard/fiscal-periods` | HIGH | 0 | — |
-| FiscalPeriods | GET | `/api/fiscal-periods/{id}` | تفاصيل فترة | DONE | NO_UI | — | LOW | 4.4 | — |
+| FiscalPeriods | GET | `/api/fiscal-periods/{id}` | تفاصيل فترة | DONE | CONNECTED | `/dashboard/fiscal-periods/[id]` | LOW | 4.4 | UI-037 — عرض name/startDate/endDate/status/branchId/system data |
+
 | FiscalPeriods | PATCH | `/api/fiscal-periods/{id}` | فتح/إغلاق فترة | DONE | CONNECTED | `/dashboard/fiscal-periods` | HIGH | 0 | — |
-| FiscalPeriods | DELETE | `/api/fiscal-periods/{id}` | حذف فترة مستقبلية | DONE | NO_UI | — | LOW | 4.4 | — |
+
+| FiscalPeriods | DELETE | `/api/fiscal-periods/{id}` | حذف فترة مستقبلية | DONE | CONNECTED | `/dashboard/fiscal-periods/[id]` | LOW | 4.4 | UI-037 — زر حذف مع ConfirmDialog, فقط لفترات FUTURE + صلاحية manage |
 
 ---
 
@@ -363,9 +365,9 @@
 
 | Status | Count |
 |--------|-------|
-| CONNECTED | 122 |
+| CONNECTED | 124 |
 | PARTIAL | 0 |
-| NO_UI | 4 |
+| NO_UI | 2 |
 | BACKEND_ONLY | 3 |
 | UNKNOWN | 0 |
 | BROKEN | 0 |

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable, type Column } from "@/components/shared/data-table";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
-import { Plus } from "lucide-react";
+import { Plus, Eye } from "lucide-react";
 
 interface FiscalPeriod {
   id: string;
@@ -24,6 +25,7 @@ interface FiscalPeriod {
 
 export default function FiscalPeriodsPage() {
   const qc = useQueryClient();
+  const router = useRouter();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
@@ -36,7 +38,9 @@ export default function FiscalPeriodsPage() {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => setUserCompanyId(d.data?.companyId || null))
-      .catch(() => {});
+      .catch(() => {
+        toast("تعذر التحقق من بيانات المستخدم", "error");
+      });
   }, []);
 
   const { data, isLoading, error } = useQuery({
@@ -195,6 +199,15 @@ export default function FiscalPeriodsPage() {
             icon: <span className="text-xs">إغلاق</span>,
           },
         ]}
+        actions={(item: FiscalPeriod) => (
+          <button
+            onClick={() => router.push(`/dashboard/fiscal-periods/${item.id}`)}
+            className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-primary"
+            title="عرض التفاصيل"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+        )}
       />
 
       <Dialog

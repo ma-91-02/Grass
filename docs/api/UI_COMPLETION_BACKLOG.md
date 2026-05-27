@@ -1261,6 +1261,45 @@
 
 ---
 
+#### Task UI-037
+**Title:** Fiscal Period Detail/Delete UI  
+**Status:** `DONE`  
+**Priority:** LOW  
+**Related APIs:**
+- `GET /api/fiscal-periods/{id}`
+- `DELETE /api/fiscal-periods/{id}`
+**Target UI Pages:**
+- `/dashboard/fiscal-periods/[id]/page.tsx`
+- `/dashboard/fiscal-periods/page.tsx` (زر عرض)
+**Scope:**
+- إنشاء صفحة تفاصيل فترة مالية للقراءة فقط
+- عرض name/startDate/endDate/status/branchId/system data
+- إضافة زر Eye (عرض التفاصيل) في قائمة الفترات
+- إضافة زر حذف مع ConfirmDialog للفترات المستقبلية فقط (status=FUTURE)
+- إصلاح silent catch في قائمة الفترات
+**Forbidden:**
+- تعديل backend
+- تعديل fiscal period logic
+**Acceptance Criteria:**
+- زر عرض يظهر لكل فترة في القائمة
+- زر حذف يظهر فقط للفترات المستقبلية مع صلاحية manage
+- ConfirmDialog قبل الحذف
+- نجاح الحذف يرجع للقائمة
+- فشل الحذف يعرض رسالة الخطأ من backend
+- خطأ في التحميل يظهر رسالة واضحة
+**Required Checks:**
+- npm run lint
+- npm run typecheck
+- npm run build
+**Documentation Updates:**
+- API_REGISTRY.md: GET + DELETE: NO_UI → CONNECTED
+- UI_BINDING_ROADMAP.md: تحديث المتبقي NO_UI (4→2)
+- UI_COMPLETION_BACKLOG.md: UI-037 → DONE
+**Commit Hash:** `39910fe`
+**Date:** 2026-05-27
+
+---
+
 #### Task UI-034
 **Title:** Purchases Edit UI  
 **Status:** `DONE`  
@@ -1328,6 +1367,7 @@
 | UI-034 | DONE | 1c5d530 | 2026-05-27 |
 | UI-035 | DONE | e874cfc | 2026-05-27 |
 | UI-036 | DONE | 0e748f4 | 2026-05-27 |
+| UI-037 | DONE | 39910fe | 2026-05-27 |
 
 ---
 
