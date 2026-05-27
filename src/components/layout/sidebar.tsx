@@ -27,6 +27,7 @@ import {
   BarChart3,
   Search,
   ArrowLeftRight,
+  Truck,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -55,6 +56,11 @@ const menuItems = [
     title: "مرتجعات المبيعات",
     href: "/dashboard/sales-returns",
     icon: RotateCcw,
+  },
+  {
+    title: "المشتريات",
+    href: "/dashboard/purchases",
+    icon: Truck,
   },
   {
     title: "الحسابات",

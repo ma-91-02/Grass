@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-27 (SEC-002 — إزالة hardcoded JWT fallback من proxy.ts)
+> آخر تحديث: 2026-05-27 (NAV-001 — Full Sidebar Navigation Coverage Audit)
 
 ---
 
@@ -1429,6 +1429,34 @@
 
 ---
 
+#### Task NAV-001
+**Title:** Full Sidebar Navigation Coverage Audit
+**Status:** `DONE`
+**Priority:** LOW
+**Scope:**
+- فحص كل 62 dashboard routes
+- فحص 26 رابط Sidebar Direct
+- إضافة رابط "المشتريات" إلى الـ Sidebar (كان مفقودًا)
+- لا توجد روابط مكسورة أو صفحات معزولة
+**Forbidden:**
+- تعديل backend
+- تعديل auth flow
+**Acceptance Criteria:**
+- جميع الـ 27 list pages مرتبطة بـ Sidebar أو قابلة للوصول من Parent
+- جميع الـ 17 detail pages لها زر عرض من صفحة القائمة
+- جميع الـ 9 new pages لها زر إنشاء من صفحة القائمة
+- جميع الـ 7 edit pages لها زر تعديل من صفحة التفاصيل
+- لا توجد روابط مكسورة
+**Required Checks:**
+- npm run typecheck
+- npm run build
+**Documentation Updates:**
+- UI_COMPLETION_BACKLOG.md: إضافة NAV-001
+**Commit Hash:** (pending commit)
+**Date:** 2026-05-27
+
+---
+
 #### Task MAINT-003
 **Title:** Final Zero-NO_UI Verification & Navigation Smoke Audit
 **Status:** `DONE`
@@ -1492,6 +1520,7 @@
 | MAINT-004 | DONE | — | 2026-05-27 |
 | SEC-001 | DONE | — | 2026-05-27 |
 | SEC-002 | DONE | f06a092 | 2026-05-27 |
+| NAV-001 | DONE | (pending commit) | 2026-05-27 |
 
 ---
 
