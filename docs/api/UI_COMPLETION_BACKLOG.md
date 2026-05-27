@@ -1476,7 +1476,7 @@
 - جميع صفحات التفاصيل موجودة وتحتوي loading/error/back states
 - لا توجد silent failures
 - لا توجد روابط مكسورة
-**Commit Hash:** ``
+**Commit Hash:** `bcbbf7f`
 **Date:** 2026-05-27
 
 ---
@@ -1586,7 +1586,7 @@
 | SEC-002 | DONE | f06a092 | 2026-05-27 |
 | NAV-001 | DONE | ac80078 | 2026-05-27 |
 | PM-001 | DONE | 09acdf5 | 2026-05-27 |
-| PH00-COMPLETE-001 | DONE |  | 2026-05-28 |
+| PH00-COMPLETE-001 | DONE | bcbbf7f | 2026-05-28 |
 
 ---
 
