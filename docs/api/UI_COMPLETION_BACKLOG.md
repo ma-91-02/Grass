@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-28 (PH00-COMPLETE-001 — Foundation Core Completion)
+> آخر تحديث: 2026-05-28 (PH00-GATE-VERIFY-001 — Phase Zero Gate Verification)
 
 ---
 
@@ -1545,13 +1545,40 @@
 
 ---
 
+#### Task PH00-GATE-VERIFY-001
+**Title:** Apply Mandatory Phase Gate To PH-00 Foundation Core
+**Status:** `BLOCKED`
+**Priority:** CRITICAL
+**Scope:**
+- تطبيق Phase Gate على PH-00
+- تدقيق FND-001 إلى FND-008
+- تدقيق Backend/API/Data Integrity/Accounting/UI/Tests/Docs
+- إنشاء `PH00_GATE_VERIFICATION_AR.md`
+- تحديث `PROJECT_PROGRESS_TRACKER_AR.md`
+**Forbidden:**
+- تنفيذ PH-01
+- تعديل Purchases/Sales/Reports/HR/Coolify
+- تنفيذ Features خارج PH-00
+**Result:**
+- تم تنفيذ مهمة التحقق.
+- القرار النهائي: `PH-00 NOT APPROVED`.
+- بقيت فجوات داخل PH-00 يجب إصلاحها قبل الانتقال: Auth Audit وJournal Reversal.
+**Documentation Updates:**
+- `docs/qa/phase-gates/PH00_GATE_VERIFICATION_AR.md`
+- `docs/PROJECT_PROGRESS_TRACKER_AR.md`
+- `docs/api/UI_COMPLETION_BACKLOG.md`
+**Commit Hash:** ``
+**Date:** 2026-05-28
+
+---
+
 | الأولوية | العدد |
 |----------|-------|
-| CRITICAL | 7 |
+| CRITICAL | 8 |
 | HIGH | 7 |
 | MEDIUM | 10 |
 | LOW | 11 |
-| **الإجمالي** | **35** |
+| **الإجمالي** | **36** |
 
 ---
 
@@ -1587,6 +1614,7 @@
 | NAV-001 | DONE | ac80078 | 2026-05-27 |
 | PM-001 | DONE | 09acdf5 | 2026-05-27 |
 | PH00-COMPLETE-001 | DONE | bcbbf7f | 2026-05-28 |
+| PH00-GATE-VERIFY-001 | BLOCKED |  | 2026-05-28 |
 
 ---
 

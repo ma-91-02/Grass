@@ -66,6 +66,13 @@
 - أي دورة مالية أو مخزنية لم تُختبر end-to-end تُصنف غالباً `NEEDS_AUDIT` أو `PARTIAL`.
 - النسبة العامة للمشروع تشمل نطاق ERP المؤسسي الكامل، لذلك ستكون أقل من نسبة جاهزية شاشة أو وحدة منفردة.
 
+### قاعدة Phase Gate الإلزامية
+
+- لا تُعتبر أي Phase مكتملة 100%، ولا يجوز الانتقال إلى Phase بعدها، إلا بعد تنفيذ مهمة تحقق مستقلة لها بصيغة `PHXX-GATE-VERIFY-001`.
+- أمثلة إلزامية: `PH00-GATE-VERIFY-001` قبل PH-01، و`PH01-GATE-VERIFY-001` قبل PH-02، و`PH02-GATE-VERIFY-001` قبل PH-03.
+- أي Phase بدون Gate Verification مستقل تبقى `NEEDS_AUDIT` حتى لو كانت كل UI/API ظاهرياً مكتملة.
+- إذا فشلت البوابة، تُعاد حالة المرحلة إلى `NEEDS_AUDIT` أو `PARTIAL` حسب الفجوة، وتُحدد مهمة إصلاح داخل نفس المرحلة قبل أي انتقال.
+
 ## 5. ملخص تنفيذي
 
 | المؤشر                                                               | النتيجة                                                                         |
@@ -78,14 +85,14 @@
 | روابط Sidebar مباشرة                                                 | 27 تقريباً                                                                      |
 | ملفات الاختبار                                                       | 22                                                                              |
 | test cases / describe / it تقريباً                                   | 621                                                                             |
-| النسبة العامة التقريبية للمشروع المؤسسي                              | 46%                                                                             |
-| النسبة التقريبية للنواة القابلة للتجربة بعد تدقيق المبيعات/المشتريات | 61% تقريباً                                                                     |
-| المرحلة الحالية                                                      | تدقيق المشتريات End-to-End قبل التقارير                                         |
-| المهمة التالية الموصى بها                                            | PUR-AUDIT-001 — تدقيق دورة المشتريات كاملة من الإنشاء إلى الأثر المالي والمخزني |
+| النسبة العامة التقريبية للمشروع المؤسسي                              | 45%                                                                             |
+| النسبة التقريبية للنواة القابلة للتجربة بعد تدقيق المبيعات/المشتريات | 59% تقريباً                                                                     |
+| المرحلة الحالية                                                      | إصلاح فجوات Phase Gate داخل PH-00 قبل الانتقال                                  |
+| المهمة التالية الموصى بها                                            | PH00-FIX-001 — إصلاح فجوات Auth Audit وJournal Reversal داخل Foundation Core    |
 
 ### أهم الاستنتاجات
 
-- Foundation وUI Binding قطعا شوطاً كبيراً: Auth، RBAC، companies، branches، fiscal periods، chart of accounts، journal entries، معظم صفحات dashboard، وSidebar موجودة. بعد PH00-COMPLETE-001 أصبحت فجوات PH-00 العملية مغلقة، وبقي smoke runtime الدوري جزءاً من QA/Release وليس blocker داخل Foundation.
+- Foundation وUI Binding قطعا شوطاً كبيراً: Auth، RBAC، companies، branches، fiscal periods، chart of accounts، journal entries، معظم صفحات dashboard، وSidebar موجودة. لكن `PH00-GATE-VERIFY-001` لم يعتمد PH-00 بسبب فجوتين داخل Foundation: failed-login audit لا يملك تخزيناً مضموناً عند عدم وجود مستخدم، وسياسة عكس القيد تضع الأصل `REVERSED` بينما قيد العكس ما زال `DRAFT`.
 - المخزون والمبيعات لهما تنفيذ أعمق من المشتريات، مع خدمات stock balance وposting tests للمبيعات والمرتجعات.
 - المشتريات تمتلك UI وAPI وPDF ومصاريف داخل الفاتورة، لكنها لا تحقق بعد فلسفة الخطة الأصلية بالكامل: لا يوجد endpoint ترحيل مشتريات، لا يوجد AP journal، لا توجد Purchase Returns، لا توجد اختبارات مشتريات، وتوجد تحديثات مباشرة على `paymentAccount.balance` و`product.purchasePrice`.
 - التقارير العامة ما زالت placeholder، رغم وجود dashboard stats وتقارير inventory valuation/audit.
@@ -95,9 +102,17 @@
 
 المرحلة الحالية حسب المقارنة بين الخطة والكود هي:
 
-**Phase 7 — Purchases End-to-End Audit & Posting Hardening**
+**PH-00 — Foundation Gate Findings Fix**
 
 السبب:
+
+- تم تنفيذ Gate مستقل لـ PH-00 حسب القاعدة الجديدة.
+- نتيجة Gate هي `PH-00 NOT APPROVED`.
+- لا يجوز الانتقال إلى PH-01 أو العودة إلى تدقيق المشتريات كمرحلة تالية قبل إصلاح فجوات PH-00 الحرجة.
+- فجوة FND-008: `recordAuthAudit` قد لا يحفظ failed login audit لأن `AuditLog.userId` إلزامي، بينما failed login لا يملك `userId`.
+- فجوة FND-006: عكس القيد الحالي ينشئ قيد عكس `DRAFT` ويعلّم القيد الأصلي `REVERSED` فوراً، وهذا يحتاج سياسة reversal محاسبية أوضح قبل الاعتماد.
+
+بعد إغلاق PH00-FIX-001 وإعادة تشغيل Gate، يمكن العودة إلى المسار السابق:
 
 - `docs/api/API_REGISTRY.md` يوضح أن endpoints المشتريات مربوطة بالواجهة.
 - توجد صفحات:
@@ -114,13 +129,13 @@
 - لا يوجد model أو API أو UI لـ `PurchaseReturn`.
 - لا توجد اختبارات مشتريات في `src/lib/__tests__`.
 
-لذلك لا يُنصح بالانتقال إلى التقارير المالية قبل تدقيق المشتريات وتحديد فجواتها بدقة.
+لذلك لا يُنصح بالانتقال إلى PH-01 أو التقارير المالية قبل إصلاح فجوات PH-00، ثم إعادة تشغيل `PH00-GATE-VERIFY-001`. بعد اعتماد PH-00، يعود تدقيق المشتريات إلى كونه المسار العملي التالي قبل التقارير.
 
 ## 7. جدول المراحل الرئيسي
 
 | Phase ID | اسم المرحلة                 | الهدف                                                                | الحالة      | الإنجاز | مطلوبة للتجربة؟             | مطلوبة قبل Coolify؟ | المهمة التالية داخلها                        | ملاحظات                                                            |
 | -------- | --------------------------- | -------------------------------------------------------------------- | ----------- | ------: | --------------------------- | ------------------- | -------------------------------------------- | ------------------------------------------------------------------ |
-| PH-00    | Foundation Core             | Auth, RBAC, Company, Branch, Fiscal Periods, COA, Journal foundation | DONE        |    100% | نعم                         | نعم                 | لا توجد مهمة PH-00 متبقية؛ التالي PUR-AUDIT-001 | اكتملت فجوات Foundation العملية، وsmoke runtime يبقى ضمن QA الدوري |
+| PH-00    | Foundation Core             | Auth, RBAC, Company, Branch, Fiscal Periods, COA, Journal foundation | NEEDS_AUDIT |     81% | نعم                         | نعم                 | PH00-FIX-001                                 | فشل Gate بسبب Auth Audit وJournal Reversal؛ لا انتقال قبل الإصلاح |
 | PH-01    | Users & Permissions         | المستخدمون، الأدوار، الصلاحيات، الجلسات                              | PARTIAL     |     75% | نعم                         | نعم                 | تدقيق Roles editor وpermission coverage      | يوجد users/roles basic، لكن لا توجد MFA أو role detail editor كامل |
 | PH-02    | Dashboard & Navigation      | Sidebar، parent pages، navigation coverage، UI binding               | PARTIAL     |     70% | نعم                         | نعم                 | إصلاح dashboard/settings placeholders لاحقاً | Zero NO_UI موثق، لكن بعض الصفحات placeholder                       |
 | PH-03    | Customers & Suppliers       | العملاء، الموردون، الذمم، كشوفات العملاء                             | PARTIAL     |     80% | نعم                         | نعم                 | تدقيق supplier AP مع المشتريات               | العملاء أقوى من الموردين بسبب collections/receivables              |
@@ -148,9 +163,9 @@
 | FND-003 | Branch model + APIs          | Data/API    | DONE    |   100% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | HIGH     | `Branch`, `/api/branches`, `/dashboard/branches`    | موجود                                                 |
 | FND-004 | Fiscal periods               | Accounting  | DONE    |   100% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `FiscalPeriod`, `/api/fiscal-periods`, PeriodGuard  | Foundation guard مكتمل؛ close engine المتقدم خارج PH-00 |
 | FND-005 | Chart of Accounts foundation | Accounting  | DONE    |   100% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `Account`, `/api/accounts`, `/dashboard/accounts`, `/api/accounts/tree` | تم تدقيق seed الأساسي وإغلاق عزل الشركة في tree API |
-| FND-006 | JournalEntry / JournalLine   | Accounting  | DONE    |   100% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `JournalEntry`, `/api/journal-entries`              | موجود مع post/reverse ومعاملات audit مالية آمنة       |
+| FND-006 | JournalEntry / JournalLine   | Accounting  | NEEDS_AUDIT |    25% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `JournalEntry`, `/api/journal-entries`, `PH00_GATE_VERIFICATION_AR.md` | عكس القيد يحتاج سياسة محاسبية آمنة قبل اعتماد Gate |
 | FND-007 | PostingService foundation    | Accounting  | DONE    |   100% | نعم     | نعم  | لا  | لا  | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `src/lib/services/posting-service.ts`               | Foundation journal posting مكتمل؛ source documents تخص phases لاحقة |
-| FND-008 | Audit baseline               | Security    | DONE    |   100% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | HIGH     | `AuditLog`, `/api/audit-logs`, journal audit transaction tests | baseline مكتمل؛ hash-chain/append-only المؤسسي ضمن PH-12 |
+| FND-008 | Audit baseline               | Security    | NEEDS_AUDIT |    25% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | HIGH     | `AuditLog`, `/api/audit-logs`, `recordAuthAudit`, `PH00_GATE_VERIFICATION_AR.md` | failed-login audit قد لا يُحفظ عند عدم وجود userId |
 
 #### تحديث PH00-COMPLETE-001
 
@@ -167,6 +182,20 @@
 - عدم تغطية `PostingService` لكل source documents ليس نقصاً داخل PH-00؛ ترحيل المبيعات والمشتريات والمخزون يبقى ضمن مراحله.
 - Month-end/year-end close engine وFX revaluation وhard-close المؤسسي ليست ضمن PH-00؛ PH-00 يطلب `PeriodGuard` وحالات الفترة الأساسية فقط.
 - Audit hash-chain/append-only storage وsigned events جزء من Security Hardening/Enterprise Controls وليس شرطاً لإغلاق Foundation Core.
+
+#### تحديث PH00-GATE-VERIFY-001
+
+| البند | النتيجة |
+| ----- | ------- |
+| قرار Gate | `PH-00 NOT APPROVED` |
+| ملف التحقق | `docs/qa/phase-gates/PH00_GATE_VERIFICATION_AR.md` |
+| الاختبارات المرتبطة بـ PH-00 | نجحت: 9 ملفات، 274 اختباراً |
+| الاختبار العام | نجح: 22 ملفاً، 533 اختباراً |
+| Runtime verification | محدود: `/auth/login` يعمل، والصفحات/APIs المحمية ترفض غير المصادق عليه؛ لم تتوفر جلسة System Owner لتدقيق runtime كامل |
+| فجوة FND-006 | عكس القيد ينشئ قيد عكس `DRAFT` ويعلّم الأصل `REVERSED` فوراً |
+| فجوة FND-008 | failed-login audit قد لا يُحفظ لأن `AuditLog.userId` إلزامي و`recordAuthAudit` يستخدم `"unknown"` عند غياب المستخدم |
+| الحالة الجديدة لـ PH-00 | `NEEDS_AUDIT` بنسبة 81% |
+| المهمة التالية داخل PH-00 | `PH00-FIX-001 — إصلاح فجوات Auth Audit وJournal Reversal داخل Foundation Core` |
 
 ### PH-01 — Users & Permissions
 
@@ -620,23 +649,24 @@
 
 المهمة التالية المنطقية الآن:
 
-**PUR-AUDIT-001 — تدقيق تنفيذ المشتريات الحالي End-to-End**
+**PH00-FIX-001 — إصلاح فجوات Auth Audit وJournal Reversal داخل Foundation Core**
 
 ### السبب
 
-- المشتريات هي آخر فجوة حرجة قبل الاعتماد على التقارير.
-- UI/API للمشتريات موجودان، لذلك قد تبدو مكتملة ظاهرياً.
-- الخطة الأصلية تطلب purchase posting، AP، stock IN، landed cost، purchase returns.
-- الكود الحالي لا يملك post endpoint ولا اختبارات مشتريات.
-- توجد مؤشرات خطر: `status` غير متسق، `StockMovement` لا يطبق balance، direct `paymentAccount.balance`، direct `product.purchasePrice`.
+- `PH00-GATE-VERIFY-001` انتهى بقرار `PH-00 NOT APPROVED`.
+- لا يجوز الانتقال إلى PH-01 أو العودة إلى PUR-AUDIT-001 قبل اعتماد PH-00 عبر Gate مستقل.
+- فجوة `FND-008` تمس audit baseline: failed-login audit قد لا يُحفظ عند عدم وجود `userId`.
+- فجوة `FND-006` تمس accounting integrity: عكس القيد الحالي يعلّم الأصل `REVERSED` بينما قيد العكس ما زال `DRAFT`.
+- هذه فجوات داخل Foundation Core، وليست Purchases أو Sales أو Reports.
 
 ### نطاق المهمة التالية المقترح
 
-- لا تنفيذ كود.
-- تشغيل/قراءة دورة إنشاء شراء نقدي وآجل من الكود.
-- توثيق كل فجوة: status، stock balance، journal/AP، payment account، landed cost، permissions، audit، tests.
-- تحديث tracker بنتيجة التدقيق.
-- بعد التدقيق فقط يتم إنشاء مهمة تنفيذ صغيرة لتصحيح purchase posting.
+- تحليل خيار audit الآمن لفشل تسجيل الدخول بدون مستخدم.
+- إصلاح failed-login audit بطريقة لا تكسر `AuditLog` ولا تخلق user وهمي.
+- اعتماد سياسة reversal journal الآمنة ثم تنفيذها داخل PH-00 فقط.
+- إضافة اختبارات تثبت حفظ/توثيق failed-login audit وسلامة reversal.
+- إعادة تشغيل `PH00-GATE-VERIFY-001` بعد الإصلاح.
+- بعد اعتماد PH-00 فقط، يعود `PUR-AUDIT-001` كالمهمة العملية التالية قبل التقارير.
 
 ## 25. طريقة تحديث هذا الملف مستقبلاً
 
