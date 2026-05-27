@@ -1,7 +1,7 @@
 # UI Binding Roadmap — Grass ERP
 
 > خارطة ربط الواجهة الأمامية بالـ APIs حسب الأولوية.
-> آخر تحديث: 2026-05-27 (UI-039 — تفاصيل قسم العميل)
+> آخر تحديث: 2026-05-27 (MAINT-003 — تدقيق Zero NO_UI النهائي)
 
 ---
 
@@ -338,3 +338,28 @@
 
 ### التوصية:
 - UI-034 (PATCH Purchases) تم إنجازه — جميع مهام UI المتبقية منخفضة الأولوية (LOW detail endpoints)
+
+---
+
+## MAINT-003 Zero-NO_UI Verification (2026-05-27)
+
+تم التدقيق النهائي لمشروع Zero NO_UI:
+
+- **CONNECTED:** 126 ✅ (جميع endpoints مربوطة)
+- **NO_UI:** 0 ✅ (لا يوجد endpoint غير مربوط)
+- **BACKEND_ONLY:** 3 ✅ (`/api/permissions`, `/api/accounts/tree`, `/api/packaging`)
+- **PARTIAL:** 0 ✅
+- **UNKNOWN:** 0 ✅
+- **BROKEN:** 0 ✅
+
+### التحقق من الصفحات:
+- ✅ `/dashboard/accounts/[id]` — موجود ويعمل (UI-035)
+- ✅ `/dashboard/units/[id]` — موجود ويعمل (UI-036)
+- ✅ `/dashboard/fiscal-periods/[id]` — موجود ويعمل (UI-037)
+- ✅ `/dashboard/categories/[id]` — موجود ويعمل (UI-038)
+- ✅ `/dashboard/customer-categories/[id]` — موجود ويعمل (UI-039)
+- ✅ جميع الصفحات المصدرية تحتوي أزرار عرض التفاصيل
+- ✅ لا توجد silent failures (`.catch(() => {})`) في أي من الصفحات الجديدة
+- ✅ لا توجد روابط مكسورة في Sidebar
+
+**الخلاصة:** المشروع وصل إلى Zero NO_UI. جميع نقاط النهاية الـ 129 مربوطة أو ذات غرض خلفي فقط.

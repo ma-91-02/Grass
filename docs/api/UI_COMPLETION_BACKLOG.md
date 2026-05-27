@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-27 (UI-039 — تفاصيل قسم العميل)
+> آخر تحديث: 2026-05-27 (MAINT-003 — تدقيق Zero NO_UI النهائي)
 
 ---
 
@@ -1401,13 +1401,37 @@
 
 ---
 
+#### Task MAINT-003
+**Title:** Final Zero-NO_UI Verification & Navigation Smoke Audit
+**Status:** `DONE`
+**Priority:** LOW
+**Related APIs:**
+- جميع endpoints
+**Target UI Pages:**
+- جميع صفحات التفاصيل من UI-035 إلى UI-039
+**Scope:**
+- تدقيق API_REGISTRY.md بالكامل والتأكد من NO_UI = 0
+- التحقق من وجود وعمل جميع صفحات التفاصيل الجديدة
+- التحقق من أزرار العرض في الصفحات المصدرية
+- فحص silent failures
+- فحص الروابط في Sidebar
+**Acceptance Criteria:**
+- NO_UI = 0 فعلاً في الجدول وليس الملخص فقط
+- جميع صفحات التفاصيل موجودة وتحتوي loading/error/back states
+- لا توجد silent failures
+- لا توجد روابط مكسورة
+**Commit Hash:** ``
+**Date:** 2026-05-27
+
+---
+
 | الأولوية | العدد |
 |----------|-------|
 | CRITICAL | 6 |
 | HIGH | 7 |
 | MEDIUM | 10 |
-| LOW | 10 |
-| **الإجمالي** | **33** |
+| LOW | 11 |
+| **الإجمالي** | **34** |
 
 ---
 
@@ -1436,6 +1460,7 @@
 | UI-037 | DONE | 6a08f89 | 2026-05-27 |
 | UI-038 | DONE | 20e4673 | 2026-05-27 |
 | UI-039 | DONE | ae1df38 | 2026-05-27 |
+| MAINT-003 | DONE |  | 2026-05-27 |
 
 ---
 
