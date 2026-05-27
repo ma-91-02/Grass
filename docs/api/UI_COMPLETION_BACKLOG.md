@@ -1220,7 +1220,8 @@
 - API_REGISTRY.md: GET /api/accounts/{id}: NO_UI → CONNECTED
 - UI_BINDING_ROADMAP.md: تحديث 1.4 — accounts/{id} ✅
 - UI_COMPLETION_BACKLOG.md: UI-035 → DONE
-**Commit Hash:** `084d251`
+**Commit Hash:** `e874cfc`
+
 **Date:** 2026-05-27
 
 ---
@@ -1290,7 +1291,7 @@
 | UI-032 | DONE | 750658e | 2026-05-27 |
 | UI-033 | DONE | bf90430 | 2026-05-27 |
 | UI-034 | DONE | 1c5d530 | 2026-05-27 |
-| UI-035 | DONE | 084d251 | 2026-05-27 |
+| UI-035 | DONE | e874cfc | 2026-05-27 |
 
 ---
 
