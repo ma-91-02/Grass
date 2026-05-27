@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-27 (PM-001 — Master Project Progress Tracker)
+> آخر تحديث: 2026-05-28 (PH00-COMPLETE-001 — Foundation Core Completion)
 
 ---
 
@@ -1512,13 +1512,46 @@
 
 ---
 
+#### Task PH00-COMPLETE-001
+**Title:** Complete Foundation Core Phase To 100%
+**Status:** `DONE`
+**Priority:** CRITICAL
+**Scope:**
+- تدقيق FND-001 إلى FND-008
+- إكمال فجوات Foundation Core فقط
+- تحديث `PROJECT_PROGRESS_TRACKER_AR.md`
+- تحديث الاختبارات عند الحاجة
+**Forbidden:**
+- تنفيذ أي Phase أخرى
+- تعديل Purchases/Sales/Reports/HR/Coolify
+- تعديل Prisma
+- إضافة packages جديدة
+- تنفيذ source document posting خارج journal foundation
+**Acceptance Criteria:**
+- إغلاق فجوات PeriodGuard داخل PH-00
+- تطبيق عزل الشركة على `GET /api/accounts/tree`
+- ضمان أن journal create/update/delete/reverse/post يكتب audit المالي ضمن transaction
+- توثيق أن source documents والـ closing enterprise المتقدم خارج PH-00
+- تحديث حالة PH-00 إلى 100% فقط إذا اكتملت فجوات Foundation العملية
+**Required Checks:**
+- `npm run typecheck`
+- `npm run build`
+- `npm test -- --run`
+**Documentation Updates:**
+- `docs/PROJECT_PROGRESS_TRACKER_AR.md`
+- `docs/api/UI_COMPLETION_BACKLOG.md`
+**Commit Hash:** ``
+**Date:** 2026-05-28
+
+---
+
 | الأولوية | العدد |
 |----------|-------|
-| CRITICAL | 6 |
+| CRITICAL | 7 |
 | HIGH | 7 |
 | MEDIUM | 10 |
 | LOW | 11 |
-| **الإجمالي** | **34** |
+| **الإجمالي** | **35** |
 
 ---
 
@@ -1553,6 +1586,7 @@
 | SEC-002 | DONE | f06a092 | 2026-05-27 |
 | NAV-001 | DONE | ac80078 | 2026-05-27 |
 | PM-001 | DONE | 09acdf5 | 2026-05-27 |
+| PH00-COMPLETE-001 | DONE |  | 2026-05-28 |
 
 ---
 

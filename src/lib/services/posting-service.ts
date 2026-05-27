@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { LedgerValidator } from "./ledger-validator";
 import { PeriodGuard } from "./period-guard";
 import { CurrencyGuard } from "./currency-guard";
-import { logAudit } from "@/lib/auth";
 
 export interface PostJournalInput {
   journalEntryId: string;
@@ -267,12 +266,19 @@ export class PostingService {
           },
         });
 
-        // Write audit inside transaction (per AI_GLOBAL_RULES.md: audit failure must fail the transaction)
-        await logAudit(input.userId, "POST", "JournalEntry", journalEntry.id, {
-          entryNumber: journalEntry.entryNumber,
-          lines: lockedEntry.lines.length,
-          totalDebit: validation.totalDebit,
-          totalCredit: validation.totalCredit,
+        await tx.auditLog.create({
+          data: {
+            userId: input.userId,
+            action: "POST",
+            entity: "JournalEntry",
+            entityId: journalEntry.id,
+            details: {
+              entryNumber: journalEntry.entryNumber,
+              lines: lockedEntry.lines.length,
+              totalDebit: validation.totalDebit,
+              totalCredit: validation.totalCredit,
+            } as never,
+          },
         });
 
         return updated;

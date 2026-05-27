@@ -29,6 +29,13 @@ export class PeriodGuard {
       };
     }
 
+    if (period.status === "ARCHIVED") {
+      return {
+        allowed: false,
+        error: `الفترة المالية "${period.name}" مؤرشفة ولا تقبل الترحيل`,
+      };
+    }
+
     if (period.status === "CLOSING_IN_PROGRESS") {
       return {
         allowed: false,

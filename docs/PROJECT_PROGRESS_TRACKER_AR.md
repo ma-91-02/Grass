@@ -76,16 +76,16 @@
 | Backend-only endpoints                                               | 3                                                                               |
 | صفحات Dashboard                                                      | 62                                                                              |
 | روابط Sidebar مباشرة                                                 | 27 تقريباً                                                                      |
-| ملفات الاختبار                                                       | 18                                                                              |
-| test cases / describe / it تقريباً                                   | 628                                                                             |
-| النسبة العامة التقريبية للمشروع المؤسسي                              | 45%                                                                             |
-| النسبة التقريبية للنواة القابلة للتجربة بعد تدقيق المبيعات/المشتريات | 60% تقريباً                                                                     |
+| ملفات الاختبار                                                       | 22                                                                              |
+| test cases / describe / it تقريباً                                   | 621                                                                             |
+| النسبة العامة التقريبية للمشروع المؤسسي                              | 46%                                                                             |
+| النسبة التقريبية للنواة القابلة للتجربة بعد تدقيق المبيعات/المشتريات | 61% تقريباً                                                                     |
 | المرحلة الحالية                                                      | تدقيق المشتريات End-to-End قبل التقارير                                         |
 | المهمة التالية الموصى بها                                            | PUR-AUDIT-001 — تدقيق دورة المشتريات كاملة من الإنشاء إلى الأثر المالي والمخزني |
 
 ### أهم الاستنتاجات
 
-- Foundation وUI Binding قطعا شوطاً كبيراً: Auth، RBAC، companies، branches، fiscal periods، chart of accounts، journal entries، معظم صفحات dashboard، وSidebar موجودة.
+- Foundation وUI Binding قطعا شوطاً كبيراً: Auth، RBAC، companies، branches، fiscal periods، chart of accounts، journal entries، معظم صفحات dashboard، وSidebar موجودة. بعد PH00-COMPLETE-001 أصبحت فجوات PH-00 العملية مغلقة، وبقي smoke runtime الدوري جزءاً من QA/Release وليس blocker داخل Foundation.
 - المخزون والمبيعات لهما تنفيذ أعمق من المشتريات، مع خدمات stock balance وposting tests للمبيعات والمرتجعات.
 - المشتريات تمتلك UI وAPI وPDF ومصاريف داخل الفاتورة، لكنها لا تحقق بعد فلسفة الخطة الأصلية بالكامل: لا يوجد endpoint ترحيل مشتريات، لا يوجد AP journal، لا توجد Purchase Returns، لا توجد اختبارات مشتريات، وتوجد تحديثات مباشرة على `paymentAccount.balance` و`product.purchasePrice`.
 - التقارير العامة ما زالت placeholder، رغم وجود dashboard stats وتقارير inventory valuation/audit.
@@ -120,7 +120,7 @@
 
 | Phase ID | اسم المرحلة                 | الهدف                                                                | الحالة      | الإنجاز | مطلوبة للتجربة؟             | مطلوبة قبل Coolify؟ | المهمة التالية داخلها                        | ملاحظات                                                            |
 | -------- | --------------------------- | -------------------------------------------------------------------- | ----------- | ------: | --------------------------- | ------------------- | -------------------------------------------- | ------------------------------------------------------------------ |
-| PH-00    | Foundation Core             | Auth, RBAC, Company, Branch, Fiscal Periods, COA, Journal foundation | PARTIAL     |     85% | نعم                         | نعم                 | تدقيق نهائي للـ foundation smoke scripts     | Phase 1 موثق كمكتمل لكن يحتاج smoke runtime دوري                   |
+| PH-00    | Foundation Core             | Auth, RBAC, Company, Branch, Fiscal Periods, COA, Journal foundation | DONE        |    100% | نعم                         | نعم                 | لا توجد مهمة PH-00 متبقية؛ التالي PUR-AUDIT-001 | اكتملت فجوات Foundation العملية، وsmoke runtime يبقى ضمن QA الدوري |
 | PH-01    | Users & Permissions         | المستخدمون، الأدوار، الصلاحيات، الجلسات                              | PARTIAL     |     75% | نعم                         | نعم                 | تدقيق Roles editor وpermission coverage      | يوجد users/roles basic، لكن لا توجد MFA أو role detail editor كامل |
 | PH-02    | Dashboard & Navigation      | Sidebar، parent pages، navigation coverage، UI binding               | PARTIAL     |     70% | نعم                         | نعم                 | إصلاح dashboard/settings placeholders لاحقاً | Zero NO_UI موثق، لكن بعض الصفحات placeholder                       |
 | PH-03    | Customers & Suppliers       | العملاء، الموردون، الذمم، كشوفات العملاء                             | PARTIAL     |     80% | نعم                         | نعم                 | تدقيق supplier AP مع المشتريات               | العملاء أقوى من الموردين بسبب collections/receivables              |
@@ -133,7 +133,7 @@
 | PH-10    | Internal Project Management | مشاريع داخلية، مهام، إنتاجية، وقت عمل                                | FUTURE      |      0% | لا                          | لا                  | تعريف blueprint مستقبلي                      | غير موجود في الخطة التنفيذية الحالية                               |
 | PH-11    | Backup & Recovery           | PostgreSQL backup، restore، drills، phase snapshots                  | TODO        |      8% | نعم قبل تجربة بيانات حقيقية | نعم                 | كتابة خطة backup بدون سكربت تنفيذ            | لا يوجد script backup/restore                                      |
 | PH-12    | Security Hardening          | JWT، RBAC، audit، secrets، MFA، anti-fraud                           | PARTIAL     |     45% | نعم                         | نعم                 | تدقيق secrets وproduction auth               | JWT/RBAC موجود، MFA/device trust مستقبلية                          |
-| PH-13    | Testing & QA                | Unit/API/integration/workflow/accounting/inventory tests             | PARTIAL     |     52% | نعم                         | نعم                 | إضافة purchase workflow tests بعد audit      | توجد 18 test files، فجوة المشتريات والتقارير                       |
+| PH-13    | Testing & QA                | Unit/API/integration/workflow/accounting/inventory tests             | PARTIAL     |     54% | نعم                         | نعم                 | إضافة purchase workflow tests بعد audit      | توجد 22 test files، فجوة المشتريات والتقارير                       |
 | PH-14    | Production Readiness        | env، scripts، monitoring، migrations، owner، rollback                | TODO        |     32% | نعم                         | نعم                 | Production readiness checklist               | build/test scripts موجودة، Docker/Coolify غير موجود                |
 | PH-15    | Coolify Trial Release       | تجهيز deploy تجريبي على Coolify                                      | TODO        |      7% | لا                          | نعم                 | لا تبدأ قبل backup + purchase audit          | لا يوجد Docker/Coolify config                                      |
 
@@ -143,14 +143,30 @@
 
 | Task ID | اسم المهمة                   | النوع       | الحالة  | النسبة | Backend | API  | UI  | Nav | Tests | Docs | قبل التجربة؟ | قبل Coolify؟ | مؤجل؟ | الأولوية | الدليل من المشروع                                   | الملاحظات                                             |
 | ------- | ---------------------------- | ----------- | ------- | -----: | ------- | ---- | --- | --- | ----- | ---- | ------------ | ------------ | ----- | -------- | --------------------------------------------------- | ----------------------------------------------------- |
-| FND-001 | Auth login/logout/me         | Backend/API | DONE    |   100% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `/api/auth/*`, `/auth/login`, tests auth/session    | يحتاج smoke runtime عند كل release                    |
+| FND-001 | Auth login/logout/me         | Backend/API | DONE    |   100% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `/api/auth/*`, `/auth/login`, tests auth/session    | مكتمل، وsmoke runtime دوري ضمن QA/Release              |
 | FND-002 | Company model + APIs         | Data/API    | DONE    |   100% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `Company`, `/api/companies`, `/dashboard/companies` | موجود ومربوط                                          |
 | FND-003 | Branch model + APIs          | Data/API    | DONE    |   100% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | HIGH     | `Branch`, `/api/branches`, `/dashboard/branches`    | موجود                                                 |
-| FND-004 | Fiscal periods               | Accounting  | PARTIAL |    50% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `FiscalPeriod`, `/api/fiscal-periods`, PeriodGuard  | close engine غير منفذ                                 |
-| FND-005 | Chart of Accounts foundation | Accounting  | DONE    |   100% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `Account`, `/api/accounts`, `/dashboard/accounts`   | يحتاج تدقيق production seed                           |
-| FND-006 | JournalEntry / JournalLine   | Accounting  | DONE    |   100% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `JournalEntry`, `/api/journal-entries`              | موجود مع post/reverse                                 |
-| FND-007 | PostingService foundation    | Accounting  | PARTIAL |    50% | نعم     | جزئي | لا  | لا  | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `src/lib/services/posting-service.ts`               | يغطي journal posting، لا يغطي كل source documents بعد |
-| FND-008 | Audit baseline               | Security    | PARTIAL |    50% | نعم     | نعم  | نعم | نعم | جزئي  | نعم  | نعم          | نعم          | لا    | HIGH     | `AuditLog`, `/api/audit-logs`                       | audit ليس append-only/hash-chain بعد                  |
+| FND-004 | Fiscal periods               | Accounting  | DONE    |   100% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `FiscalPeriod`, `/api/fiscal-periods`, PeriodGuard  | Foundation guard مكتمل؛ close engine المتقدم خارج PH-00 |
+| FND-005 | Chart of Accounts foundation | Accounting  | DONE    |   100% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `Account`, `/api/accounts`, `/dashboard/accounts`, `/api/accounts/tree` | تم تدقيق seed الأساسي وإغلاق عزل الشركة في tree API |
+| FND-006 | JournalEntry / JournalLine   | Accounting  | DONE    |   100% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `JournalEntry`, `/api/journal-entries`              | موجود مع post/reverse ومعاملات audit مالية آمنة       |
+| FND-007 | PostingService foundation    | Accounting  | DONE    |   100% | نعم     | نعم  | لا  | لا  | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `src/lib/services/posting-service.ts`               | Foundation journal posting مكتمل؛ source documents تخص phases لاحقة |
+| FND-008 | Audit baseline               | Security    | DONE    |   100% | نعم     | نعم  | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | HIGH     | `AuditLog`, `/api/audit-logs`, journal audit transaction tests | baseline مكتمل؛ hash-chain/append-only المؤسسي ضمن PH-12 |
+
+#### تحديث PH00-COMPLETE-001
+
+| المهمة | الحالة قبل التنفيذ | النقص الحقيقي داخل PH-00 | ما تم إصلاحه | الحالة الجديدة | الدليل |
+| ------ | ------------------ | ------------------------- | ------------ | --------------- | ------ |
+| FND-004 | PARTIAL | `PeriodGuard` لم يمنع `ARCHIVED` صراحة | منع الترحيل على الفترات المؤرشفة وإضافة اختبار | DONE | `src/lib/services/period-guard.ts`, `period-guard.test.ts` |
+| FND-005 | DONE مع ملاحظة تدقيق | `GET /api/accounts/tree` لا يطبق عزل الشركة | إضافة `canAccessCompany` واختبار منع الوصول | DONE | `/api/accounts/tree`, `accounts-tree.test.ts` |
+| FND-006 | DONE مع حاجة تدقيق سلامة | بعض عمليات journal write/audit لم تكن في نفس transaction | جعل create/update/delete/reverse للقيود المالية تكتب audit داخل transaction | DONE | `src/app/api/journal-entries/**` |
+| FND-007 | PARTIAL | Audit ترحيل القيد كان يستخدم `logAudit` خارج tx client | نقل audit داخل `PostingService` إلى `tx.auditLog.create` مع اختبار rollback عند فشل audit | DONE | `posting-service.ts`, `posting-service-foundation.test.ts` |
+| FND-008 | PARTIAL | نقص اختبارات baseline audit للترحيل/العكس داخل المعاملة | إضافة اختبارات audit transaction للترحيل والعكس | DONE | `posting-service-foundation.test.ts`, `journal-entry-reversal.test.ts` |
+
+ملاحظات حدود النطاق:
+
+- عدم تغطية `PostingService` لكل source documents ليس نقصاً داخل PH-00؛ ترحيل المبيعات والمشتريات والمخزون يبقى ضمن مراحله.
+- Month-end/year-end close engine وFX revaluation وhard-close المؤسسي ليست ضمن PH-00؛ PH-00 يطلب `PeriodGuard` وحالات الفترة الأساسية فقط.
+- Audit hash-chain/append-only storage وsigned events جزء من Security Hardening/Enterprise Controls وليس شرطاً لإغلاق Foundation Core.
 
 ### PH-01 — Users & Permissions
 
@@ -399,7 +415,7 @@
 | Purchases stock effect      | ينشئ StockMovement ولا يطبق balance                           | تدقيق المخزون بعد إنشاء فاتورة شراء |
 | Purchases accounting effect | direct paymentAccount update ولا journal/AP                   | تدقيق مالي إلزامي                   |
 | Dashboard stats             | لا يظهر أنه company-scoped بالكامل                            | تدقيق العزل                         |
-| Audit behavior              | بعض audit خارج transaction أو best-effort                     | تدقيق audit safety                  |
+| Audit behavior              | PH-00 financial journal audit أصبح داخل transaction؛ يبقى تدقيق non-financial/security audit ضمن PH-12 | تدقيق audit safety خارج PH-00      |
 
 ## 12. المهام المطلوبة قبل النسخة التجريبية
 

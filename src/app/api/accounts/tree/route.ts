@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, checkPermission } from "@/lib/auth";
+import { getCurrentUser, checkPermission, canAccessCompany } from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -47,6 +47,10 @@ export async function GET(request: NextRequest) {
   const companyId = searchParams.get("companyId");
 
   if (!companyId) return errorResponse("companyId مطلوب");
+
+  if (!(await canAccessCompany(user, companyId))) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
 
   const accounts = await prisma.account.findMany({
     where: { companyId, isActive: true },

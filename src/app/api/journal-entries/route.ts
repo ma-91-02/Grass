@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import {
   getCurrentUser,
   checkPermission,
-  logAudit,
   canAccessCompany,
   requireDbPermission,
 } from "@/lib/auth";
@@ -173,36 +172,48 @@ export async function POST(request: NextRequest) {
     });
     const entryNumber = `JE-${String(entryCount + 1).padStart(5, "0")}`;
 
-    // 7. Create journal entry with lines
-    const journalEntry = await prisma.journalEntry.create({
-      data: {
-        companyId: parsed.companyId,
-        branchId: parsed.branchId || null,
-        fiscalPeriodId,
-        entryNumber,
-        entryDate,
-        currency: parsed.currency,
-        exchangeRateSnapshot: parsed.exchangeRateSnapshot,
-        description: parsed.description || null,
-        sourceType: parsed.sourceType || null,
-        sourceId: parsed.sourceId || null,
-        status: "DRAFT",
-        createdById: user.userId,
-        lines: {
-          create: parsed.lines.map((line) => ({
-            accountId: line.accountId,
-            debit: line.debit,
-            credit: line.credit,
-            description: line.description || null,
-          })),
+    // 7. Create journal entry with audit in one transaction
+    const journalEntry = await prisma.$transaction(async (tx) => {
+      const created = await tx.journalEntry.create({
+        data: {
+          companyId: parsed.companyId,
+          branchId: parsed.branchId || null,
+          fiscalPeriodId,
+          entryNumber,
+          entryDate,
+          currency: parsed.currency,
+          exchangeRateSnapshot: parsed.exchangeRateSnapshot,
+          description: parsed.description || null,
+          sourceType: parsed.sourceType || null,
+          sourceId: parsed.sourceId || null,
+          status: "DRAFT",
+          createdById: user.userId,
+          lines: {
+            create: parsed.lines.map((line) => ({
+              accountId: line.accountId,
+              debit: line.debit,
+              credit: line.credit,
+              description: line.description || null,
+            })),
+          },
         },
-      },
-      include: { lines: true },
-    });
+        include: { lines: true },
+      });
 
-    await logAudit(user.userId, "CREATE", "JournalEntry", journalEntry.id, {
-      entryNumber,
-      linesCount: parsed.lines.length,
+      await tx.auditLog.create({
+        data: {
+          userId: user.userId,
+          action: "CREATE",
+          entity: "JournalEntry",
+          entityId: created.id,
+          details: {
+            entryNumber,
+            linesCount: parsed.lines.length,
+          } as never,
+        },
+      });
+
+      return created;
     });
 
     return successResponse(journalEntry, 201);

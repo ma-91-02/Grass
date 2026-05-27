@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import {
   getCurrentUser,
   checkPermission,
-  logAudit,
   canAccessCompany,
   requireDbPermission,
 } from "@/lib/auth";
@@ -169,35 +168,45 @@ export async function PATCH(
       if (period) fiscalPeriodId = period.id;
     }
 
-    // 6. Update — preserve original entry number
-    const journalEntry = await prisma.journalEntry.update({
-      where: { id },
-      data: {
-        companyId: parsed.companyId,
-        branchId: parsed.branchId || null,
-        fiscalPeriodId,
-        entryNumber: existing.entryNumber,
-        entryDate,
-        currency: parsed.currency,
-        exchangeRateSnapshot: parsed.exchangeRateSnapshot,
-        description: parsed.description || null,
-        sourceType: parsed.sourceType || null,
-        sourceId: parsed.sourceId || null,
-        lines: {
-          deleteMany: {},
-          create: parsed.lines.map((line) => ({
-            accountId: line.accountId,
-            debit: line.debit,
-            credit: line.credit,
-            description: line.description || null,
-          })),
+    // 6. Update with audit in one transaction — preserve original entry number
+    const journalEntry = await prisma.$transaction(async (tx) => {
+      const updated = await tx.journalEntry.update({
+        where: { id },
+        data: {
+          companyId: parsed.companyId,
+          branchId: parsed.branchId || null,
+          fiscalPeriodId,
+          entryNumber: existing.entryNumber,
+          entryDate,
+          currency: parsed.currency,
+          exchangeRateSnapshot: parsed.exchangeRateSnapshot,
+          description: parsed.description || null,
+          sourceType: parsed.sourceType || null,
+          sourceId: parsed.sourceId || null,
+          lines: {
+            deleteMany: {},
+            create: parsed.lines.map((line) => ({
+              accountId: line.accountId,
+              debit: line.debit,
+              credit: line.credit,
+              description: line.description || null,
+            })),
+          },
         },
-      },
-      include: { lines: true },
-    });
+        include: { lines: true },
+      });
 
-    await logAudit(user.userId, "UPDATE", "JournalEntry", id, {
-      entryNumber: existing.entryNumber,
+      await tx.auditLog.create({
+        data: {
+          userId: user.userId,
+          action: "UPDATE",
+          entity: "JournalEntry",
+          entityId: id,
+          details: { entryNumber: existing.entryNumber } as never,
+        },
+      });
+
+      return updated;
     });
 
     return successResponse(journalEntry);
@@ -234,10 +243,17 @@ export async function DELETE(
   if (existing._count.postingOperations > 0)
     return errorResponse("لا يمكن حذف قيد له عمليات ترحيل مرتبطة");
 
-  await prisma.journalEntry.delete({ where: { id } });
-
-  await logAudit(user.userId, "DELETE", "JournalEntry", id, {
-    entryNumber: existing.entryNumber,
+  await prisma.$transaction(async (tx) => {
+    await tx.journalEntry.delete({ where: { id } });
+    await tx.auditLog.create({
+      data: {
+        userId: user.userId,
+        action: "DELETE",
+        entity: "JournalEntry",
+        entityId: id,
+        details: { entryNumber: existing.entryNumber } as never,
+      },
+    });
   });
 
   return successResponse({ deleted: true });

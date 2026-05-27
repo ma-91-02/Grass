@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import {
   getCurrentUser,
   requireDbPermission,
-  logAudit,
   canAccessCompany,
 } from "@/lib/auth";
 import {
@@ -12,7 +11,6 @@ import {
   unauthorizedError,
   forbiddenError,
   notFoundError,
-  serverError,
 } from "@/lib/api-response";
 import { PERMISSIONS } from "@/lib/permissions";
 import { PeriodGuard } from "@/lib/services/period-guard";
@@ -63,35 +61,47 @@ export async function POST(
     description: `عكس: ${original.entryNumber} - ${line.description || ""}`,
   }));
 
-  const reversed = await prisma.journalEntry.create({
-    data: {
-      companyId: original.companyId,
-      branchId: original.branchId,
-      fiscalPeriodId: original.fiscalPeriodId,
-      entryNumber,
-      entryDate: new Date(),
-      currency: original.currency,
-      exchangeRateSnapshot: original.exchangeRateSnapshot,
-      description: `عكس القيد ${original.entryNumber}`,
-      sourceType: "REVERSE",
-      sourceId: original.id,
-      status: "DRAFT",
-      createdById: user.userId,
-      lines: {
-        create: reversedLines,
+  const reversed = await prisma.$transaction(async (tx) => {
+    const created = await tx.journalEntry.create({
+      data: {
+        companyId: original.companyId,
+        branchId: original.branchId,
+        fiscalPeriodId: original.fiscalPeriodId,
+        entryNumber,
+        entryDate: new Date(),
+        currency: original.currency,
+        exchangeRateSnapshot: original.exchangeRateSnapshot,
+        description: `عكس القيد ${original.entryNumber}`,
+        sourceType: "REVERSE",
+        sourceId: original.id,
+        status: "DRAFT",
+        createdById: user.userId,
+        lines: {
+          create: reversedLines,
+        },
       },
-    },
-    include: { lines: true },
-  });
+      include: { lines: true },
+    });
 
-  await prisma.journalEntry.update({
-    where: { id: original.id },
-    data: { status: "REVERSED" as never },
-  });
+    await tx.journalEntry.update({
+      where: { id: original.id },
+      data: { status: "REVERSED" as never },
+    });
 
-  await logAudit(user.userId, "REVERSE", "JournalEntry", reversed.id, {
-    originalEntryNumber: original.entryNumber,
-    reversedEntryNumber: entryNumber,
+    await tx.auditLog.create({
+      data: {
+        userId: user.userId,
+        action: "REVERSE",
+        entity: "JournalEntry",
+        entityId: created.id,
+        details: {
+          originalEntryNumber: original.entryNumber,
+          reversedEntryNumber: entryNumber,
+        } as never,
+      },
+    });
+
+    return created;
   });
 
   return successResponse(reversed, 201);
