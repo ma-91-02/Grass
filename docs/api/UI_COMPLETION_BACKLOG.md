@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-27 (NAV-001 — Full Sidebar Navigation Coverage Audit)
+> آخر تحديث: 2026-05-27 (PM-001 — Master Project Progress Tracker)
 
 ---
 
@@ -1481,6 +1481,37 @@
 
 ---
 
+#### Task PM-001
+**Title:** Create Master Project Progress Tracker
+**Status:** `DONE`
+**Priority:** LOW
+**Scope:**
+- قراءة `MASTER_PROJECT_MAP_AR.md` بالكامل
+- مقارنة الخطة مع المشروع الحالي
+- إنشاء `PROJECT_PROGRESS_TRACKER_AR.md`
+- تقسيم المشروع إلى phases و tasks
+- حساب نسب الإنجاز
+- تحديد المرحلة الحالية
+- تحديد المهمة التالية
+**Forbidden:**
+- تعديل الكود
+- تعديل backend
+- تعديل frontend
+- تعديل Prisma
+- تنفيذ أي feature
+**Acceptance Criteria:**
+- إنشاء ملف متابعة تقدم رئيسي باللغة العربية
+- ربط كل مرحلة بحالة ونسبة ودليل من المشروع
+- تحديد المشتريات كمرحلة التدقيق الحالية إذا أكد التحليل ذلك
+- عدم تعديل أي ملفات كود
+**Documentation Updates:**
+- `docs/PROJECT_PROGRESS_TRACKER_AR.md`
+- `docs/api/UI_COMPLETION_BACKLOG.md`
+**Commit Hash:** `PENDING`
+**Date:** 2026-05-27
+
+---
+
 | الأولوية | العدد |
 |----------|-------|
 | CRITICAL | 6 |
@@ -1521,6 +1552,7 @@
 | SEC-001 | DONE | — | 2026-05-27 |
 | SEC-002 | DONE | f06a092 | 2026-05-27 |
 | NAV-001 | DONE | ac80078 | 2026-05-27 |
+| PM-001 | DONE | PENDING | 2026-05-27 |
 
 ---
 
