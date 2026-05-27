@@ -1567,7 +1567,7 @@
 - `docs/qa/phase-gates/PH00_GATE_VERIFICATION_AR.md`
 - `docs/PROJECT_PROGRESS_TRACKER_AR.md`
 - `docs/api/UI_COMPLETION_BACKLOG.md`
-**Commit Hash:** ``
+**Commit Hash:** `b708528`
 **Date:** 2026-05-28
 
 ---
@@ -1614,7 +1614,7 @@
 | NAV-001 | DONE | ac80078 | 2026-05-27 |
 | PM-001 | DONE | 09acdf5 | 2026-05-27 |
 | PH00-COMPLETE-001 | DONE | bcbbf7f | 2026-05-28 |
-| PH00-GATE-VERIFY-001 | BLOCKED |  | 2026-05-28 |
+| PH00-GATE-VERIFY-001 | BLOCKED | b708528 | 2026-05-28 |
 
 ---
 
