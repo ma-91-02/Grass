@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Category {
@@ -15,14 +16,22 @@ interface Category {
 }
 
 export default function CategoriesPage() {
+  const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetch("/api/categories")
       .then((res) => res.json())
-      .then((data) => setCategories(data.data))
+      .then((data) => {
+        if (!data.success) throw new Error(data.error || "فشل تحميل التصنيفات");
+        setCategories(data.data);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "فشل تحميل التصنيفات");
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -54,11 +63,19 @@ export default function CategoriesPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-gray-500">جاري التحميل...</div>
+        <div className="flex items-center justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
+        </div>
+      ) : error ? (
+        <Card>
+          <CardContent className="py-12 text-center text-red-600">
+            {error}
+          </CardContent>
+        </Card>
       ) : filtered.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-gray-500">
-            لا يوجد تصنيفات
+            {search ? "لا توجد نتائج للبحث" : "لا يوجد تصنيفات"}
           </CardContent>
         </Card>
       ) : (
@@ -76,6 +93,9 @@ export default function CategoriesPage() {
                   <th className="text-right p-4 text-sm font-medium text-gray-500">
                     الحالة
                   </th>
+                  <th className="text-center p-4 text-sm font-medium text-gray-500">
+                    الإجراءات
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -92,6 +112,19 @@ export default function CategoriesPage() {
                       <Badge variant={cat.isActive ? "success" : "danger"}>
                         {cat.isActive ? "نشط" : "غير نشط"}
                       </Badge>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() =>
+                            router.push(`/dashboard/categories/${cat.id}`)
+                          }
+                          className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-primary"
+                          title="عرض التفاصيل"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

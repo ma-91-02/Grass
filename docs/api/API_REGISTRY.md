@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-27 (UI-037 — تفاصيل وحذف الفترة المالية)
+> آخر تحديث: 2026-05-27 (UI-038 — تفاصيل تصنيف المادة)
 
 ---
 
@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 129 |
-| CONNECTED | 124 |
+| CONNECTED | 125 |
 | PARTIAL | 0 |
-| NO_UI | 2 |
+| NO_UI | 1 |
 | BACKEND_ONLY | 3 |
 
 ---
@@ -131,7 +131,7 @@
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | ProductCategories | GET | `/api/categories` | قائمة تصنيفات المواد | DONE | CONNECTED | `/dashboard/categories`, `/dashboard/products` | HIGH | 0 | تم إصلاح cache key مع companyId scope |
 | ProductCategories | POST | `/api/categories` | إنشاء تصنيف | DONE | CONNECTED | `/components/forms/product-form.tsx` (inline) | HIGH | 0 | تم إصلاح persistence مع cache invalidation والتحقق من companyId |
-| ProductCategories | GET | `/api/categories/{id}` | تفاصيل تصنيف | DONE | NO_UI | — | LOW | 4.4 | — |
+| ProductCategories | GET | `/api/categories/{id}` | تفاصيل تصنيف | DONE | CONNECTED | `/dashboard/categories/[id]` | LOW | 4.4 | UI-038 — عرض تفاصيل تصنيف المادة |
 | ProductCategories | PATCH | `/api/categories/{id}` | تحديث تصنيف | DONE | CONNECTED | `/dashboard/categories` | HIGH | 0 | — |
 | ProductCategories | DELETE | `/api/categories/{id}` | حذف تصنيف | DONE | CONNECTED | `/components/forms/product-form.tsx` (inline) | HIGH | 0 | — |
 
@@ -365,9 +365,9 @@
 
 | Status | Count |
 |--------|-------|
-| CONNECTED | 124 |
+| CONNECTED | 125 |
 | PARTIAL | 0 |
-| NO_UI | 2 |
+| NO_UI | 1 |
 | BACKEND_ONLY | 3 |
 | UNKNOWN | 0 |
 | BROKEN | 0 |

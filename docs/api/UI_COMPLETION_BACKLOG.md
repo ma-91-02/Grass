@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-27 (UI-034 — تعديل فاتورة شراء)
+> آخر تحديث: 2026-05-27 (UI-038 — تفاصيل تصنيف المادة)
 
 ---
 
@@ -1335,13 +1335,46 @@
 
 ---
 
+#### Task UI-038
+**Title:** Product Category Detail UI
+**Status:** `DONE`
+**Priority:** LOW
+**Related APIs:**
+- `GET /api/categories/{id}`
+**Target UI Pages:**
+- `/dashboard/categories/[id]/page.tsx`
+- `/dashboard/categories/page.tsx`
+**Scope:**
+- صفحة تفاصيل تصنيف مادة read-only
+- زر Eye من صفحة التصنيفات
+- ربط GET /api/categories/{id}
+**Forbidden:**
+- تعديل backend
+**Acceptance Criteria:**
+- زر عرض يظهر لكل تصنيف في القائمة
+- صفحة تفاصيل تعرض name/code/description/isActive/system data
+- خطأ في التحميل يظهر رسالة واضحة
+- زر رجوع لقائمة التصنيفات
+**Required Checks:**
+- npm run lint
+- npm run typecheck
+- npm run build
+**Documentation Updates:**
+- API_REGISTRY.md: GET /api/categories/{id}: NO_UI → CONNECTED
+- UI_BINDING_ROADMAP.md: تحديث المتبقي NO_UI (2→1)
+- UI_COMPLETION_BACKLOG.md: UI-038 → DONE
+**Commit Hash:** `aa3f1b0`
+**Date:** 2026-05-27
+
+---
+
 | الأولوية | العدد |
 |----------|-------|
 | CRITICAL | 6 |
 | HIGH | 7 |
 | MEDIUM | 10 |
-| LOW | 8 |
-| **الإجمالي** | **31** |
+| LOW | 9 |
+| **الإجمالي** | **32** |
 
 ---
 
@@ -1368,6 +1401,7 @@
 | UI-035 | DONE | e874cfc | 2026-05-27 |
 | UI-036 | DONE | 0e748f4 | 2026-05-27 |
 | UI-037 | DONE | 6a08f89 | 2026-05-27 |
+| UI-038 | DONE | aa3f1b0 | 2026-05-27 |
 
 ---
 
