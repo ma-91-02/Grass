@@ -1424,7 +1424,7 @@
 - npm run build
 **Documentation Updates:**
 - UI_COMPLETION_BACKLOG.md: إضافة SEC-002
-**Commit Hash:** (pending commit)
+**Commit Hash:** `f06a092`
 **Date:** 2026-05-27
 
 ---
@@ -1491,7 +1491,7 @@
 | MAINT-003 | DONE | 2f8d9ce | 2026-05-27 |
 | MAINT-004 | DONE | — | 2026-05-27 |
 | SEC-001 | DONE | — | 2026-05-27 |
-| SEC-002 | DONE | (pending commit) | 2026-05-27 |
+| SEC-002 | DONE | f06a092 | 2026-05-27 |
 
 ---
 
