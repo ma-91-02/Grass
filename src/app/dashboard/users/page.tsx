@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Plus, Search, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
+import { PERMISSIONS } from "@/lib/permissions";
+import type { TokenPayload } from "@/lib/auth";
 
 interface User {
   id: string;
@@ -25,6 +27,25 @@ export default function UsersPage() {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
+  const [user, setUser] = useState<TokenPayload | null>(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+
+  useEffect(() => {
+    setIsLoadingAuth(true);
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.success) throw new Error(d.error || "فشل تحميل بيانات الجلسة");
+        setUser(d.data);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingAuth(false));
+  }, []);
+
+  const userPermissions = user?.permissions || [];
+  const canCreate = userPermissions.includes(PERMISSIONS.USERS_CREATE);
+  const canEdit = userPermissions.includes(PERMISSIONS.USERS_EDIT);
+  const canView = userPermissions.includes(PERMISSIONS.USERS_VIEW);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["users"],
@@ -65,10 +86,12 @@ export default function UsersPage() {
           <h1 className="text-2xl font-bold text-dark">المستخدمين</h1>
           <p className="text-sm text-gray-500">إدارة حسابات المستخدمين</p>
         </div>
-        <Button onClick={() => router.push("/dashboard/users/new")}>
-          <Plus className="h-4 w-4" />
-          مستخدم جديد
-        </Button>
+        {isLoadingAuth ? null : canCreate ? (
+          <Button onClick={() => router.push("/dashboard/users/new")}>
+            <Plus className="h-4 w-4" />
+            مستخدم جديد
+          </Button>
+        ) : null}
       </div>
 
       <div className="flex items-center gap-4">
@@ -153,29 +176,33 @@ export default function UsersPage() {
                     </td>
                     <td className="p-4 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        <button
-                          onClick={() => router.push(`/dashboard/users/${user.id}`)}
-                          className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-blue-600"
-                          title="عرض"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() =>
-                            toggleMutation.mutate({
-                              id: user.id,
-                              isActive: !user.isActive,
-                            })
-                          }
-                          className={`rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
-                            user.isActive
-                              ? "text-red-600 hover:bg-red-50"
-                              : "text-green-600 hover:bg-green-50"
-                          }`}
-                          disabled={toggleMutation.isPending}
-                        >
-                          {user.isActive ? "تعطيل" : "تفعيل"}
-                        </button>
+                        {canView && (
+                          <button
+                            onClick={() => router.push(`/dashboard/users/${user.id}`)}
+                            className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-blue-600"
+                            title="عرض"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                        )}
+                        {canEdit && (
+                          <button
+                            onClick={() =>
+                              toggleMutation.mutate({
+                                id: user.id,
+                                isActive: !user.isActive,
+                              })
+                            }
+                            className={`rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
+                              user.isActive
+                                ? "text-red-600 hover:bg-red-50"
+                                : "text-green-600 hover:bg-green-50"
+                            }`}
+                            disabled={toggleMutation.isPending}
+                          >
+                            {user.isActive ? "تعطيل" : "تفعيل"}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

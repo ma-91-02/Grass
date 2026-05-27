@@ -5,18 +5,23 @@ import {
   successResponse,
   unauthorizedError,
   forbiddenError,
+  serverError,
 } from "@/lib/api-response";
 import { PERMISSIONS } from "@/lib/permissions";
 
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) return unauthorizedError();
-  if (!(await requireDbPermission(user.userId, PERMISSIONS.ROLES_VIEW)))
-    return forbiddenError();
+  try {
+    const user = await getCurrentUser();
+    if (!user) return unauthorizedError();
+    if (!(await requireDbPermission(user.userId, PERMISSIONS.ROLES_VIEW)))
+      return forbiddenError();
 
-  const permissions = await prisma.permission.findMany({
-    orderBy: [{ module: "asc" }, { name: "asc" }],
-  });
+    const permissions = await prisma.permission.findMany({
+      orderBy: [{ module: "asc" }, { name: "asc" }],
+    });
 
-  return successResponse(permissions);
+    return successResponse(permissions);
+  } catch (error) {
+    return serverError(error);
+  }
 }

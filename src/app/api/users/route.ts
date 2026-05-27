@@ -11,33 +11,38 @@ import {
   errorResponse,
   unauthorizedError,
   forbiddenError,
+  serverError,
 } from "@/lib/api-response";
 import { PERMISSIONS } from "@/lib/permissions";
 
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) return unauthorizedError();
-  if (!(await requireDbPermission(user.userId, PERMISSIONS.USERS_VIEW)))
-    return forbiddenError();
+  try {
+    const user = await getCurrentUser();
+    if (!user) return unauthorizedError();
+    if (!(await requireDbPermission(user.userId, PERMISSIONS.USERS_VIEW)))
+      return forbiddenError();
 
-  const users = await prisma.user.findMany({
-    include: {
-      roles: { include: { role: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+    const users = await prisma.user.findMany({
+      include: {
+        roles: { include: { role: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-  const data = users.map((u) => ({
-    id: u.id,
-    name: u.name,
-    email: u.email,
-    isActive: u.isActive,
-    phone: u.phone,
-    roles: u.roles.map((r) => r.role.name),
-    createdAt: u.createdAt.toISOString(),
-  }));
+    const data = users.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      isActive: u.isActive,
+      phone: u.phone,
+      roles: u.roles.map((r) => r.role.name),
+      createdAt: u.createdAt.toISOString(),
+    }));
 
-  return successResponse(data);
+    return successResponse(data);
+  } catch (error) {
+    return serverError(error);
+  }
 }
 
 export async function POST(request: NextRequest) {

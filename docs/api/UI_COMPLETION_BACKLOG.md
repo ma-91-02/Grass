@@ -1598,18 +1598,53 @@
 - `docs/qa/phase-gates/PH00_GATE_VERIFICATION_AR.md`
 - `docs/PROJECT_PROGRESS_TRACKER_AR.md`
 - `docs/api/UI_COMPLETION_BACKLOG.md`
-**Commit Hash:** ``
+**Commit Hash:**
+**Date:** 2026-05-28
+
+---
+
+#### Task PH01-COMPLETE-001
+**Title:** Complete Users & Permissions Phase To 100%
+**Status:** `IN_PROGRESS`
+**Priority:** CRITICAL
+**Scope:**
+- إكمال Roles CRUD API (POST/PATCH/DELETE)
+- إضافة try-catch لكل handlers users/roles/permissions
+- إضافة UI permission hiding في users و roles
+- إنشاء gate verification document
+- تحديث progress tracker والـ backlog
+**Forbidden:**
+- تنفيذ أي Phase أخرى
+- تعديل Purchases/Sales/Reports/HR/Coolify
+- تعديل Prisma schema
+- إضافة packages جديدة
+**Acceptance Criteria:**
+- Roles CRUD API: POST لإنشاء دور، PATCH لتعديل الدور، DELETE لحذف الدور
+- حماية أدوار النظام من التعديل/الحذف
+- try-catch في جميع handlers
+- UI permission hiding: إخفاء أزرار users/roles حسب الصلاحية
+- Gate verification: `PH01_GATE_VERIFICATION_AR.md`
+- تحديث `PROJECT_PROGRESS_TRACKER_AR.md` (PH-01 → DONE 100%)
+**Required Checks:**
+- `npm run typecheck`
+- `npm run build`
+- `npm test -- --run`
+**Documentation Updates:**
+- `docs/qa/phase-gates/PH01_GATE_VERIFICATION_AR.md`
+- `docs/PROJECT_PROGRESS_TRACKER_AR.md`
+- `docs/api/UI_COMPLETION_BACKLOG.md`
+**Commit Hash:** `61facf9`
 **Date:** 2026-05-28
 
 ---
 
 | الأولوية | العدد |
 |----------|-------|
-| CRITICAL | 9 |
+| CRITICAL | 10 |
 | HIGH | 7 |
 | MEDIUM | 10 |
 | LOW | 11 |
-| **الإجمالي** | **37** |
+| **الإجمالي** | **38** |
 
 ---
 
@@ -1647,6 +1682,7 @@
 | PH00-COMPLETE-001 | DONE | bcbbf7f | 2026-05-28 |
 | PH00-GATE-VERIFY-001 | BLOCKED | b708528 | 2026-05-28 |
 | PH00-GATE-FIX-001 | DONE | 4bec87c | 2026-05-28 |
+| PH01-COMPLETE-001 | DONE | 61facf9 | 2026-05-28 |
 
 ---
 

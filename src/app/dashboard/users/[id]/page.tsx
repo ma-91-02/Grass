@@ -10,6 +10,7 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Dialog } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
 import { ArrowLeft, User } from "lucide-react";
+import { PERMISSIONS } from "@/lib/permissions";
 
 interface Role {
   id: string;
@@ -36,6 +37,7 @@ export default function UserDetailPage() {
   const id = params.id as string;
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentPermissions, setCurrentPermissions] = useState<string[]>([]);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
@@ -52,6 +54,7 @@ export default function UserDetailPage() {
       .then((d) => {
         if (!d.success) throw new Error(d.error || "فشل تحميل بيانات الجلسة");
         setCurrentUserId(d.data.userId);
+        setCurrentPermissions(d.data.permissions || []);
       })
       .catch((err) => {
         setAuthError(
@@ -151,6 +154,9 @@ export default function UserDetailPage() {
   const isSelfAction = isCurrentUser;
   const isOwner = user?.isSystemOwner || false;
   const ownerLocked = isOwner && !isSelfAction;
+
+  const canEdit = currentPermissions.includes(PERMISSIONS.USERS_EDIT);
+  const canDelete = currentPermissions.includes(PERMISSIONS.USERS_DELETE);
 
   if (isLoading || isLoadingAuth) {
     return (
@@ -288,16 +294,18 @@ export default function UserDetailPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>الأدوار</CardTitle>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={openEditRoles}
-              disabled={updateMutation.isPending || isOwner}
-              title={isOwner ? "لا يمكن تعديل صلاحيات أو حالة مالك النظام" : undefined}
-            >
-              تعديل الأدوار
-            </Button>
+            {canEdit && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={openEditRoles}
+                disabled={updateMutation.isPending || isOwner}
+                title={isOwner ? "لا يمكن تعديل صلاحيات أو حالة مالك النظام" : undefined}
+              >
+                تعديل الأدوار
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -324,38 +332,42 @@ export default function UserDetailPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
-            <Button
-              type="button"
-              variant={user.isActive ? "outline" : "primary"}
-              onClick={() => setToggleOpen(true)}
-              disabled={updateMutation.isPending || isSelfAction || isOwner}
-              title={
-                isOwner
-                  ? "لا يمكن تعديل صلاحيات أو حالة مالك النظام"
-                  : isSelfAction
-                    ? "لا يمكنك تغيير حالة حسابك"
-                    : user.isActive
-                      ? "تعطيل المستخدم"
-                      : "تفعيل المستخدم"
-              }
-            >
-              {user.isActive ? "تعطيل" : "تفعيل"}
-            </Button>
-            <Button
-              type="button"
-              variant="danger"
-              onClick={() => setDeleteOpen(true)}
-              disabled={deleteMutation.isPending || isSelfAction || isOwner}
-              title={
-                isOwner
-                  ? "لا يمكن حذف مالك النظام"
-                  : isSelfAction
-                    ? "لا يمكنك حذف حسابك"
-                    : "حذف المستخدم"
-              }
-            >
-              حذف
-            </Button>
+            {canEdit && (
+              <Button
+                type="button"
+                variant={user.isActive ? "outline" : "primary"}
+                onClick={() => setToggleOpen(true)}
+                disabled={updateMutation.isPending || isSelfAction || isOwner}
+                title={
+                  isOwner
+                    ? "لا يمكن تعديل صلاحيات أو حالة مالك النظام"
+                    : isSelfAction
+                      ? "لا يمكنك تغيير حالة حسابك"
+                      : user.isActive
+                        ? "تعطيل المستخدم"
+                        : "تفعيل المستخدم"
+                }
+              >
+                {user.isActive ? "تعطيل" : "تفعيل"}
+              </Button>
+            )}
+            {canDelete && (
+              <Button
+                type="button"
+                variant="danger"
+                onClick={() => setDeleteOpen(true)}
+                disabled={deleteMutation.isPending || isSelfAction || isOwner}
+                title={
+                  isOwner
+                    ? "لا يمكن حذف مالك النظام"
+                    : isSelfAction
+                      ? "لا يمكنك حذف حسابك"
+                      : "حذف المستخدم"
+                }
+              >
+                حذف
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
