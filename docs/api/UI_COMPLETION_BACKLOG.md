@@ -1226,6 +1226,40 @@
 
 ---
 
+#### Task UI-036
+**Title:** Unit Detail UI  
+**Status:** `DONE`  
+**Priority:** MEDIUM  
+**Related APIs:**
+- `GET /api/units/{id}`
+**Target UI Pages:**
+- `/dashboard/units/[id]/page.tsx`
+- `/dashboard/units/page.tsx` (زر عرض)
+**Scope:**
+- إنشاء صفحة تفاصيل وحدة قياس للقراءة فقط
+- عرض name/code/symbol/type/isActive/system data
+- إضافة زر Eye (عرض التفاصيل) في قائمة الوحدات
+**Forbidden:**
+- تعديل backend
+- تعديل units logic
+**Acceptance Criteria:**
+- زر عرض يظهر لكل وحدة في القائمة
+- صفحة تفاصيل تعرض جميع معلومات الوحدة
+- خطأ في التحميل يظهر رسالة واضحة
+- زر رجوع لقائمة الوحدات
+**Required Checks:**
+- npm run lint
+- npm run typecheck
+- npm run build
+**Documentation Updates:**
+- API_REGISTRY.md: GET /api/units/{id}: NO_UI → CONNECTED
+- UI_BINDING_ROADMAP.md: تحديث 2.3 — units/{id} ✅
+- UI_COMPLETION_BACKLOG.md: UI-036 → DONE
+**Commit Hash:** `9be8e7b`
+**Date:** 2026-05-27
+
+---
+
 #### Task UI-034
 **Title:** Purchases Edit UI  
 **Status:** `DONE`  
@@ -1292,6 +1326,7 @@
 | UI-033 | DONE | bf90430 | 2026-05-27 |
 | UI-034 | DONE | 1c5d530 | 2026-05-27 |
 | UI-035 | DONE | e874cfc | 2026-05-27 |
+| UI-036 | DONE | 9be8e7b | 2026-05-27 |
 
 ---
 

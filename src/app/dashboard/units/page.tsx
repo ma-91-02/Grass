@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Ruler } from "lucide-react";
+import { Edit, Trash2, Ruler, Eye } from "lucide-react";
 
 interface Unit {
   id: string;
@@ -289,6 +289,13 @@ export default function UnitsPage() {
         searchPlaceholder="بحث بالاسم أو الكود..."
         actions={(item: Unit) => (
           <div className="flex items-center justify-center gap-1">
+            <button
+              onClick={() => router.push(`/dashboard/units/${item.id}`)}
+              className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-primary"
+              title="عرض التفاصيل"
+            >
+              <Eye className="h-4 w-4" />
+            </button>
             <button
               onClick={() => openEdit(item)}
               className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-blue-600"

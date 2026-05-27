@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-27 (UI-035 — تفاصيل الحساب)
+> آخر تحديث: 2026-05-27 (UI-036 — تفاصيل وحدة القياس)
 
 ---
 
@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 129 |
-| CONNECTED | 121 |
+| CONNECTED | 122 |
 | PARTIAL | 0 |
-| NO_UI | 5 |
+| NO_UI | 4 |
 | BACKEND_ONLY | 3 |
 
 ---
@@ -143,7 +143,7 @@
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | Units | GET | `/api/units` | قائمة وحدات القياس | DONE | CONNECTED | `/dashboard/units`, `/dashboard/products` (dropdown) | MEDIUM | 2.3 | تم إنشاء صفحة إدارة وحدات القياس 2026-05-24 |
 | Units | POST | `/api/units` | إنشاء وحدة | DONE | CONNECTED | `/dashboard/units` | MEDIUM | 2.3 | — |
-| Units | GET | `/api/units/{id}` | تفاصيل وحدة | DONE | NO_UI | — | MEDIUM | 2.3 | — |
+| Units | GET | `/api/units/{id}` | تفاصيل وحدة | DONE | CONNECTED | `/dashboard/units/[id]` | MEDIUM | 2.3 | UI-036 — عرض name/code/symbol/type/isActive/system data |
 | Units | PATCH | `/api/units/{id}` | تحديث وحدة | DONE | CONNECTED | `/dashboard/units` | MEDIUM | 2.3 | — |
 | Units | DELETE | `/api/units/{id}` | حذف وحدة | DONE | CONNECTED | `/dashboard/units` | MEDIUM | 2.3 | إذا الوحدة مستخدمة في مواد يتم تعطيلها بدلاً من الحذف |
 
@@ -363,9 +363,9 @@
 
 | Status | Count |
 |--------|-------|
-| CONNECTED | 121 |
+| CONNECTED | 122 |
 | PARTIAL | 0 |
-| NO_UI | 5 |
+| NO_UI | 4 |
 | BACKEND_ONLY | 3 |
 | UNKNOWN | 0 |
 | BROKEN | 0 |
