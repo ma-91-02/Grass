@@ -1396,7 +1396,7 @@
 - API_REGISTRY.md: GET /api/customer-categories/{id}: NO_UI → CONNECTED
 - UI_BINDING_ROADMAP.md: تحديث المتبقي NO_UI (1→0)
 - UI_COMPLETION_BACKLOG.md: UI-039 → DONE
-**Commit Hash:** ``
+**Commit Hash:** `ae1df38`
 **Date:** 2026-05-27
 
 ---
@@ -1435,7 +1435,7 @@
 | UI-036 | DONE | 0e748f4 | 2026-05-27 |
 | UI-037 | DONE | 6a08f89 | 2026-05-27 |
 | UI-038 | DONE | 20e4673 | 2026-05-27 |
-| UI-039 | DONE |  | 2026-05-27 |
+| UI-039 | DONE | ae1df38 | 2026-05-27 |
 
 ---
 
