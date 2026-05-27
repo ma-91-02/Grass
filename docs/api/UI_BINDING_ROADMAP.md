@@ -1,7 +1,7 @@
 # UI Binding Roadmap — Grass ERP
 
 > خارطة ربط الواجهة الأمامية بالـ APIs حسب الأولوية.
-> آخر تحديث: 2026-05-18
+> آخر تحديث: 2026-05-27 (MAINT-002 — التدقيق النهائي)
 
 ---
 
@@ -310,3 +310,31 @@
 - ✅ تم إجراء smoke test على كل صفحة
 - ✅ تم تحديث `API_REGISTRY.md` بـ UI Status = CONNECTED
 - ✅ تم تحديث `API_UPDATE_RULES.md` إذا لزم الأمر
+
+---
+
+## MAINT-002 Audit Note (2026-05-27)
+
+تم التدقيق النهائي لـ API_REGISTRY.md:
+
+- **CONNECTED:** 119 (تصحيح من 88 — 31 endpoint لم تكن محدّثة في Executive Summary)
+- **NO_UI:** 7 (تصحيح من 0 — 7 detail/action endpoints لا تزال غير مربوطه)
+- **BACKEND_ONLY:** 3 (تصحيح من 10 — 8 endpoints لم تكن صحيحة)
+- **PARTIAL:** 0 (تصحيح من 30 — لا يوجد endpoints مربوط جزئيًا)
+
+### المتبقي NO_UI (7 endpoints):
+1. `GET /api/customer-categories/{id}` — تفاصيل قسم (LOW)
+2. `GET /api/categories/{id}` — تفاصيل تصنيف (LOW)
+3. `GET /api/units/{id}` — تفاصيل وحدة (LOW)
+4. `GET /api/accounts/{id}` — تفاصيل حساب (LOW)
+5. `GET /api/fiscal-periods/{id}` — تفاصيل فترة (LOW)
+6. `DELETE /api/fiscal-periods/{id}` — حذف فترة (LOW)
+7. `PATCH /api/purchases/{id}` — تحديث فاتورة شراء (HIGH) ← مهمة UI-034
+
+### التغييرات:
+- `GET /api/customer-collections/{id}/print`: NO_UI → CONNECTED (مستخدم من صفحة القائمة)
+- `GET /api/accounts/tree`: NO_UI → BACKEND_ONLY (UI يبني الشجرة من flat list)
+- `GET /api/exchange-rates/{id}`: UNKNOWN → CONNECTED (مستخدم في صفحة القائمة)
+
+### التوصية:
+- UI-034 (PATCH Purchases) هو أولوية HIGH ويُوصى به كأول مهمة UI تالية.

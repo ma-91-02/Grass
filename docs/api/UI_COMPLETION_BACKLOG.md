@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-27 (UI-033)
+> آخر تحديث: 2026-05-27 (MAINT-002 — التدقيق النهائي)
 
 ---
 
@@ -947,7 +947,7 @@
 
 #### Task UI-026
 **Title:** Inventory Audit UI  
-**Status:** `TODO`  
+**Status:** `DONE`  
 **Priority:** LOW  
 **Related APIs:**
 - `GET /api/inventory/audit/issues`
@@ -970,7 +970,7 @@
 **Documentation Updates:**
 - API_REGISTRY.md: UI Status = CONNECTED للـ endpoints
 - UI_BINDING_ROADMAP.md: إزالة المهمة
-**Commit Hash:**
+**Commit Hash:** `7b77262`
 
 ---
 
@@ -983,7 +983,7 @@
 **Target UI Pages:**
 - `/dashboard/collections/[id]/page.tsx`
 **Scope:**
-- صفحة تفاصيل سند قبض مع زر طباعة
+- إنشاء صفحة تفاصيل سند قبض مع زر طباعة (الـ print endpoint مربوط من صفحة القائمة)
 **Forbidden:**
 - تعديل backend print logic
 **Acceptance Criteria:**
@@ -1184,6 +1184,40 @@
 - API_REGISTRY.md: GET: NO_UI → CONNECTED, CONNECTED: 87→88, NO_UI: 1→0
 - UI_BINDING_ROADMAP.md: إضافة Supplier Detail
 **Commit Hash:** `bf90430`
+
+---
+
+#### Task UI-034
+**Title:** Purchases Edit UI  
+**Status:** `TODO`  
+**Priority:** HIGH  
+**Related APIs:**
+- `PATCH /api/purchases/{id}`
+- `GET /api/purchases/{id}`
+**Target UI Pages:**
+- `/dashboard/purchases/[id]/edit/page.tsx`
+- `/dashboard/purchases/[id]/page.tsx` (زر تعديل)
+**Scope:**
+- إنشاء صفحة تعديل مسودة فاتورة شراء
+- تعديل مورد/مخزن/عملة/خصومات/بنود عبر PATCH
+- إضافة زر تعديل في صفحة التفاصيل للمسودات فقط
+**Forbidden:**
+- تعديل backend
+- تعديل purchase posting logic
+**Acceptance Criteria:**
+- زر تعديل يظهر فقط للمسودات وللمستخدم الحاصل على صلاحية
+- صفحة تعديل تعرض بيانات الفاتورة الحالية
+- تعديل المورد والمخزن والعملة والخصومات والبنود
+- حفظ التعديلات عبر PATCH والعودة للتفاصيل
+**Required Checks:**
+- npm run lint
+- npm run typecheck
+- npm run build
+**Documentation Updates:**
+- API_REGISTRY.md: PATCH: NO_UI → CONNECTED
+- UI_BINDING_ROADMAP.md: إزالة المهمة من 1.1
+**Commit Hash:**
+**Date:**
 
 ---
 

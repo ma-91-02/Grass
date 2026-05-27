@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-27 (UI-033)
+> آخر تحديث: 2026-05-27 (MAINT-002 — التدقيق النهائي)
 
 ---
 
@@ -10,11 +10,11 @@
 | المقياس | العدد |
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
-| إجمالي نقاط النهاية (methods) | 128 |
-| CONNECTED | 88 |
-| PARTIAL | 30 |
-| NO_UI | 0 |
-| BACKEND_ONLY | 10 |
+| إجمالي نقاط النهاية (methods) | 129 |
+| CONNECTED | 119 |
+| PARTIAL | 0 |
+| NO_UI | 7 |
+| BACKEND_ONLY | 3 |
 
 ---
 
@@ -259,7 +259,7 @@
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | Collections | GET | `/api/customer-collections` | قائطة التحصيلات | DONE | CONNECTED | `/dashboard/collections` | HIGH | 0 | — |
 | Collections | POST | `/api/customer-collections` | إنشاء سند قبض | DONE | CONNECTED | `/dashboard/collections/new` | HIGH | 0 | — |
-| Collections | GET | `/api/customer-collections/{id}/print` | طباعة سند قبض | DONE | NO_UI | — | LOW | 3.0 | لا يوجد detail page مع زر طباعة |
+| Collections | GET | `/api/customer-collections/{id}/print` | طباعة سند قبض | DONE | CONNECTED | `/dashboard/collections` | LOW | 3.3 | يُفتح في تبويب جديد عبر window.open من صفحة التحصيلات |
 
 ---
 
@@ -286,7 +286,7 @@
 | Accounts | GET | `/api/accounts/{id}` | تفاصيل حساب | DONE | NO_UI | — | HIGH | 1.4 | — |
 | Accounts | PATCH | `/api/accounts/{id}` | تحديث حساب | DONE | CONNECTED | `/dashboard/accounts` | HIGH | 1.4 | مودال تعديل (name/parent/isPosting/description) |
 | Accounts | DELETE | `/api/accounts/{id}` | حذف حساب | DONE | CONNECTED | `/dashboard/accounts` | HIGH | 1.4 | ConfirmDialog + عرض رسالة الرفض من backend |
-| Accounts | GET | `/api/accounts/tree` | شجرة الحسابات | DONE | NO_UI | — | HIGH | 1.4 | مستخدمة كمرجع، الـ UI يبني tree من list |
+| Accounts | GET | `/api/accounts/tree` | شجرة الحسابات | DONE | BACKEND_ONLY | — | HIGH | 1.4 | الـ UI يبني الشجرة من flat list; endpoint موجود كمرجع للاستخدام الداخلي |
 
 ---
 
@@ -317,7 +317,7 @@
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | ExchangeRates | GET | `/api/exchange-rates` | قائمة أسعار الصرف | DONE | CONNECTED | `/dashboard/exchange-rates` | HIGH | 0 | — |
 | ExchangeRates | POST | `/api/exchange-rates` | إنشاء سعر صرف | DONE | CONNECTED | `/dashboard/exchange-rates` | HIGH | 0 | — |
-| ExchangeRates | GET | `/api/exchange-rates/{id}` | تفاصيل سعر صرف | DONE | UNKNOWN | — | LOW | 4.4 | لم يتم التحقق |
+| ExchangeRates | GET | `/api/exchange-rates/{id}` | تفاصيل سعر صرف | DONE | CONNECTED | `/dashboard/exchange-rates` | LOW | 4.4 | يُستخدم في صفحة القائمة قبل الحذف |
 | ExchangeRates | DELETE | `/api/exchange-rates/{id}` | حذف سعر صرف | DONE | CONNECTED | `/dashboard/exchange-rates` | HIGH | 0 | — |
 
 ---
@@ -363,10 +363,10 @@
 
 | Status | Count |
 |--------|-------|
-| CONNECTED | 74 |
-| PARTIAL | 31 |
-| NO_UI | 13 |
-| BACKEND_ONLY | 10 |
+| CONNECTED | 119 |
+| PARTIAL | 0 |
+| NO_UI | 7 |
+| BACKEND_ONLY | 3 |
 | UNKNOWN | 0 |
 | BROKEN | 0 |
-| **Total** | **128** |
+| **Total** | **129** |
