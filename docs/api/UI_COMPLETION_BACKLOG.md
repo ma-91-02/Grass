@@ -1098,7 +1098,34 @@
 
 ---
 
-## 8. ملخص العدادات
+#### Task UI-031
+**Title:** Stock Adjustment Edit UI  
+**Status:** `DONE`  
+**Priority:** MEDIUM  
+**Related APIs:**
+- `PATCH /api/stock-adjustments/{id}`
+**Target UI Pages:**
+- `/dashboard/stock-adjustments/[id]/edit/page.tsx`
+- `/dashboard/stock-adjustments/[id]/page.tsx`
+**Scope:**
+- إنشاء صفحة تعديل مسودة تسوية مخزن (مخزن/تاريخ/سبب/ملاحظات)
+- إضافة زر تعديل في صفحة التفاصيل للمسودات فقط
+**Forbidden:**
+- تعديل backend
+**Acceptance Criteria:**
+- زر تعديل يظهر فقط للمسودات وللمستخدم الحاصل على صلاحية stockAdjustments.edit
+- صفحة تعديل تعرض بيانات التسوية الحالية وتعديلها عبر PATCH
+- الحقول المدعومة: warehouseId, adjustmentDate, reason, notes
+- بنود التسوية معروضة كـ read-only لأن PATCH لا يدعم تعديل البنود
+- منع تعديل غير DRAFT برسالة واضحة
+**Required Checks:**
+- npm run lint
+- npm run typecheck
+- npm run build
+**Documentation Updates:**
+- API_REGISTRY.md: PATCH: NO_UI → CONNECTED, CONNECTED: 85→86, NO_UI: 3→2
+- UI_BINDING_ROADMAP.md: 2.2 إضافة PATCH + edit page
+**Commit Hash:**
 
 | الأولوية | العدد |
 |----------|-------|
@@ -1123,6 +1150,10 @@
 | UI-025 | DONE | c4986ab | 2026-05-27 |
 | UI-026 | DONE | 7b77262 | 2026-05-27 |
 | UI-027 | DONE | 4d9489a | 2026-05-27 |
+| UI-028 | DONE | 1953a81 | 2026-05-27 |
+| UI-029 | DONE | ce81810 | 2026-05-27 |
+| UI-030 | DONE | 8904c52 | 2026-05-27 |
+| UI-031 | DONE | | 2026-05-27 |
 
 ---
 

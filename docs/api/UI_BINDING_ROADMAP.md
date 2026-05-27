@@ -138,6 +138,7 @@
 - `POST /api/stock-movements/{id}/post` — ترحيل حركة ✅ (COMPLETED)
 - `GET /api/stock-adjustments` — قائمة تسويات المخزن ✅ (COMPLETED)
 - `POST /api/stock-adjustments` — إنشاء تسوية ✅ (COMPLETED)
+- `PATCH /api/stock-adjustments/{id}` — تحديث تسوية ✅ (COMPLETED)
 
 **الصفحات المطلوبة:**
 - `/dashboard/stock-movements/page.tsx` — قائمة ✅ (COMPLETED — list + filters)
@@ -146,7 +147,8 @@
 - `/dashboard/stock-movements/new/page.tsx` — إنشاء تسوية ✅ (COMPLETED)
 - `/dashboard/stock-adjustments/page.tsx` — قائمة ✅ (COMPLETED)
 - `/dashboard/stock-adjustments/new/page.tsx` — إنشاء تسوية ✅ (COMPLETED)
-- `/dashboard/stock-adjustments/[id]/page.tsx` — تفاصيل + ترحيل + حذف ✅ (COMPLETED)
+- `/dashboard/stock-adjustments/[id]/page.tsx` — تفاصيل + ترحيل + حذف + تعديل ✅ (COMPLETED)
+- `/dashboard/stock-adjustments/[id]/edit/page.tsx` — تعديل مسودة ✅ (COMPLETED)
 
 **Priority:** MEDIUM
 

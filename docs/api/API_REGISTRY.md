@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-27 (UI-030)
+> آخر تحديث: 2026-05-27 (UI-031)
 
 ---
 
@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 128 |
-| CONNECTED | 85 |
+| CONNECTED | 86 |
 | PARTIAL | 30 |
-| NO_UI | 3 |
+| NO_UI | 2 |
 | BACKEND_ONLY | 10 |
 
 ---
@@ -194,7 +194,7 @@
 | StockAdjustments | GET | `/api/stock-adjustments` | قائمة تسويات المخزن | DONE | CONNECTED | `/dashboard/stock-adjustments` | MEDIUM | 2.2 | قائمة مع فلترة + بحث + badges |
 | StockAdjustments | POST | `/api/stock-adjustments` | إنشاء تسوية | DONE | CONNECTED | `/dashboard/stock-adjustments/new` | MEDIUM | 2.2 | form إنشاء تسوية مع بنود متعددة |
 | StockAdjustments | GET | `/api/stock-adjustments/{id}` | تفاصيل تسوية | DONE | CONNECTED | `/dashboard/stock-adjustments/[id]` | MEDIUM | 2.2 | عرض معلومات + بنود + ملخص |
-| StockAdjustments | PATCH | `/api/stock-adjustments/{id}` | تحديث تسوية | DONE | NO_UI | — | MEDIUM | 2.2 | — |
+| StockAdjustments | PATCH | `/api/stock-adjustments/{id}` | تحديث تسوية | DONE | CONNECTED | `/dashboard/stock-adjustments/[id]/edit` | MEDIUM | 2.2 | تعديل المخزن/التاريخ/السبب/ملاحظات فقط — لا تعديل بنود |
 | StockAdjustments | DELETE | `/api/stock-adjustments/{id}` | حذف تسوية | DONE | CONNECTED | `/dashboard/stock-adjustments/[id]` | MEDIUM | 2.2 | ConfirmDialog + فقط للمسودات |
 | StockAdjustments | POST | `/api/stock-adjustments/{id}/post` | ترحيل تسوية | DONE | CONNECTED | `/dashboard/stock-adjustments/[id]` | MEDIUM | 2.2 | ConfirmDialog + فقط للمسودات |
 
