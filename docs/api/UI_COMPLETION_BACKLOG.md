@@ -1155,7 +1155,9 @@
 **Documentation Updates:**
 - API_REGISTRY.md: GET: NO_UI → CONNECTED, CONNECTED: 86→87, NO_UI: 2→1
 - UI_BINDING_ROADMAP.md: إضافة Warehouses Detail
-**Commit Hash:**
+**Commit Hash:** `750658e`
+
+---
 
 | الأولوية | العدد |
 |----------|-------|
@@ -1184,7 +1186,7 @@
 | UI-029 | DONE | ce81810 | 2026-05-27 |
 | UI-030 | DONE | 8904c52 | 2026-05-27 |
 | UI-031 | DONE | a605f7f | 2026-05-27 |
-| UI-032 | DONE | | 2026-05-27 |
+| UI-032 | DONE | 750658e | 2026-05-27 |
 
 ---
 
