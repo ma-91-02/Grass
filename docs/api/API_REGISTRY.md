@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-27 (MAINT-002 — التدقيق النهائي)
+> آخر تحديث: 2026-05-27 (UI-034 — تعديل فاتورة شراء)
 
 ---
 
@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 129 |
-| CONNECTED | 119 |
+| CONNECTED | 120 |
 | PARTIAL | 0 |
-| NO_UI | 7 |
+| NO_UI | 6 |
 | BACKEND_ONLY | 3 |
 
 ---
@@ -329,7 +329,7 @@
 | Purchases | GET | `/api/purchases` | قائمة فواتير الشراء | DONE | CONNECTED | `/dashboard/purchases` | CRITICAL | 0 | — |
 | Purchases | POST | `/api/purchases` | إنشاء فاتورة شراء | DONE | CONNECTED | `/dashboard/purchases/new` | CRITICAL | 1.0 | — |
 | Purchases | GET | `/api/purchases/{id}` | تفاصيل فاتورة شراء | DONE | CONNECTED | `/dashboard/purchases/[id]` | HIGH | 1.0 | — |
-| Purchases | PATCH | `/api/purchases/{id}` | تحديث فاتورة شراء | DONE | NO_UI | — | HIGH | 1.0 | — |
+| Purchases | PATCH | `/api/purchases/{id}` | تحديث فاتورة شراء | DONE | CONNECTED | `/dashboard/purchases/[id]/edit` | HIGH | 1.0 | تعديل المسودات فقط — الحقول: المورد/المخزن/التاريخ/العملة/البنود/المصاريف |
 | Purchases | DELETE | `/api/purchases/{id}` | حذف فاتورة شراء | DONE | CONNECTED | `/dashboard/purchases` | CRITICAL | 0 | — |
 | Purchases | GET | `/api/purchases/{id}/pdf` | تحميل PDF فاتورة الشراء | DONE | CONNECTED | `/dashboard/purchases` | HIGH | 0 | — |
 
@@ -363,9 +363,9 @@
 
 | Status | Count |
 |--------|-------|
-| CONNECTED | 119 |
+| CONNECTED | 120 |
 | PARTIAL | 0 |
-| NO_UI | 7 |
+| NO_UI | 6 |
 | BACKEND_ONLY | 3 |
 | UNKNOWN | 0 |
 | BROKEN | 0 |

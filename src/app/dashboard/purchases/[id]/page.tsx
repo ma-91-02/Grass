@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
-import { ArrowLeft, Printer, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, Printer, Trash2 } from "lucide-react";
 
 interface PurchaseItem {
   id: string;
@@ -60,6 +60,19 @@ export default function PurchaseDetailPage() {
   const { toast } = useToast();
   const id = params.id as string;
 
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => setPermissions(d.data?.permissions || []))
+      .catch(() => toast("تعذر التحقق من الصلاحيات", "error"));
+  }, []);
+
+  const canEdit =
+    permissions.includes("purchases.edit") || permissions.length === 0;
+
   const {
     data: invoice,
     isLoading,
@@ -91,7 +104,8 @@ export default function PurchaseDetailPage() {
     onError: (err: Error) => toast(err.message, "error"),
   });
 
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const canDelete =
+    permissions.includes("purchases.delete") || permissions.length === 0;
 
   if (isLoading) {
     return (
@@ -143,6 +157,15 @@ export default function PurchaseDetailPage() {
           <p className="text-sm text-gray-500">{statusBadge(invoice.status)}</p>
         </div>
         <div className="flex gap-2">
+          {invoice.status === "DRAFT" && canEdit && (
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/dashboard/purchases/${id}/edit`)}
+            >
+              <Pencil className="h-4 w-4" />
+              تعديل
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() =>
@@ -152,26 +175,28 @@ export default function PurchaseDetailPage() {
             <Printer className="h-4 w-4" />
             PDF
           </Button>
-          <Button
-            variant="danger"
-            onClick={() => {
-              if (showDeleteConfirm) {
-                deleteMutation.mutate();
-                setShowDeleteConfirm(false);
-              } else {
-                setShowDeleteConfirm(true);
-                setTimeout(() => setShowDeleteConfirm(false), 4000);
-              }
-            }}
-            disabled={deleteMutation.isPending}
-          >
-            <Trash2 className="h-4 w-4" />
-            {showDeleteConfirm
-              ? "تأكيد الحذف"
-              : deleteMutation.isPending
+          {canDelete && invoice.status === "DRAFT" && (
+            <Button
+              variant="danger"
+              onClick={() => {
+                if (deleteConfirm) {
+                  deleteMutation.mutate();
+                  setDeleteConfirm(false);
+                } else {
+                  setDeleteConfirm(true);
+                  setTimeout(() => setDeleteConfirm(false), 4000);
+                }
+              }}
+              disabled={deleteMutation.isPending}
+            >
+              <Trash2 className="h-4 w-4" />
+              {deleteConfirm
+                ? "تأكيد الحذف"
+                : deleteMutation.isPending
                 ? "جاري الحذف..."
                 : "حذف"}
-          </Button>
+            </Button>
+          )}
         </div>
       </div>
 

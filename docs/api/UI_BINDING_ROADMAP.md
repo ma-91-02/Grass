@@ -1,7 +1,7 @@
 # UI Binding Roadmap — Grass ERP
 
 > خارطة ربط الواجهة الأمامية بالـ APIs حسب الأولوية.
-> آخر تحديث: 2026-05-27 (MAINT-002 — التدقيق النهائي)
+> آخر تحديث: 2026-05-27 (UI-034 — تعديل فاتورة شراء)
 
 ---
 
@@ -36,7 +36,7 @@
 - `GET /api/purchases` — قائمة فواتير الشراء ✅ (موجود)
 - `POST /api/purchases` — إنشاء فاتورة شراء ✅ (COMPLETED)
 - `GET /api/purchases/{id}` — تفاصيل فاتورة شراء ✅ (COMPLETED)
-- `PATCH /api/purchases/{id}` — تحديث فاتورة شراء ❌
+- `PATCH /api/purchases/{id}` — تحديث فاتورة شراء ✅ (COMPLETED — UI-034: تعديل المسودات فقط مع دعم الحقول الكاملة والبنود والمصاريف)
 
 **الصفحات المطلوبة:**
 - `/dashboard/purchases/new/page.tsx` — صفحة إنشاء فاتورة شراء
@@ -317,19 +317,18 @@
 
 تم التدقيق النهائي لـ API_REGISTRY.md:
 
-- **CONNECTED:** 119 (تصحيح من 88 — 31 endpoint لم تكن محدّثة في Executive Summary)
-- **NO_UI:** 7 (تصحيح من 0 — 7 detail/action endpoints لا تزال غير مربوطه)
+- **CONNECTED:** 120 (تصحيح من 88 — 31 endpoint لم تكن محدّثة في Executive Summary)
+- **NO_UI:** 6 (تصحيح من 0 — 6 detail/action endpoints لا تزال غير مربوطه)
 - **BACKEND_ONLY:** 3 (تصحيح من 10 — 8 endpoints لم تكن صحيحة)
 - **PARTIAL:** 0 (تصحيح من 30 — لا يوجد endpoints مربوط جزئيًا)
 
-### المتبقي NO_UI (7 endpoints):
+### المتبقي NO_UI (6 endpoints):
 1. `GET /api/customer-categories/{id}` — تفاصيل قسم (LOW)
 2. `GET /api/categories/{id}` — تفاصيل تصنيف (LOW)
 3. `GET /api/units/{id}` — تفاصيل وحدة (LOW)
 4. `GET /api/accounts/{id}` — تفاصيل حساب (LOW)
 5. `GET /api/fiscal-periods/{id}` — تفاصيل فترة (LOW)
 6. `DELETE /api/fiscal-periods/{id}` — حذف فترة (LOW)
-7. `PATCH /api/purchases/{id}` — تحديث فاتورة شراء (HIGH) ← مهمة UI-034
 
 ### التغييرات:
 - `GET /api/customer-collections/{id}/print`: NO_UI → CONNECTED (مستخدم من صفحة القائمة)
@@ -337,4 +336,4 @@
 - `GET /api/exchange-rates/{id}`: UNKNOWN → CONNECTED (مستخدم في صفحة القائمة)
 
 ### التوصية:
-- UI-034 (PATCH Purchases) هو أولوية HIGH ويُوصى به كأول مهمة UI تالية.
+- UI-034 (PATCH Purchases) تم إنجازه — جميع مهام UI المتبقية منخفضة الأولوية (LOW detail endpoints)
