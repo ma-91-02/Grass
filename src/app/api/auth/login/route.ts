@@ -43,6 +43,9 @@ export async function POST(request: NextRequest) {
         action: "LOGIN_FAILED",
         ipAddress: ip === "unknown" ? undefined : ip,
         userAgent,
+        details: {
+          reason: "INVALID_CREDENTIALS",
+        },
       });
       return errorResponse("بيانات الدخول غير صحيحة", 401);
     }

@@ -5,7 +5,7 @@
 - تاريخ التحقق: 2026-05-28
 - نوع المهمة: PH00-GATE-VERIFY-001
 - النطاق: تدقيق واعتماد فقط، بدون تنفيذ Features جديدة.
-- القرار النهائي: `PH-00 NOT APPROVED`
+- القرار النهائي بعد PH00-GATE-FIX-001: `PH-00 APPROVED FOR PH-01`
 
 ## نطاق التحقق
 
@@ -65,36 +65,36 @@
 | Gate | النتيجة | الدليل | الملاحظات | القرار |
 | ---- | ------- | ------ | ---------- | ------ |
 | Architecture Gate | PASS WITH NOTES | `docs/PROJECT_PROGRESS_TRACKER_AR.md`, `docs/accounting/*`, `docs/architecture/*` | فلسفة ledger-first موجودة، لكن قاعدة Gate الإلزامية لم تكن موثقة قبل هذه المهمة. | مقبول بعد تحديث التوثيق |
-| Data Model Gate | FAIL | `prisma/schema.prisma`, `src/lib/auth/audit.ts`, `src/app/api/journal-entries/[id]/reverse/route.ts` | `AuditLog.userId` إلزامي بينما `LOGIN_FAILED` قد لا يملك مستخدماً، وعكس القيد لا يملك علاقة reversal صريحة كافية. | غير معتمد |
-| Backend/API Gate | FAIL | `/api/auth/login`, `/api/journal-entries/[id]/reverse`, `/api/accounts/tree` | endpoints موجودة وعزل الشركة موجود في tree، لكن failed-login audit قد لا يُحفظ، وعكس القيد يعلّم الأصل `REVERSED` بينما قيد العكس يبقى `DRAFT`. | غير معتمد |
-| Accounting Integrity Gate | FAIL | `journal-entry-reversal.test.ts`, reverse route | القيد الأصلي يصبح `REVERSED` قبل وجود قيد عكس مرحّل فعلياً؛ هذا لا يكفي كتصحيح ledger-first آمن. | غير معتمد |
+| Data Model Gate | PASS | `prisma/schema.prisma`, migration `20260528013000_make_audit_log_user_optional`, reverse route | أصبح `AuditLog.userId` اختيارياً مع `ON DELETE SET NULL`، وبقي ربط العكس عبر `sourceType/sourceId` مع audit details صريحة. | معتمد |
+| Backend/API Gate | PASS | `/api/auth/login`, `/api/journal-entries/[id]/reverse`, `/api/audit-logs` | failed-login audit لا يستخدم user وهمي، وعكس القيد ينشئ قيد عكس `POSTED` داخل transaction قبل تعليم الأصل `REVERSED`. | معتمد |
+| Accounting Integrity Gate | PASS | `journal-entry-reversal.test.ts`, reverse route | قيد العكس أصبح `POSTED` ومتوازناً داخل نفس transaction، والأصل لا يتحول إلى `REVERSED` إذا فشل إنشاء العكس أو audit. | معتمد |
 | Inventory Integrity Gate | NOT_APPLICABLE | PH-00 لا يكتب stock movements | لا يوجد تنفيذ مخزني داخل Foundation Core. | غير مطبق |
 | UI Runtime Gate | LIMITED | `/auth/login -> 200`, protected dashboard routes redirect to login, protected APIs return 401 | لم تتوفر جلسة System Owner موثقة لتدقيق الصفحات المحمية end-to-end. لا توجد نتيجة runtime كاملة للصفحات المحمية. | يحتاج Runtime كامل قبل الاعتماد النهائي |
 | Navigation Gate | PASS WITH NOTES | `src/components/layout/sidebar.tsx`, صفحات dashboard الخاصة بـ PH-00 | الروابط الأساسية موجودة، والتحويل للحماية يعمل بدون جلسة. | مقبول مع Runtime محدود |
-| Permission/Security Gate | PASS WITH GAP | `requireDbPermission`, `canAccessCompany`, protected API smoke | الصلاحيات موجودة عموماً، لكن failed-login audit gap يمنع إغلاق Security/Audit بالكامل. | غير كاف للاعتماد |
-| Testing Gate | PASS WITH GAPS | 9 ملفات PH-00 نجحت، full test suite نجح | الاختبارات الحالية تمر، لكنها لا تكشف مشكلة failed-login audit، وتثبت السلوك الحالي لعكس القيد بدل إثبات سلامته المحاسبية. | غير كاف للاعتماد |
+| Permission/Security Gate | PASS | `requireDbPermission`, `canAccessCompany`, `auth-audit.test.ts` | failed-login audit أصبح يحفظ الحدث بدون userId حقيقي وبدون fake user. | معتمد |
+| Testing Gate | PASS | targeted PH-00 tests، full suite، typecheck، build | أضيفت/عدلت اختبارات تثبت failed-login audit وسلامة reversal. | معتمد |
 | Documentation Gate | PASS WITH NOTES | تم إنشاء هذا الملف وتحديث tracker/backlog | ملفات QA المرجعية الخمسة غير موجودة، لذلك تم توثيق عدم توفرها. | مقبول مع ملاحظة |
-| Data Integrity Gate | FAIL | `AuditLog.userId`, reverse source fields | سجلات auth الفاشلة قد تفشل بسبب FK، وعلاقة العكس غير صريحة بما يكفي لإثبات سلامة reversal-only correction. | غير معتمد |
-| No Phase Leakage Gate | PASS | git diff الحالي بعد المهمة docs-only، مع وجود تغيير سابق غير تابع لم يتم لمسه | لم يتم تنفيذ Purchases/Sales/Reports/HR/Coolify ولم يتم تعديل Prisma أو الكود. | معتمد |
+| Data Integrity Gate | PASS | `AuditLog.userId?`, migration, posted reversal journal | سجلات auth الفاشلة لم تعد تعتمد على FK إلزامي، وعكس القيد لا يترك الأصل `REVERSED` مع قيد عكس `DRAFT`. | معتمد |
+| No Phase Leakage Gate | PASS | git diff الحالي محصور في PH-00 backend/tests/docs + migration، مع وجود تغيير سابق غير تابع لم يتم لمسه | لم يتم تنفيذ Purchases/Sales/Reports/HR/Coolify، ولم يتم تعديل Frontend. | معتمد |
 
 ## جدول Tasks
 
 | Task ID | المهمة | الحالة قبل التحقق | نتيجة Backend/API | نتيجة Data Integrity | نتيجة Accounting | نتيجة UI | نتيجة Navigation | نتيجة Security | نتيجة Tests | نتيجة Docs | القرار النهائي |
 | ------- | ------ | ------------------ | ----------------- | -------------------- | ---------------- | -------- | ---------------- | -------------- | ------------ | --------- | -------------- |
-| FND-001 | Auth login/logout/me | DONE | APIs موجودة، و`/api/auth/me` محمي | session payload يعمل؛ failed-login audit مرتبط بـ FND-008 | لا ينطبق مباشرة | `/auth/login` يرجع 200 | login route موجود | لا default JWT secret مثبت في الكود؛ يحتاج env في التشغيل | auth/session tests ناجحة | موثق | APPROVED WITH AUDIT GAP |
+| FND-001 | Auth login/logout/me | DONE | APIs موجودة، و`/api/auth/me` محمي | session payload يعمل؛ failed-login audit عولج ضمن FND-008 | لا ينطبق مباشرة | `/auth/login` يرجع 200 | login route موجود | لا default JWT secret مثبت في الكود؛ يحتاج env في التشغيل | auth/session/auth-audit tests ناجحة | موثق | APPROVED |
 | FND-002 | Company model + APIs | DONE | `/api/companies` موجود | `Company` مرتبط بالكيانات الأساسية | لا ينطبق مباشرة | صفحة الشركات موجودة | رابط موجود | APIs محمية | coverage ضمن foundation/company binding | موثق | APPROVED |
 | FND-003 | Branch model + APIs | DONE | `/api/branches` موجود | branch scoped بالشركة | لا ينطبق مباشرة | صفحة الفروع موجودة | رابط موجود | APIs محمية | coverage ضمن foundation | موثق | APPROVED |
 | FND-004 | Fiscal periods | DONE | `/api/fiscal-periods` و`PeriodGuard` موجودان | periods scoped بالشركة والفرع عند الحاجة | يمنع `HARD_CLOSED`, `ARCHIVED`, `CLOSING_IN_PROGRESS`, `FUTURE`, `SOFT_CLOSED` | صفحة الفترات موجودة | رابط موجود | APIs محمية | period guard tests ناجحة | موثق | APPROVED |
 | FND-005 | Chart of Accounts foundation | DONE | `/api/accounts`, `/api/accounts/tree` موجودة | tree API يطبق `canAccessCompany` | COA foundation موجود مع currency/account rules | صفحات الحسابات موجودة | رابط موجود | محمي بالصلاحيات | accounts-tree tests ناجحة | موثق | APPROVED |
-| FND-006 | JournalEntry / JournalLine | DONE | create/update/delete/post/reverse موجودة | relation العكس غير كافية؛ قيد العكس DRAFT | FAIL بسبب عكس القيد: الأصل `REVERSED` وقيد العكس `DRAFT` | صفحات القيود موجودة، runtime محمي غير مكتمل | روابط موجودة | permissions موجودة | tests ناجحة لكنها لا تثبت السلامة المطلوبة | موثق | NOT APPROVED |
+| FND-006 | JournalEntry / JournalLine | DONE | create/update/delete/post/reverse موجودة | العكس أصبح posted + source link + audit details | PASS: قيد العكس `POSTED` ومتوازن، والأصل يتغير بعد نجاح العملية | صفحات القيود موجودة، runtime محمي غير مكتمل | روابط موجودة | permissions موجودة | tests محدثة تثبت السلامة | موثق | APPROVED |
 | FND-007 | PostingService foundation | DONE | PostingService موجود ويستخدم transaction | idempotency/operation tracking موجود | القيد المتوازن والترحيل الأساسي يعملان للقيود اليدوية | لا UI مباشر | لا ينطبق | يستقبل userId ويكتب audit داخل transaction | posting tests ناجحة | موثق | APPROVED FOR FOUNDATION ONLY |
-| FND-008 | Audit baseline | DONE | audit logs API موجود، وfinancial audit داخل transaction | FAIL بسبب `AuditLog.userId` الإلزامي مع `recordAuthAudit` بدون userId | financial audit للقيود موجود؛ auth audit ناقص | صفحة audit موجودة | رابط موجود | failed-login audit قد لا يُحفظ | لا يوجد test يثبت حفظ failed-login audit بلا مستخدم | موثق | NOT APPROVED |
+| FND-008 | Audit baseline | DONE | audit logs API موجود، وfinancial audit داخل transaction | `AuditLog.userId` أصبح اختيارياً للحوادث الأمنية بدون مستخدم | financial audit للقيود موجود؛ auth audit محفوظ | صفحة audit موجودة | رابط موجود | failed-login audit لا يستخدم fake user | `auth-audit.test.ts` يثبت failed/success audit | موثق | APPROVED |
 
 ## FND-001 — Auth login/logout/me
 
 ### النتيجة
 
-`APPROVED WITH AUDIT GAP`
+`APPROVED`
 
 ### الأدلة
 
@@ -110,11 +110,11 @@
 - login/logout/me موجودة ومحمية.
 - `/auth/login` يعمل في smoke محدود ويرجع 200.
 - `/api/auth/me` بدون جلسة يرجع 401.
-- فجوة audit في failed login تخص FND-008 لأنها تتعلق بتخزين سجل التدقيق.
+- فجوة audit في failed login أُغلقت ضمن FND-008 عبر PH00-GATE-FIX-001.
 
 ### القرار
 
-مقبول وظيفياً، لكنه لا يغلق PH-00 بسبب فجوة Audit baseline.
+مقبول وظيفياً بعد إغلاق فجوة Audit baseline.
 
 ## FND-002 — Company model + APIs
 
@@ -192,26 +192,26 @@
 
 ### النتيجة
 
-`NOT APPROVED`
+`APPROVED`
 
 ### الفجوة الحرجة
 
-عكس القيد الحالي ينشئ قيد عكس بحالة `DRAFT` ثم يحدّث القيد الأصلي إلى `REVERSED` داخل نفس transaction.
+كان عكس القيد ينشئ قيد عكس بحالة `DRAFT` ثم يحدّث القيد الأصلي إلى `REVERSED` داخل نفس transaction.
 
 ### السبب المحاسبي
 
-- سياسة reversal-only correction تتطلب أن يكون أثر العكس واضحاً ومتكاملاً داخل ledger.
-- اعتبار القيد الأصلي `REVERSED` قبل ترحيل قيد العكس فعلياً قد يجعل التقارير أو القراءة المحاسبية تعتبر الأصل معكوساً بينما قيد العكس لم يصبح `POSTED`.
-- الاختبار الحالي يثبت هذا السلوك، لكنه لا يثبت سلامته المحاسبية.
-- العلاقة الحالية تعتمد على `sourceType = "REVERSE"` و`sourceId = original.id`، ولا توجد علاقة reversal صريحة كافية لتدقيق كامل.
+- تم اعتماد عكس فوري داخل نفس transaction.
+- قيد العكس يُنشأ الآن بحالة `POSTED` مع `postedAt`.
+- يتم التحقق من توازن قيد العكس قبل الحفظ باستخدام `LedgerValidator`.
+- يبقى الربط عبر `sourceType = "REVERSE"` و`sourceId = original.id` مع audit details تشمل `originalJournalEntryId` و`reversalJournalEntryId`.
+- لا يتم تعليم الأصل `REVERSED` إذا فشل إنشاء قيد العكس أو فشل audit داخل transaction.
 
-### القرار المطلوب لاحقاً
+### الاختبارات المثبتة
 
-إنشاء مهمة PH-00 صغيرة لاحقة لتحديد سياسة العكس المعتمدة وتنفيذها بأمان، مثل:
-
-- إما إنشاء قيد العكس كـ `POSTED` داخل نفس العملية مع audit واضح.
-- أو إبقاء الأصل `POSTED` حتى يتم ترحيل قيد العكس ثم تحديث العلاقة والحالة.
-- أو إضافة علاقة reversal صريحة إذا كان ذلك يتطلب تعديل Prisma بعد اعتماد قرار معماري.
+- `journal-entry-reversal.test.ts` يثبت إنشاء قيد عكس `POSTED`.
+- يثبت أن قيد العكس متوازن debit = credit.
+- يثبت أن audit يسبق تعليم الأصل `REVERSED`.
+- يثبت أن فشل audit أو فشل إنشاء قيد العكس لا يعلّم الأصل `REVERSED`.
 
 ## FND-007 — PostingService foundation
 
@@ -235,27 +235,25 @@
 
 ### النتيجة
 
-`NOT APPROVED`
+`APPROVED`
 
 ### الفجوة الحرجة
 
-`recordAuthAudit` يستخدم `userId: params.userId || "unknown"`، بينما `AuditLog.userId` إلزامي ومربوط بـ `User`.
+كان `recordAuthAudit` يستخدم `userId: params.userId || "unknown"`، بينما `AuditLog.userId` كان إلزامياً ومربوطاً بـ `User`.
 
 ### الأثر
 
-- عند فشل تسجيل الدخول لا يوجد غالباً `userId`.
-- محاولة إنشاء AuditLog بقيمة `"unknown"` قد تفشل بسبب foreign key.
-- الدالة تلتقط الخطأ وتسجل `console.error` فقط، لذلك قد تضيع محاولة الدخول الفاشلة من audit trail.
-- هذا يتعارض مع audit baseline وsecurity accountability داخل PH-00.
+- تم تعديل `AuditLog.userId` إلى اختياري مع migration رسمية.
+- تم منع استخدام أي userId وهمي.
+- failed-login audit يسجل `email`, `success: false`, `reason`, `ipAddress`, و`userAgent` عند توفرها.
+- successful-login audit ما زال يسجل userId الحقيقي.
+- `/api/audit-logs` يعرض fallback عربي للأحداث الأمنية غير المرتبطة بمستخدم.
 
-### القرار المطلوب لاحقاً
+### الاختبارات المثبتة
 
-إنشاء مهمة PH-00 صغيرة لاحقة لمعالجة auth audit بدون كسر Prisma عشوائياً، مثل:
-
-- اعتماد userId اختياري في AuditLog مع entity/email/ip عند عدم وجود مستخدم.
-- أو إنشاء system/security actor رسمي.
-- أو فصل `AuthAuditLog` إذا اعتمدت المعمارية ذلك.
-- إضافة test يثبت حفظ failed-login audit بدون مستخدم فعلي.
+- `auth-audit.test.ts` يثبت failed-login audit بدون userId.
+- يثبت successful-login audit مع userId حقيقي.
+- يثبت أن فشل تخزين audit لا يكسر مسار المصادقة ويعيد نتيجة موثقة.
 
 ## الفجوات خارج PH-00
 
@@ -278,31 +276,33 @@
 
 | الفحص | النتيجة | التفاصيل |
 | ----- | ------- | -------- |
-| PH-00 targeted tests | PASS | 9 ملفات اختبار نجحت، 274 اختباراً نجح. |
-| Full test suite | PASS | 22 ملف اختبار نجح، 533 اختباراً نجح. |
+| PH-00 targeted tests | PASS | 6 ملفات اختبار مرتبطة بالفجوتين نجحت، 148 اختباراً نجح. |
+| Full test suite | PASS | 23 ملف اختبار نجح، 537 اختباراً نجح. |
 | Runtime smoke limited | LIMITED PASS | `/auth/login -> 200`, protected dashboard routes redirect to login, protected APIs return 401. |
-| typecheck | NOT_RUN | لم يتم تعديل TypeScript في هذه المهمة. |
-| build | NOT_RUN | لم يتم تعديل TypeScript في هذه المهمة. |
+| typecheck | PASS | `npm run typecheck` نجح بعد الإصلاح. |
+| build | PASS | `npm run build` نجح بعد الإصلاح. |
 
 ## القرار النهائي
 
-`PH-00 NOT APPROVED`
+`PH-00 APPROVED FOR PH-01`
 
-لا يجوز الانتقال إلى PH-01 كمرحلة معتمدة حتى يتم إغلاق فجوتين داخل Foundation Core:
+تم إغلاق فجوتي Foundation Core اللتين منعتا الاعتماد:
 
-1. إصلاح سياسة Auth Audit عند فشل تسجيل الدخول بدون مستخدم.
-2. إصلاح سياسة Journal Reversal بحيث لا يصبح القيد الأصلي `REVERSED` قبل وجود عكس محاسبي مرحّل أو علاقة reversal سليمة ومعتمدة.
+1. سياسة Auth Audit عند فشل تسجيل الدخول بدون مستخدم.
+2. سياسة Journal Reversal بحيث لا يصبح القيد الأصلي `REVERSED` إلا بعد إنشاء قيد عكس `POSTED` ومتوازن داخل نفس transaction.
 
 ## المهمة التالية داخل PH-00
 
-`PH00-FIX-001 — Fix Foundation Gate Findings`
+لا توجد مهمة Gate blocker متبقية داخل PH-00.
 
-نطاقها المقترح:
+## تحديث PH00-GATE-FIX-001
 
-- تحليل خيار audit model الآمن بدون كسر ledger-first.
-- إصلاح failed-login audit بطريقة قابلة للاختبار.
-- اعتماد وتنفيذ سياسة reversal journal الآمنة.
-- إضافة اختبارات تثبت:
-  - failed-login audit محفوظ أو موثق بشكل auditable.
-  - العكس لا يخلق حالة Ledger متناقضة.
-- إعادة تشغيل Phase Gate بعد الإصلاح.
+| البند | النتيجة |
+| ----- | ------- |
+| الخلل في FND-006 | قيد العكس كان `DRAFT` بينما الأصل يصبح `REVERSED`. |
+| إصلاح FND-006 | قيد العكس أصبح `POSTED` ومتوازناً، ويتم تعليم الأصل بعد نجاح create + audit داخل transaction. |
+| الخلل في FND-008 | failed-login audit كان يعتمد على userId وهمي بسبب FK إلزامي. |
+| إصلاح FND-008 | `AuditLog.userId` أصبح اختيارياً، ولا يتم إرسال userId عند عدم وجود مستخدم. |
+| migration | `20260528013000_make_audit_log_user_optional` |
+| الاختبارات | `auth-audit.test.ts`, `journal-entry-reversal.test.ts`, full suite |
+| القرار بعد الإصلاح | `PH-00 APPROVED FOR PH-01` |

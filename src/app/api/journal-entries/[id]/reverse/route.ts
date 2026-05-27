@@ -14,6 +14,7 @@ import {
 } from "@/lib/api-response";
 import { PERMISSIONS } from "@/lib/permissions";
 import { PeriodGuard } from "@/lib/services/period-guard";
+import { LedgerValidator } from "@/lib/services/ledger-validator";
 
 export async function POST(
   _request: NextRequest,
@@ -53,6 +54,7 @@ export async function POST(
     where: { companyId: original.companyId },
   });
   const entryNumber = `JE-${String(entryCount + 1).padStart(5, "0")}`;
+  const reversalDate = new Date();
 
   const reversedLines = original.lines.map((line) => ({
     accountId: line.accountId,
@@ -61,6 +63,11 @@ export async function POST(
     description: `عكس: ${original.entryNumber} - ${line.description || ""}`,
   }));
 
+  const validation = LedgerValidator.validateLines(reversedLines);
+  if (!validation.valid) {
+    return errorResponse(validation.errors.join(" | "));
+  }
+
   const reversed = await prisma.$transaction(async (tx) => {
     const created = await tx.journalEntry.create({
       data: {
@@ -68,24 +75,20 @@ export async function POST(
         branchId: original.branchId,
         fiscalPeriodId: original.fiscalPeriodId,
         entryNumber,
-        entryDate: new Date(),
+        entryDate: reversalDate,
         currency: original.currency,
         exchangeRateSnapshot: original.exchangeRateSnapshot,
         description: `عكس القيد ${original.entryNumber}`,
         sourceType: "REVERSE",
         sourceId: original.id,
-        status: "DRAFT",
+        status: "POSTED",
+        postedAt: reversalDate,
         createdById: user.userId,
         lines: {
           create: reversedLines,
         },
       },
       include: { lines: true },
-    });
-
-    await tx.journalEntry.update({
-      where: { id: original.id },
-      data: { status: "REVERSED" as never },
     });
 
     await tx.auditLog.create({
@@ -97,8 +100,18 @@ export async function POST(
         details: {
           originalEntryNumber: original.entryNumber,
           reversedEntryNumber: entryNumber,
+          originalJournalEntryId: original.id,
+          reversalJournalEntryId: created.id,
+          reversalStatus: "POSTED",
+          totalDebit: validation.totalDebit,
+          totalCredit: validation.totalCredit,
         } as never,
       },
+    });
+
+    await tx.journalEntry.update({
+      where: { id: original.id },
+      data: { status: "REVERSED" as never },
     });
 
     return created;

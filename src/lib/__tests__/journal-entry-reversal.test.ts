@@ -44,22 +44,27 @@ const postedJournal = {
   ],
 };
 
-function mockReverseTransaction(auditCreate = vi.fn().mockResolvedValue({})) {
+function mockReverseTransaction(options?: {
+  create?: ReturnType<typeof vi.fn>;
+  auditCreate?: ReturnType<typeof vi.fn>;
+  update?: ReturnType<typeof vi.fn>;
+}) {
   const reversed = {
     ...postedJournal,
     id: "je-2",
     entryNumber: "JE-00002",
-    status: "DRAFT",
+    status: "POSTED",
+    postedAt: new Date("2026-05-28T00:00:00.000Z"),
   };
   const tx = {
     journalEntry: {
-      create: vi.fn().mockResolvedValue(reversed),
-      update: vi
-        .fn()
-        .mockResolvedValue({ ...postedJournal, status: "REVERSED" }),
+      create: options?.create || vi.fn().mockResolvedValue(reversed),
+      update:
+        options?.update ||
+        vi.fn().mockResolvedValue({ ...postedJournal, status: "REVERSED" }),
     },
     auditLog: {
-      create: auditCreate,
+      create: options?.auditCreate || vi.fn().mockResolvedValue({}),
     },
   };
 
@@ -96,7 +101,7 @@ describe("journal entry reversal transaction", () => {
     );
   });
 
-  it("writes reversal journal, original status, and audit in one transaction", async () => {
+  it("creates a posted balanced reversal journal, then marks the original reversed in one transaction", async () => {
     const tx = mockReverseTransaction();
 
     const { POST } =
@@ -106,7 +111,46 @@ describe("journal entry reversal transaction", () => {
     });
 
     expect(response.status).toBe(201);
-    expect(tx.journalEntry.create).toHaveBeenCalled();
+    const body = await response.json();
+    expect(body.data.status).toBe("POSTED");
+
+    expect(tx.journalEntry.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          sourceType: "REVERSE",
+          sourceId: "je-1",
+          status: "POSTED",
+          postedAt: expect.any(Date),
+          lines: {
+            create: [
+              expect.objectContaining({
+                accountId: "cash",
+                debit: 0,
+                credit: 100,
+              }),
+              expect.objectContaining({
+                accountId: "capital",
+                debit: 100,
+                credit: 0,
+              }),
+            ],
+          },
+        }),
+      }),
+    );
+
+    const createArgs = tx.journalEntry.create.mock.calls[0][0];
+    const lines = createArgs.data.lines.create;
+    const totalDebit = lines.reduce(
+      (sum: number, line: { debit: number }) => sum + line.debit,
+      0,
+    );
+    const totalCredit = lines.reduce(
+      (sum: number, line: { credit: number }) => sum + line.credit,
+      0,
+    );
+    expect(totalDebit).toBe(totalCredit);
+
     expect(tx.journalEntry.update).toHaveBeenCalledWith({
       where: { id: "je-1" },
       data: { status: "REVERSED" },
@@ -117,14 +161,25 @@ describe("journal entry reversal transaction", () => {
         action: "REVERSE",
         entity: "JournalEntry",
         entityId: "je-2",
+        details: expect.objectContaining({
+          originalJournalEntryId: "je-1",
+          reversalJournalEntryId: "je-2",
+          reversalStatus: "POSTED",
+          totalDebit: 100,
+          totalCredit: 100,
+        }),
       }),
     });
+
+    expect(tx.auditLog.create.mock.invocationCallOrder[0]).toBeLessThan(
+      tx.journalEntry.update.mock.invocationCallOrder[0],
+    );
   });
 
   it("does not report success when reversal audit fails", async () => {
-    mockReverseTransaction(
-      vi.fn().mockRejectedValue(new Error("audit failed")),
-    );
+    const tx = mockReverseTransaction({
+      auditCreate: vi.fn().mockRejectedValue(new Error("audit failed")),
+    });
 
     const { POST } =
       await import("@/app/api/journal-entries/[id]/reverse/route");
@@ -133,5 +188,24 @@ describe("journal entry reversal transaction", () => {
         params: Promise.resolve({ id: "je-1" }),
       }),
     ).rejects.toThrow("audit failed");
+
+    expect(tx.journalEntry.update).not.toHaveBeenCalled();
+  });
+
+  it("does not mark the original reversed when reversal creation fails", async () => {
+    const tx = mockReverseTransaction({
+      create: vi.fn().mockRejectedValue(new Error("create failed")),
+    });
+
+    const { POST } =
+      await import("@/app/api/journal-entries/[id]/reverse/route");
+    await expect(
+      POST(new Request("http://localhost") as never, {
+        params: Promise.resolve({ id: "je-1" }),
+      }),
+    ).rejects.toThrow("create failed");
+
+    expect(tx.auditLog.create).not.toHaveBeenCalled();
+    expect(tx.journalEntry.update).not.toHaveBeenCalled();
   });
 });

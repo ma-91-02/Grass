@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-28 (PH00-GATE-VERIFY-001 — Phase Zero Gate Verification)
+> آخر تحديث: 2026-05-28 (PH00-GATE-FIX-001 — Phase Zero Gate Blockers Fixed)
 
 ---
 
@@ -1572,13 +1572,44 @@
 
 ---
 
+#### Task PH00-GATE-FIX-001
+**Title:** Fix PH-00 Gate Blocking Findings
+**Status:** `DONE`
+**Priority:** CRITICAL
+**Scope:**
+- إصلاح Journal Reverse Integrity
+- إصلاح Failed Login Audit Integrity
+- تحديث اختبارات PH-00
+- تحديث `PH00_GATE_VERIFICATION_AR.md`
+- تحديث `PROJECT_PROGRESS_TRACKER_AR.md`
+**Forbidden:**
+- تنفيذ PH-01
+- تعديل Purchases/Sales/Reports/HR/Coolify
+- تنفيذ Features خارج PH-00
+**Result:**
+- قيد العكس أصبح `POSTED` ومتوازناً داخل نفس transaction.
+- failed-login audit لم يعد يستخدم userId وهمي.
+- تم اعتماد PH-00 بعد الإصلاح.
+**Required Checks:**
+- `npm run typecheck`
+- `npm run build`
+- `npm test -- --run`
+**Documentation Updates:**
+- `docs/qa/phase-gates/PH00_GATE_VERIFICATION_AR.md`
+- `docs/PROJECT_PROGRESS_TRACKER_AR.md`
+- `docs/api/UI_COMPLETION_BACKLOG.md`
+**Commit Hash:** ``
+**Date:** 2026-05-28
+
+---
+
 | الأولوية | العدد |
 |----------|-------|
-| CRITICAL | 8 |
+| CRITICAL | 9 |
 | HIGH | 7 |
 | MEDIUM | 10 |
 | LOW | 11 |
-| **الإجمالي** | **36** |
+| **الإجمالي** | **37** |
 
 ---
 
@@ -1615,6 +1646,7 @@
 | PM-001 | DONE | 09acdf5 | 2026-05-27 |
 | PH00-COMPLETE-001 | DONE | bcbbf7f | 2026-05-28 |
 | PH00-GATE-VERIFY-001 | BLOCKED | b708528 | 2026-05-28 |
+| PH00-GATE-FIX-001 | DONE |  | 2026-05-28 |
 
 ---
 

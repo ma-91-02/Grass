@@ -22,7 +22,7 @@ export async function GET() {
   const data = logs.map((l) => ({
     id: l.id,
     userId: l.userId,
-    userName: l.user.name,
+    userName: l.user?.name || "حدث أمني بدون مستخدم",
     action: l.action,
     entity: l.entity,
     entityId: l.entityId,
