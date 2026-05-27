@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/toast";
 import { ArrowLeft } from "lucide-react";
 
 interface SupplierAccount {
@@ -39,6 +40,7 @@ export default function SupplierDetailPage() {
   const router = useRouter();
   const id = params.id as string;
 
+  const { toast } = useToast();
   const [permissions, setPermissions] = useState<string[]>([]);
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function SupplierDetailPage() {
         setPermissions(d.data?.permissions || []);
       })
       .catch(() => {
-        // Auth error is handled silently — no permission-dependent UI
+        toast("تعذر التحقق من الصلاحيات", "error");
       });
   }, []);
 
