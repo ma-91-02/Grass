@@ -1215,9 +1215,10 @@
 - npm run build
 **Documentation Updates:**
 - API_REGISTRY.md: PATCH: NO_UI → CONNECTED
-- UI_BINDING_ROADMAP.md: إزالة المهمة من 1.1
-**Commit Hash:**
-**Date:**
+- UI_BINDING_ROADMAP.md: تحديث 1.1 — PATCH ✅
+- UI_COMPLETION_BACKLOG.md: UI-034 → DONE
+**Commit Hash:** `1c5d530`
+**Date:** 2026-05-27
 
 ---
 
@@ -1250,6 +1251,7 @@
 | UI-031 | DONE | a605f7f | 2026-05-27 |
 | UI-032 | DONE | 750658e | 2026-05-27 |
 | UI-033 | DONE | bf90430 | 2026-05-27 |
+| UI-034 | DONE | 1c5d530 | 2026-05-27 |
 
 ---
 
