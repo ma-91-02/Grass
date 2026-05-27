@@ -11,11 +11,13 @@ import {
   RotateCcw,
   Boxes,
   Warehouse,
+  Truck,
 } from "lucide-react";
 import Link from "next/link";
 
 interface DashboardStats {
   totalCustomers: number;
+  totalSuppliers: number;
   totalProducts: number;
   totalInvoices: number;
   totalUsers: number;
@@ -24,6 +26,7 @@ interface DashboardStats {
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     totalCustomers: 0,
+    totalSuppliers: 0,
     totalProducts: 0,
     totalInvoices: 0,
     totalUsers: 0,
@@ -53,6 +56,12 @@ export default function DashboardPage() {
       value: stats.totalCustomers,
       icon: Users,
       color: "text-blue-600",
+    },
+    {
+      title: "إجمالي الموردين",
+      value: stats.totalSuppliers,
+      icon: Truck,
+      color: "text-purple-600",
     },
     {
       title: "إجمالي المواد",
@@ -116,6 +125,12 @@ export default function DashboardPage() {
       href: "/dashboard/sales-returns",
       icon: RotateCcw,
       desc: "إدارة مرتجعات البيع",
+    },
+    {
+      title: "المشتريات",
+      href: "/dashboard/purchases",
+      icon: Truck,
+      desc: "إدارة فواتير الشراء",
     },
   ];
 

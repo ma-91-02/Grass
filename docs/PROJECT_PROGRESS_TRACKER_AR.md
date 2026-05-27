@@ -81,18 +81,18 @@
 | API methods حسب `API_REGISTRY.md`                                    | 129                                                                             |
 | API methods مربوطة بالواجهة                                          | 126                                                                             |
 | Backend-only endpoints                                               | 3                                                                               |
-| صفحات Dashboard                                                      | 62                                                                              |
-| روابط Sidebar مباشرة                                                 | 27 تقريباً                                                                      |
+| صفحات Dashboard                                                      | 63                                                                              |
+| روابط Sidebar مباشرة                                                 | 30                                                                              |
 | ملفات الاختبار                                                       | 22                                                                              |
 | test cases / describe / it تقريباً                                   | 621                                                                             |
-| النسبة العامة التقريبية للمشروع المؤسسي                              | 46%                                                                             |
+| النسبة العامة التقريبية للمشروع المؤسسي                              | 48%                                                                             |
 | النسبة التقريبية للنواة القابلة للتجربة بعد تدقيق المبيعات/المشتريات | 61% تقريباً                                                                     |
 | المرحلة الحالية                                                      | تدقيق المشتريات End-to-End قبل التقارير                                         |
 | المهمة التالية الموصى بها                                            | PUR-AUDIT-001 — تدقيق دورة المشتريات كاملة من الإنشاء إلى الأثر المالي والمخزني |
 
 ### أهم الاستنتاجات
 
-- Foundation وUI Binding قطعا شوطاً كبيراً: Auth، RBAC، companies، branches، fiscal periods، chart of accounts، journal entries، معظم صفحات dashboard، وSidebar موجودة. بعد `PH00-GATE-FIX-001` أُغلقت فجوتا failed-login audit وJournal Reversal، وأصبحت PH-00 معتمدة للانتقال.
+- Foundation وUI Binding قطعا شوطاً كبيراً: Auth، RBAC، companies، branches، fiscal periods، chart of accounts، journal entries، معظم صفحات dashboard، وSidebar موجودة. بعد `PH00-GATE-FIX-001` أُغلقت فجوتا failed-login audit وJournal Reversal، وأصبحت PH-00 معتمدة للانتقال. PH-02 (Dashboard & Navigation) اكتملت 100% مع إحصائيات company-scoped وصفحات التقارير والإعدادات والمخزون.
 - المخزون والمبيعات لهما تنفيذ أعمق من المشتريات، مع خدمات stock balance وposting tests للمبيعات والمرتجعات.
 - المشتريات تمتلك UI وAPI وPDF ومصاريف داخل الفاتورة، لكنها لا تحقق بعد فلسفة الخطة الأصلية بالكامل: لا يوجد endpoint ترحيل مشتريات، لا يوجد AP journal، لا توجد Purchase Returns، لا توجد اختبارات مشتريات، وتوجد تحديثات مباشرة على `paymentAccount.balance` و`product.purchasePrice`.
 - التقارير العامة ما زالت placeholder، رغم وجود dashboard stats وتقارير inventory valuation/audit.
@@ -129,7 +129,7 @@
 | -------- | --------------------------- | -------------------------------------------------------------------- | ----------- | ------: | --------------------------- | ------------------- | -------------------------------------------- | ------------------------------------------------------------------ |
 | PH-00    | Foundation Core             | Auth, RBAC, Company, Branch, Fiscal Periods, COA, Journal foundation | DONE        |    100% | نعم                         | نعم                 | لا توجد مهمة PH-00 متبقية؛ التالي PUR-AUDIT-001 | تم اعتماد PH-00 بعد PH00-GATE-FIX-001 |
 | PH-01    | Users & Permissions         | المستخدمون، الأدوار، الصلاحيات، الجلسات                              | DONE        |   100% | نعم                         | نعم                 | تم تدقيق Roles CRUD وpermission coverage     | Roles editor كامل + permission hiding + gate verification |
-| PH-02    | Dashboard & Navigation      | Sidebar، parent pages، navigation coverage، UI binding               | PARTIAL     |     70% | نعم                         | نعم                 | إصلاح dashboard/settings placeholders لاحقاً | Zero NO_UI موثق، لكن بعض الصفحات placeholder                       |
+| PH-02    | Dashboard & Navigation      | Sidebar، parent pages، navigation coverage، UI binding               | DONE        |   100% | نعم                         | نعم                 | لا توجد مهمة PH-02 متبقية | تم إنجاز NAV-002 إلى NAV-006 بالكامل |
 | PH-03    | Customers & Suppliers       | العملاء، الموردون، الذمم، كشوفات العملاء                             | PARTIAL     |     80% | نعم                         | نعم                 | تدقيق supplier AP مع المشتريات               | العملاء أقوى من الموردين بسبب collections/receivables              |
 | PH-04    | Accounting & Ledger         | القيود، دليل الحسابات، posting، العملات، السندات                     | PARTIAL     |     58% | نعم                         | نعم                 | تدقيق السندات غير المنفذة                    | Journals موجودة، vouchers الكاملة غير موجودة                       |
 | PH-05    | Inventory Engine            | مواد، مخازن، حركات، أرصدة، تحويلات، تسويات، تقييم                    | PARTIAL     |     62% | نعم                         | نعم                 | تدقيق opening/count/reservation gaps         | لا يوجد inventory count أو reservations كاملة                      |
@@ -218,11 +218,11 @@
 | Task ID | اسم المهمة                       | النوع         | الحالة  | النسبة | Backend | API | UI   | Nav | Tests | Docs | قبل التجربة؟ | قبل Coolify؟ | مؤجل؟ | الأولوية | الدليل من المشروع                    | الملاحظات                                 |
 | ------- | -------------------------------- | ------------- | ------- | -----: | ------- | --- | ---- | --- | ----- | ---- | ------------ | ------------ | ----- | -------- | ------------------------------------ | ----------------------------------------- |
 | NAV-001 | Sidebar coverage                 | Navigation    | DONE    |   100% | لا      | لا  | نعم  | نعم | جزئي  | نعم  | نعم          | نعم          | لا    | HIGH     | `sidebar.tsx`, NAV-001               | رابط المشتريات موجود                      |
-| NAV-002 | Dashboard stats                  | Dashboard     | PARTIAL |    50% | نعم     | نعم | نعم  | نعم | لا    | جزئي | نعم          | نعم          | لا    | MEDIUM   | `/api/dashboard/stats`, `/dashboard` | stats بسيطة وغير company-scoped بشكل كامل |
+| NAV-002 | Dashboard stats                  | Dashboard     | DONE    |   100% | نعم     | نعم | نعم  | نعم | لا    | نعم  | نعم          | نعم          | لا    | MEDIUM   | `/api/dashboard/stats`, `/dashboard` | company-scoped مع totalSuppliers |
 | NAV-003 | API UI binding registry          | Documentation | DONE    |   100% | نعم     | نعم | نعم  | نعم | لا    | نعم  | نعم          | نعم          | لا    | HIGH     | API_REGISTRY: 126 CONNECTED          | توثيق قوي                                 |
-| NAV-004 | Reports page placeholder         | UI            | TODO    |     0% | لا      | لا  | جزئي | نعم | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | `/dashboard/reports` placeholder     | يؤجل بعد تدقيق البيع/الشراء               |
-| NAV-005 | Settings page placeholder        | UI            | TODO    |     0% | لا      | لا  | جزئي | نعم | لا    | نعم  | نعم جزئياً   | نعم          | لا    | HIGH     | `/dashboard/settings` placeholder    | مطلوب لاحقاً للحسابات النظامية            |
-| NAV-006 | Parent pages for sales/inventory | UI            | PARTIAL |    50% | لا      | لا  | نعم  | نعم | لا    | جزئي | نعم          | نعم          | لا    | MEDIUM   | `/dashboard/sales`, inventory pages  | بعضها hub بسيط                            |
+| NAV-004 | Reports page                     | UI            | DONE    |   100% | لا      | لا  | نعم  | نعم | لا    | نعم  | نعم          | نعم          | لا    | MEDIUM   | `/dashboard/reports`                 | روابط لتقارير المخزون وسجل النشاطات        |
+| NAV-005 | Settings page                    | UI            | DONE    |   100% | لا      | لا  | نعم  | نعم | لا    | نعم  | نعم          | نعم          | لا    | HIGH     | `/dashboard/settings`                | روابط لإعدادات الشركة والمستخدمين والنظام  |
+| NAV-006 | Parent pages for sales/inventory | UI            | DONE    |   100% | لا      | لا  | نعم  | نعم | لا    | نعم  | نعم          | نعم          | لا    | MEDIUM   | `/dashboard/sales`, `/dashboard/inventory` | صفحتا مبيعات ومخزون رئيسيتان           |
 
 ### PH-03 — Customers & Suppliers
 

@@ -93,6 +93,11 @@ const menuItems = [
     icon: Ruler,
   },
   {
+    title: "المخزون",
+    href: "/dashboard/inventory",
+    icon: Boxes,
+  },
+  {
     title: "المخازن",
     href: "/dashboard/warehouses",
     icon: Warehouse,
@@ -148,6 +153,11 @@ const menuItems = [
     icon: FileText,
   },
   {
+    title: "التقارير",
+    href: "/dashboard/reports",
+    icon: BarChart3,
+  },
+  {
     title: "الشركات",
     href: "/dashboard/companies",
     icon: Building2,
@@ -156,6 +166,11 @@ const menuItems = [
     title: "الفروع",
     href: "/dashboard/branches",
     icon: Building2,
+  },
+  {
+    title: "الإعدادات",
+    href: "/dashboard/settings",
+    icon: Settings,
   },
   {
     title: "المستخدمين",

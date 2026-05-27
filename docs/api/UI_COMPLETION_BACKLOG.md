@@ -1605,7 +1605,7 @@
 
 #### Task PH01-COMPLETE-001
 **Title:** Complete Users & Permissions Phase To 100%
-**Status:** `IN_PROGRESS`
+**Status:** `DONE`
 **Priority:** CRITICAL
 **Scope:**
 - إكمال Roles CRUD API (POST/PATCH/DELETE)
@@ -1633,10 +1633,42 @@
 - `docs/qa/phase-gates/PH01_GATE_VERIFICATION_AR.md`
 - `docs/PROJECT_PROGRESS_TRACKER_AR.md`
 - `docs/api/UI_COMPLETION_BACKLOG.md`
-**Commit Hash:** `61facf9`
-**Date:** 2026-05-28
+ **Commit Hash:** `61facf9`
+ **Date:** 2026-05-28
 
 ---
+
+#### Task PH02-COMPLETE-001
+**Title:** Complete Dashboard & Navigation Phase To 100%
+**Status:** `DONE`
+**Priority:** HIGH
+**Scope:**
+- إكمال NAV-002 إلى NAV-006
+- company-scope dashboard stats API
+- إنشاء صفحة المخزون الرئيسية
+- تحسين صفحتي التقارير والإعدادات مع روابط مفيدة
+- إضافة روابط المخزون/التقارير/الإعدادات في الشريط الجانبي
+- تحديث progress tracker والـ backlog
+**Forbidden:**
+- تنفيذ أي Phase أخرى
+- تعديل backend business logic
+- تعديل Prisma schema
+**Acceptance Criteria:**
+- NAV-002: `/api/dashboard/stats` يستخدم companyId ويعيد totalSuppliers
+- NAV-004: صفحة تقارير مع روابط لتقارير المخزون وسجل النشاطات
+- NAV-005: صفحة إعدادات مع روابط لإدارة النظام
+- NAV-006: صفحة مخزون رئيسية مع روابط لجميع وحدات المخزون
+- جميع روابط Sidebar تؤدي إلى صفحات موجودة
+**Required Checks:**
+- `npm run typecheck`
+- `npm run build`
+**Documentation Updates:**
+- `docs/qa/phase-gates/PH02_GATE_VERIFICATION_AR.md`
+- `docs/PROJECT_PROGRESS_TRACKER_AR.md`
+- `docs/api/UI_COMPLETION_BACKLOG.md`
+- `docs/phase-reports/PH02_REPORT_AR.md`
+**Commit Hash:** `50afb10`
+**Date:** 2026-05-28
 
 | الأولوية | العدد |
 |----------|-------|
@@ -1683,6 +1715,7 @@
 | PH00-GATE-VERIFY-001 | BLOCKED | b708528 | 2026-05-28 |
 | PH00-GATE-FIX-001 | DONE | 4bec87c | 2026-05-28 |
 | PH01-COMPLETE-001 | DONE | 61facf9 | 2026-05-28 |
+| PH02-COMPLETE-001 | DONE | 50afb10 | 2026-05-28 |
 
 ---
 
