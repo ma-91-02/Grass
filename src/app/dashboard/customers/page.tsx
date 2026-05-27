@@ -748,6 +748,13 @@ export default function CustomersPage() {
             searchPlaceholder="بحث بالاسم أو الكود أو الهاتف..."
             actions={(item: Supplier) => (
               <div className="flex items-center justify-center gap-1">
+                <button
+                  onClick={() => router.push(`/dashboard/suppliers/${item.id}`)}
+                  className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-primary"
+                  title="عرض التفاصيل"
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
                 {userPermissions.includes("suppliers.edit") && (
                   <button
                     onClick={() => {

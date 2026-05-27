@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-27 (UI-032)
+> آخر تحديث: 2026-05-27 (UI-033)
 
 ---
 
@@ -1159,6 +1159,32 @@
 
 ---
 
+#### Task UI-033
+**Title:** Supplier Detail UI  
+**Status:** `DONE`  
+**Priority:** LOW  
+**Related APIs:**
+- `GET /api/suppliers/{id}`
+**Target UI Pages:**
+- `/dashboard/suppliers/[id]/page.tsx`
+**Scope:**
+- إنشاء صفحة تفاصيل مورد read-only
+- إضافة زر عرض التفاصيل من تبويب الموردين
+**Forbidden:**
+- تعديل backend
+**Acceptance Criteria:**
+- صفحة تفاصيل تعرض بيانات المورد (name/code/phone/address/notes/status/accounts)
+- زر رجوع إلى /dashboard/customers
+- إضافة زر عرض التفاصيل في جدول الموردين
+**Required Checks:**
+- npm run lint
+- npm run typecheck
+- npm run build
+**Documentation Updates:**
+- API_REGISTRY.md: GET: NO_UI → CONNECTED, CONNECTED: 87→88, NO_UI: 1→0
+- UI_BINDING_ROADMAP.md: إضافة Supplier Detail
+**Commit Hash:**
+
 | الأولوية | العدد |
 |----------|-------|
 | CRITICAL | 6 |
@@ -1187,6 +1213,7 @@
 | UI-030 | DONE | 8904c52 | 2026-05-27 |
 | UI-031 | DONE | a605f7f | 2026-05-27 |
 | UI-032 | DONE | 750658e | 2026-05-27 |
+| UI-033 | DONE | | 2026-05-27 |
 
 ---
 

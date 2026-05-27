@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-27 (UI-032)
+> آخر تحديث: 2026-05-27 (UI-033)
 
 ---
 
@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 128 |
-| CONNECTED | 87 |
+| CONNECTED | 88 |
 | PARTIAL | 30 |
-| NO_UI | 1 |
+| NO_UI | 0 |
 | BACKEND_ONLY | 10 |
 
 ---
@@ -95,7 +95,7 @@
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | Suppliers | GET | `/api/suppliers` | قائمة الموردين | DONE | CONNECTED | `/dashboard/customers` (suppliers tab) | HIGH | 0 | — |
 | Suppliers | POST | `/api/suppliers` | إنشاء مورد | DONE | CONNECTED | `/dashboard/customers` (suppliers tab) | HIGH | 0 | — |
-| Suppliers | GET | `/api/suppliers/{id}` | تفاصيل مورد | DONE | NO_UI | — | MEDIUM | 3.0 | لا يوجد detail page منفصل |
+| Suppliers | GET | `/api/suppliers/{id}` | تفاصيل مورد | DONE | CONNECTED | `/dashboard/suppliers/[id]` | MEDIUM | 3.0 | عرض name/code/phone/address/notes/status/accounts |
 | Suppliers | PATCH | `/api/suppliers/{id}` | تحديث مورد | DONE | CONNECTED | `/dashboard/customers` (suppliers tab) | HIGH | 0 | — |
 | Suppliers | DELETE | `/api/suppliers/{id}` | حذف مورد | DONE | CONNECTED | `/dashboard/customers` (suppliers tab) | HIGH | 0 | — |
 

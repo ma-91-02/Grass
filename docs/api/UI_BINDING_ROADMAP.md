@@ -12,7 +12,7 @@
 - ✅ Auth (login/logout/me)
 - ✅ Users (list + create + toggle)
 - ✅ Customers (list + create + edit + detail + receivables + statement)
-- ✅ Suppliers (list + create + edit)
+- ✅ Suppliers (list + create + edit + detail)
 - ✅ Customer Categories (list + create + edit + delete)
 - ✅ Products (list + create + edit + delete)
 - ✅ Product Categories (list + create + edit + delete)
@@ -266,7 +266,7 @@
 ### ✅ UI Binding 4.3 — Detail Pages (Warehouse Detail)
 **الصفحات المطلوبة:**
 - `/dashboard/warehouses/[id]/page.tsx` — تفاصيل مخزن ✅ (COMPLETED)
-- `/dashboard/customers/suppliers/[id]/page.tsx` — تفاصيل مورد منفصل
+- `/dashboard/suppliers/[id]/page.tsx` — تفاصيل مورد منفصل ✅ (COMPLETED — name/code/phone/address/notes/status/accounts)
 - `/dashboard/exchange-rates/[id]/page.tsx` — تفاصيل سعر صرف
 - `/dashboard/fiscal-periods/[id]/page.tsx` — تفاصيل فترة
 
