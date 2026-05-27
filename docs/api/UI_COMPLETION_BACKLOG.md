@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-27 (UI-031)
+> آخر تحديث: 2026-05-27 (UI-032)
 
 ---
 
@@ -1127,6 +1127,36 @@
 - UI_BINDING_ROADMAP.md: 2.2 إضافة PATCH + edit page
 **Commit Hash:** `a605f7f`
 
+---
+
+#### Task UI-032
+**Title:** Warehouse Detail UI  
+**Status:** `DONE`  
+**Priority:** LOW  
+**Related APIs:**
+- `GET /api/warehouses/{id}`
+**Target UI Pages:**
+- `/dashboard/warehouses/[id]/page.tsx`
+**Scope:**
+- إنشاء صفحة تفاصيل مخزن read-only
+- إضافة زر عرض التفاصيل من صفحة المخازن
+**Forbidden:**
+- تعديل backend
+**Acceptance Criteria:**
+- صفحة تفاصيل تعرض بيانات المخزن (name/code/address/status/branch)
+- زر رجوع إلى /dashboard/warehouses
+- زر تفعيل/تعطيل للمستخدم الحاصل على صلاحية
+- إضافة زر عرض التفاصيل في صفحة القائمة
+- إصلاح .catch(() => {}) silent failure في صفحة القائمة
+**Required Checks:**
+- npm run lint
+- npm run typecheck
+- npm run build
+**Documentation Updates:**
+- API_REGISTRY.md: GET: NO_UI → CONNECTED, CONNECTED: 86→87, NO_UI: 2→1
+- UI_BINDING_ROADMAP.md: إضافة Warehouses Detail
+**Commit Hash:**
+
 | الأولوية | العدد |
 |----------|-------|
 | CRITICAL | 6 |
@@ -1153,7 +1183,8 @@
 | UI-028 | DONE | 1953a81 | 2026-05-27 |
 | UI-029 | DONE | ce81810 | 2026-05-27 |
 | UI-030 | DONE | 8904c52 | 2026-05-27 |
-| UI-031 | DONE | | 2026-05-27 |
+| UI-031 | DONE | a605f7f | 2026-05-27 |
+| UI-032 | DONE | | 2026-05-27 |
 
 ---
 

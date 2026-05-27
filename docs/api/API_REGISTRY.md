@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-27 (UI-031)
+> آخر تحديث: 2026-05-27 (UI-032)
 
 ---
 
@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 128 |
-| CONNECTED | 86 |
+| CONNECTED | 87 |
 | PARTIAL | 30 |
-| NO_UI | 2 |
+| NO_UI | 1 |
 | BACKEND_ONLY | 10 |
 
 ---
@@ -155,7 +155,7 @@
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | Warehouses | GET | `/api/warehouses` | قائمة المخازن | DONE | CONNECTED | `/dashboard/warehouses`, `/dashboard/sales-invoices/new` | CRITICAL | 0 | تم إصلاح companyId في GET |
 | Warehouses | POST | `/api/warehouses` | إنشاء مخزن | DONE | CONNECTED | `/dashboard/warehouses` | CRITICAL | 0 | تم إصلاح companyId و code field |
-| Warehouses | GET | `/api/warehouses/{id}` | تفاصيل مخزن | DONE | NO_UI | — | MEDIUM | 2.0 | لا يوجد detail page |
+| Warehouses | GET | `/api/warehouses/{id}` | تفاصيل مخزن | DONE | CONNECTED | `/dashboard/warehouses/[id]` | MEDIUM | 2.0 | عرض name/code/address/status/branch/data |
 | Warehouses | PATCH | `/api/warehouses/{id}` | تحديث مخزن | DONE | CONNECTED | `/dashboard/warehouses` | CRITICAL | 0 | تم إصلاح companyId و code field |
 | Warehouses | DELETE | `/api/warehouses/{id}` | حذف مخزن | DONE | CONNECTED | `/dashboard/warehouses` | CRITICAL | 0 | — |
 

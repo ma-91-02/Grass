@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable } from "@/components/shared/data-table";
 import { Dialog } from "@/components/ui/dialog";
@@ -9,6 +10,7 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { WarehouseForm } from "@/components/forms/warehouse-form";
 import { useToast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
+import { Eye } from "lucide-react";
 
 interface Warehouse {
   id: string;
@@ -20,6 +22,7 @@ interface Warehouse {
 
 export default function WarehousesPage() {
   const qc = useQueryClient();
+  const router = useRouter();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -32,7 +35,9 @@ export default function WarehousesPage() {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => setUserCompanyId(d.data?.companyId || null))
-      .catch(() => {});
+      .catch(() => {
+        toast("تعذر تحميل بيانات الشركة", "error");
+      });
   }, []);
 
   const {
@@ -204,6 +209,13 @@ export default function WarehousesPage() {
         onSearchChange={setSearch}
         actions={(item: Warehouse) => (
           <>
+            <button
+              onClick={() => router.push(`/dashboard/warehouses/${item.id}`)}
+              className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-primary"
+              title="عرض التفاصيل"
+            >
+              <Eye className="h-4 w-4" />
+            </button>
             <button
               onClick={() => openEdit(item)}
               className="rounded-lg p-1.5 text-gray-500 hover:bg-muted hover:text-blue-600"
