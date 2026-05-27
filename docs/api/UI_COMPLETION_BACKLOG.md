@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-27 (UI-030)
+> آخر تحديث: 2026-05-27 (UI-031)
 
 ---
 
@@ -1125,7 +1125,7 @@
 **Documentation Updates:**
 - API_REGISTRY.md: PATCH: NO_UI → CONNECTED, CONNECTED: 85→86, NO_UI: 3→2
 - UI_BINDING_ROADMAP.md: 2.2 إضافة PATCH + edit page
-**Commit Hash:**
+**Commit Hash:** `a605f7f`
 
 | الأولوية | العدد |
 |----------|-------|
