@@ -1183,7 +1183,9 @@
 **Documentation Updates:**
 - API_REGISTRY.md: GET: NO_UI → CONNECTED, CONNECTED: 87→88, NO_UI: 1→0
 - UI_BINDING_ROADMAP.md: إضافة Supplier Detail
-**Commit Hash:**
+**Commit Hash:** `bf90430`
+
+---
 
 | الأولوية | العدد |
 |----------|-------|
@@ -1213,7 +1215,7 @@
 | UI-030 | DONE | 8904c52 | 2026-05-27 |
 | UI-031 | DONE | a605f7f | 2026-05-27 |
 | UI-032 | DONE | 750658e | 2026-05-27 |
-| UI-033 | DONE | | 2026-05-27 |
+| UI-033 | DONE | bf90430 | 2026-05-27 |
 
 ---
 
