@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "grass-erp-jwt-secret-key-change-in-production",
-);
+const secret = process.env.JWT_SECRET;
+if (!secret) throw new Error("JWT_SECRET environment variable is not set");
+const JWT_SECRET = new TextEncoder().encode(secret);
 
 const publicPaths = ["/auth/login", "/api/auth/login"];
 

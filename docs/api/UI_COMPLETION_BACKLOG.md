@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-27 (MAINT-003 — تدقيق Zero NO_UI النهائي)
+> آخر تحديث: 2026-05-27 (SEC-002 — إزالة hardcoded JWT fallback من proxy.ts)
 
 ---
 
@@ -1401,6 +1401,34 @@
 
 ---
 
+#### Task SEC-002
+**Title:** Remove Or Harden Orphaned Proxy JWT Fallback
+**Status:** `DONE`
+**Priority:** LOW
+**Related APIs:**
+- — (أمني)
+**Target UI Pages:**
+- — (أمني)
+**Scope:**
+- فحص src/proxy.ts
+- إزالة default JWT secret fallback (غير مستخدم)
+**Forbidden:**
+- تعديل auth flow
+- تعديل backend business logic
+**Acceptance Criteria:**
+- proxy.ts لا يحتوي أي JWT_SECRET fallback
+- proxy.ts يرمي خطأ إذا JWT_SECRET غير موجود
+- build ناجح
+**Required Checks:**
+- npm run typecheck
+- npm run build
+**Documentation Updates:**
+- UI_COMPLETION_BACKLOG.md: إضافة SEC-002
+**Commit Hash:** (pending commit)
+**Date:** 2026-05-27
+
+---
+
 #### Task MAINT-003
 **Title:** Final Zero-NO_UI Verification & Navigation Smoke Audit
 **Status:** `DONE`
@@ -1461,6 +1489,9 @@
 | UI-038 | DONE | 20e4673 | 2026-05-27 |
 | UI-039 | DONE | ae1df38 | 2026-05-27 |
 | MAINT-003 | DONE | 2f8d9ce | 2026-05-27 |
+| MAINT-004 | DONE | — | 2026-05-27 |
+| SEC-001 | DONE | — | 2026-05-27 |
+| SEC-002 | DONE | (pending commit) | 2026-05-27 |
 
 ---
 
