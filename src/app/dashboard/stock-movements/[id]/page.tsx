@@ -1,11 +1,14 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft } from "lucide-react";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { useToast } from "@/components/ui/toast";
+import { ArrowLeft, Pencil, Send, Trash2 } from "lucide-react";
 
 interface StockMovementDetail {
   id: string;
@@ -79,7 +82,31 @@ const referenceLabels: Record<string, string> = {
 export default function StockMovementDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { toast } = useToast();
+  const qc = useQueryClient();
   const id = params.id as string;
+
+  const [showPostConfirm, setShowPostConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [permissions, setPermissions] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => {
+        setPermissions(d.data?.permissions || []);
+      })
+      .catch(() => {
+        toast("تعذر التحقق من الصلاحيات", "error");
+      });
+  }, []);
+
+  const canEdit =
+    permissions.includes("stockMovements.edit") || permissions.length === 0;
+  const canDelete =
+    permissions.includes("stockMovements.delete") || permissions.length === 0;
+  const canPost =
+    permissions.includes("stockMovements.post") || permissions.length === 0;
 
   const {
     data: movement,
@@ -93,6 +120,48 @@ export default function StockMovementDetailPage() {
       if (!json.success)
         throw new Error(json.error || "فشل تحميل حركة المخزن");
       return json.data as StockMovementDetail;
+    },
+  });
+
+  const postMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/stock-movements/${id}/post`, {
+        method: "POST",
+      });
+      const json = await res.json();
+      if (!json.success)
+        throw new Error(json.error || "فشل ترحيل حركة المخزن");
+      return json.data;
+    },
+    onSuccess: () => {
+      toast("تم ترحيل حركة المخزن بنجاح", "success");
+      qc.invalidateQueries({ queryKey: ["stock-movement", id] });
+      setShowPostConfirm(false);
+    },
+    onError: (err: Error) => {
+      toast(err.message, "error");
+      setShowPostConfirm(false);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/stock-movements/${id}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (!json.success)
+        throw new Error(json.error || "فشل حذف حركة المخزن");
+      return json.data;
+    },
+    onSuccess: () => {
+      toast("تم حذف حركة المخزن بنجاح", "success");
+      router.push("/dashboard/stock-movements");
+      setShowDeleteConfirm(false);
+    },
+    onError: (err: Error) => {
+      toast(err.message, "error");
+      setShowDeleteConfirm(false);
     },
   });
 
@@ -141,6 +210,44 @@ export default function StockMovementDetailPage() {
           <p className="text-sm text-gray-500">
             {statusBadge(movement.status)}
           </p>
+        </div>
+        <div className="flex gap-2">
+          {movement.status === "DRAFT" && (
+            <>
+              {canEdit && (
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    router.push(
+                      `/dashboard/stock-movements/${movement.id}/edit`,
+                    )
+                  }
+                >
+                  <Pencil className="h-4 w-4" />
+                  تعديل
+                </Button>
+              )}
+              {canPost && (
+                <Button
+                  onClick={() => setShowPostConfirm(true)}
+                  disabled={postMutation.isPending}
+                >
+                  <Send className="h-4 w-4" />
+                  {postMutation.isPending ? "جاري الترحيل..." : "ترحيل"}
+                </Button>
+              )}
+              {canDelete && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {deleteMutation.isPending ? "جاري الحذف..." : "حذف"}
+                </Button>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -263,6 +370,26 @@ export default function StockMovementDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmDialog
+        open={showPostConfirm}
+        onClose={() => setShowPostConfirm(false)}
+        onConfirm={() => postMutation.mutate()}
+        title="ترحيل حركة المخزن"
+        message={`هل أنت متأكد من ترحيل هذه الحركة؟ لا يمكن التراجع عن هذه العملية.`}
+        confirmLabel="ترحيل"
+        loading={postMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => deleteMutation.mutate()}
+        title="حذف حركة المخزن"
+        message={`هل أنت متأكد من حذف هذه الحركة؟ لا يمكن التراجع عن هذه العملية.`}
+        confirmLabel="حذف"
+        loading={deleteMutation.isPending}
+      />
     </div>
   );
 }

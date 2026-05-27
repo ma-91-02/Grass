@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,23 @@ interface Warehouse {
   code: string;
 }
 
+interface StockMovementDetail {
+  id: string;
+  companyId: string | null;
+  productId: string;
+  warehouseId: string | null;
+  movementType: string;
+  quantity: number;
+  unitCost: number;
+  currency: string;
+  movementDate: string;
+  reason: string | null;
+  notes: string | null;
+  status: string;
+  product: { name: string; code: string };
+  warehouse: { name: string; code: string } | null;
+}
+
 interface FormData {
   productId: string;
   warehouseId: string;
@@ -34,17 +51,6 @@ interface FormData {
   notes: string;
 }
 
-const emptyForm: FormData = {
-  productId: "",
-  warehouseId: "",
-  movementType: "ADJUSTMENT_IN",
-  quantity: "1",
-  unitCost: "",
-  currency: "IQD",
-  movementDate: new Date().toISOString().split("T")[0],
-  notes: "",
-};
-
 const movementTypeOptions = [
   { value: "ADJUSTMENT_IN", label: "تسوية زيادة" },
   { value: "ADJUSTMENT_OUT", label: "تسوية نقص" },
@@ -52,21 +58,96 @@ const movementTypeOptions = [
   { value: "OUT", label: "صادر" },
 ];
 
-export default function StockMovementCreatePage() {
+const movementTypeLabels: Record<string, string> = {
+  OPENING_BALANCE: "رصيد افتتاحي",
+  IN: "وارد",
+  OUT: "صادر",
+  ADJUSTMENT_IN: "تسوية زيادة",
+  ADJUSTMENT_OUT: "تسوية نقص",
+  TRANSFER_OUT: "تحويل خارج",
+  TRANSFER_IN: "تحويل وارد",
+};
+
+export default function StockMovementEditPage() {
+  const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const [form, setForm] = useState<FormData>(emptyForm);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const id = params.id as string;
+
   const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [notDraftError, setNotDraftError] = useState(false);
+
+  const [form, setForm] = useState<FormData>({
+    productId: "",
+    warehouseId: "",
+    movementType: "ADJUSTMENT_IN",
+    quantity: "1",
+    unitCost: "",
+    currency: "IQD",
+    movementDate: "",
+    notes: "",
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
   useEffect(() => {
+    setIsLoadingAuth(true);
+    setAuthError(null);
     fetch("/api/auth/me")
       .then((r) => r.json())
-      .then((d) => setUserCompanyId(d.data?.companyId || null))
+      .then((d) => {
+        const cid = d.data?.companyId || null;
+        const perms: string[] = d.data?.permissions || [];
+        setUserCompanyId(cid);
+        setPermissions(perms);
+      })
       .catch(() => {
-        toast("تعذر تحميل بيانات المستخدم", "error");
-      });
+        setAuthError("تعذر تحميل بيانات المستخدم");
+      })
+      .finally(() => setIsLoadingAuth(false));
   }, []);
+
+  const canEdit =
+    permissions.includes("stockMovements.edit") || permissions.length === 0;
+
+  const {
+    data: movement,
+    isLoading: isLoadingMovement,
+    error: movementError,
+  } = useQuery({
+    queryKey: ["stock-movement", id],
+    queryFn: async () => {
+      const res = await fetch(`/api/stock-movements/${id}`);
+      const json = await res.json();
+      if (!json.success)
+        throw new Error(json.error || "فشل تحميل حركة المخزن");
+      return json.data as StockMovementDetail;
+    },
+  });
+
+  useEffect(() => {
+    if (movement) {
+      if (movement.status !== "DRAFT") {
+        setNotDraftError(true);
+        return;
+      }
+      setNotDraftError(false);
+      setForm({
+        productId: movement.productId || "",
+        warehouseId: movement.warehouseId || "",
+        movementType: movement.movementType,
+        quantity: String(movement.quantity),
+        unitCost: movement.unitCost > 0 ? String(movement.unitCost) : "",
+        currency: movement.currency,
+        movementDate: movement.movementDate
+          ? new Date(movement.movementDate).toISOString().split("T")[0]
+          : "",
+        notes: movement.notes || "",
+      });
+    }
+  }, [movement]);
 
   const { data: warehouses } = useQuery({
     queryKey: ["warehouses", userCompanyId],
@@ -95,32 +176,31 @@ export default function StockMovementCreatePage() {
     enabled: !!userCompanyId,
   });
 
-  const createMutation = useMutation({
+  const updateMutation = useMutation({
     mutationFn: async () => {
-      const payload = {
-        companyId: userCompanyId,
+      const payload: Record<string, unknown> = {
         productId: form.productId,
         warehouseId: form.warehouseId,
         movementType: form.movementType,
         quantity: Number(form.quantity),
         unitCost: form.unitCost ? Number(form.unitCost) : 0,
         currency: form.currency,
-        movementDate: form.movementDate || undefined,
+        movementDate: form.movementDate || null,
         notes: form.notes || null,
       };
 
-      const res = await fetch("/api/stock-movements", {
-        method: "POST",
+      const res = await fetch(`/api/stock-movements/${id}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       const json = await res.json();
-      if (!json.success) throw new Error(json.error || "فشل إنشاء حركة المخزن");
+      if (!json.success) throw new Error(json.error || "فشل تحديث حركة المخزن");
       return json.data;
     },
-    onSuccess: (data) => {
-      toast("تم إنشاء حركة المخزن بنجاح", "success");
-      router.push(`/dashboard/stock-movements/${data.id}`);
+    onSuccess: () => {
+      toast("تم تحديث حركة المخزن بنجاح", "success");
+      router.push(`/dashboard/stock-movements/${id}`);
     },
     onError: (err: Error) => {
       toast(err.message, "error");
@@ -142,21 +222,120 @@ export default function StockMovementCreatePage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    createMutation.mutate();
+    updateMutation.mutate();
   };
+
+  const isLoading = isLoadingAuth || isLoadingMovement;
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (authError || movementError) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/dashboard/stock-movements")}
+            className="rounded-lg p-2 hover:bg-muted"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-2xl font-bold text-dark">تعديل حركة مخزن</h1>
+        </div>
+        <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center text-red-600">
+          {authError ||
+            (movementError instanceof Error
+              ? movementError.message
+              : "فشل تحميل حركة المخزن")}
+        </div>
+      </div>
+    );
+  }
+
+  if (!movement) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/dashboard/stock-movements")}
+            className="rounded-lg p-2 hover:bg-muted"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-2xl font-bold text-dark">تعديل حركة مخزن</h1>
+        </div>
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-8 text-center text-yellow-700">
+          حركة المخزن غير موجودة
+        </div>
+      </div>
+    );
+  }
+
+  if (notDraftError) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push(`/dashboard/stock-movements/${id}`)}
+            className="rounded-lg p-2 hover:bg-muted"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-dark">تعديل حركة مخزن</h1>
+            <p className="text-sm text-gray-500">تعديل بيانات مسودة حركة المخزن</p>
+          </div>
+        </div>
+        <div className="rounded-lg border border-orange-200 bg-orange-50 p-8 text-center text-orange-700">
+          لا يمكن تعديل حركة مخزن غير مسودة
+        </div>
+      </div>
+    );
+  }
+
+  if (!canEdit) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push(`/dashboard/stock-movements/${id}`)}
+            className="rounded-lg p-2 hover:bg-muted"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-dark">تعديل حركة مخزن</h1>
+            <p className="text-sm text-gray-500">تعديل بيانات مسودة حركة المخزن</p>
+          </div>
+        </div>
+        <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center text-red-600">
+          لا تملك صلاحية تعديل حركة المخزن
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <button
-          onClick={() => router.push("/dashboard/stock-movements")}
+          onClick={() => router.push(`/dashboard/stock-movements/${id}`)}
           className="rounded-lg p-2 hover:bg-muted"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-dark">تسوية مخزون جديدة</h1>
-          <p className="text-sm text-gray-500">إنشاء حركة مخزن يدوية</p>
+          <h1 className="text-2xl font-bold text-dark">تعديل حركة مخزن</h1>
+          <p className="text-sm text-gray-500">
+            {movementTypeLabels[movement.movementType] || movement.movementType}
+            {" — "}
+            {movement.product?.name || ""}
+          </p>
         </div>
       </div>
 
@@ -313,17 +492,14 @@ export default function StockMovementCreatePage() {
             <div className="flex gap-3 pt-4">
               <Button
                 variant="outline"
-                onClick={() => router.push("/dashboard/stock-movements")}
+                onClick={() =>
+                  router.push(`/dashboard/stock-movements/${id}`)
+                }
               >
                 إلغاء
               </Button>
-              <Button
-                type="submit"
-                disabled={createMutation.isPending}
-              >
-                {createMutation.isPending
-                  ? "جاري الإنشاء..."
-                  : "إنشاء حركة"}
+              <Button type="submit" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? "جاري الحفظ..." : "حفظ التعديلات"}
               </Button>
             </div>
           </form>

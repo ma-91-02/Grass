@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-27 (UI-029)
+> آخر تحديث: 2026-05-27 (UI-030)
 
 ---
 
@@ -1065,32 +1065,35 @@
 ---
 
 #### Task UI-030
-**Title:** Final UI Coverage Audit  
-**Status:** `TODO`  
-**Priority:** LOW  
+**Title:** Stock Movement Detail Actions UI  
+**Status:** `DONE`  
+**Priority:** MEDIUM  
 **Related APIs:**
-- كل الـ endpoints
+- `PATCH /api/stock-movements/{id}`
+- `DELETE /api/stock-movements/{id}`
+- `POST /api/stock-movements/{id}/post`
 **Target UI Pages:**
-- كل الصفحات
+- `/dashboard/stock-movements/[id]/page.tsx`
+- `/dashboard/stock-movements/[id]/edit/page.tsx`
 **Scope:**
-- تدقيق شامل لكل الواجهات
-- التحقق من عدم وجود APIs غير مربوطة
-- التحقق من عدم وجود dead buttons
-- التحقق من عدم وجود placeholder pages
+- إضافة أزرار ترحيل/حذف/تعديل في صفحة تفاصيل حركة المخزن للمسودات فقط
+- إنشاء صفحة تعديل لمسودة حركة المخزن (مادة/مخزن/نوع/كمية/تكلفة/تاريخ/ملاحظات)
+- ربط PATCH و DELETE و POST/post
 **Forbidden:**
-- إضافة features جديدة
+- تعديل backend
 **Acceptance Criteria:**
-- كل API مربوط أو مُوسَّم BACKEND_ONLY/NO_UI
-- لا يوجد placeholder pages
-- لا يوجد dead buttons
-- API_REGISTRY.md محدّث بالكامل
+- أزرار ترحيل/حذف/تعديل تظهر فقط للمسودات وللمستخدم الحاصل على صلاحية
+- صفحة تعديل تعرض بيانات الحركة الحالية وتعديلها عبر PATCH
+- ترحيل المسودة عبر POST/post مع ConfirmDialog
+- حذف المسودة عبر DELETE مع ConfirmDialog
+- منع تعديل/حذف/ترحيل غير DRAFT
 **Required Checks:**
 - npm run lint
 - npm run typecheck
 - npm run build
 **Documentation Updates:**
-- API_REGISTRY.md: تحديث نهائي
-- UI_BINDING_ROADMAP.md: تحديث نهائي
+- API_REGISTRY.md: PATCH/DELETE/POST: NO_UI → CONNECTED
+- UI_BINDING_ROADMAP.md: 2.2 → COMPLETED بالكامل
 **Commit Hash:**
 
 ---

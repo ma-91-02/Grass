@@ -128,17 +128,21 @@
 
 ---
 
-### UI Binding 2.2 — Stock Movements & Adjustments
+### UI Binding 2.2 — Stock Movements & Adjustments ✅ (COMPLETED)
 **Endpoints المطلوب ربطها:**
 - `GET /api/stock-movements` — قائمة حركات المخزن ✅ (COMPLETED)
 - `GET /api/stock-movements/{id}` — تفاصيل حركة ✅ (COMPLETED)
 - `POST /api/stock-movements` — إنشاء حركة ✅ (COMPLETED — create form)
+- `PATCH /api/stock-movements/{id}` — تحديث حركة ✅ (COMPLETED)
+- `DELETE /api/stock-movements/{id}` — حذف حركة ✅ (COMPLETED)
+- `POST /api/stock-movements/{id}/post` — ترحيل حركة ✅ (COMPLETED)
 - `GET /api/stock-adjustments` — قائمة تسويات المخزن ✅ (COMPLETED)
 - `POST /api/stock-adjustments` — إنشاء تسوية ✅ (COMPLETED)
 
 **الصفحات المطلوبة:**
 - `/dashboard/stock-movements/page.tsx` — قائمة ✅ (COMPLETED — list + filters)
-- `/dashboard/stock-movements/[id]/page.tsx` — تفاصيل ✅ (COMPLETED)
+- `/dashboard/stock-movements/[id]/page.tsx` — تفاصيل + ترحيل + حذف + تعديل ✅ (COMPLETED)
+- `/dashboard/stock-movements/[id]/edit/page.tsx` — تعديل مسودة ✅ (COMPLETED)
 - `/dashboard/stock-movements/new/page.tsx` — إنشاء تسوية ✅ (COMPLETED)
 - `/dashboard/stock-adjustments/page.tsx` — قائمة ✅ (COMPLETED)
 - `/dashboard/stock-adjustments/new/page.tsx` — إنشاء تسوية ✅ (COMPLETED)
