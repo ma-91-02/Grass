@@ -1255,7 +1255,8 @@
 - API_REGISTRY.md: GET /api/units/{id}: NO_UI → CONNECTED
 - UI_BINDING_ROADMAP.md: تحديث 2.3 — units/{id} ✅
 - UI_COMPLETION_BACKLOG.md: UI-036 → DONE
-**Commit Hash:** `9be8e7b`
+**Commit Hash:** `0e748f4`
+
 **Date:** 2026-05-27
 
 ---
@@ -1326,7 +1327,7 @@
 | UI-033 | DONE | bf90430 | 2026-05-27 |
 | UI-034 | DONE | 1c5d530 | 2026-05-27 |
 | UI-035 | DONE | e874cfc | 2026-05-27 |
-| UI-036 | DONE | 9be8e7b | 2026-05-27 |
+| UI-036 | DONE | 0e748f4 | 2026-05-27 |
 
 ---
 
