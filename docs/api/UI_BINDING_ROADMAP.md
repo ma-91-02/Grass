@@ -1,7 +1,7 @@
 # UI Binding Roadmap — Grass ERP
 
 > خارطة ربط الواجهة الأمامية بالـ APIs حسب الأولوية.
-> آخر تحديث: 2026-05-27 (UI-034 — تعديل فاتورة شراء)
+> آخر تحديث: 2026-05-27 (UI-035 — تفاصيل الحساب)
 
 ---
 
@@ -81,6 +81,7 @@
 ### UI Binding 1.4 — Accounts Chart & Tree
 **Endpoints المطلوب ربطها:**
 - `GET /api/accounts` — قائمة الحسابات ✅ (COMPLETED)
+- `GET /api/accounts/{id}` — تفاصيل حساب ✅ (COMPLETED — UI-035: عرض code/name/type/currency/level/normalBalance/isPosting/isActive/system data/children count)
 - `GET /api/accounts/tree` — شجرة الحسابات ✅ (COMPLETED — UI يبني tree frontend من flat list)
 - `POST /api/accounts` — إنشاء حساب ✅ (COMPLETED)
 - `PATCH /api/accounts/{id}` — تحديث حساب ✅ (COMPLETED — name/parent/isPosting/description فقط)
@@ -88,10 +89,11 @@
 
 **الصفحات المطلوبة:**
 - `/dashboard/accounts/page.tsx` — شجرة الحسابات مع CRUD ✅ (COMPLETED — view + create/edit/delete modals)
+- `/dashboard/accounts/[id]/page.tsx` — تفاصيل حساب ✅ (COMPLETED — UI-035: Eye icon in tree + read-only detail page)
 
 **Priority:** HIGH
 **السبب:** المحاسبون يحتاجون لعرض وإدارة شجرة الحسابات.
-**تاريخ الإنجاز:** 2026-05-18
+**تاريخ الإنجاز:** 2026-05-18 (شجرة), 2026-05-27 (تفاصيل)
 
 ---
 
@@ -317,18 +319,17 @@
 
 تم التدقيق النهائي لـ API_REGISTRY.md:
 
-- **CONNECTED:** 120 (تصحيح من 88 — 31 endpoint لم تكن محدّثة في Executive Summary)
-- **NO_UI:** 6 (تصحيح من 0 — 6 detail/action endpoints لا تزال غير مربوطه)
+- **CONNECTED:** 121 (تصحيح من 88 — 31 endpoint لم تكن محدّثة في Executive Summary)
+- **NO_UI:** 5 (تصحيح من 0 — 5 detail/action endpoints لا تزال غير مربوطه)
 - **BACKEND_ONLY:** 3 (تصحيح من 10 — 8 endpoints لم تكن صحيحة)
 - **PARTIAL:** 0 (تصحيح من 30 — لا يوجد endpoints مربوط جزئيًا)
 
-### المتبقي NO_UI (6 endpoints):
+### المتبقي NO_UI (5 endpoints):
 1. `GET /api/customer-categories/{id}` — تفاصيل قسم (LOW)
 2. `GET /api/categories/{id}` — تفاصيل تصنيف (LOW)
 3. `GET /api/units/{id}` — تفاصيل وحدة (LOW)
-4. `GET /api/accounts/{id}` — تفاصيل حساب (LOW)
-5. `GET /api/fiscal-periods/{id}` — تفاصيل فترة (LOW)
-6. `DELETE /api/fiscal-periods/{id}` — حذف فترة (LOW)
+4. `GET /api/fiscal-periods/{id}` — تفاصيل فترة (LOW)
+5. `DELETE /api/fiscal-periods/{id}` — حذف فترة (LOW)
 
 ### التغييرات:
 - `GET /api/customer-collections/{id}/print`: NO_UI → CONNECTED (مستخدم من صفحة القائمة)

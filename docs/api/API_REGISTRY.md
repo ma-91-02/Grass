@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-27 (UI-034 — تعديل فاتورة شراء)
+> آخر تحديث: 2026-05-27 (UI-035 — تفاصيل الحساب)
 
 ---
 
@@ -11,9 +11,9 @@
 |---------|-------|
 | إجمالي الملفات (route.ts) | 68 |
 | إجمالي نقاط النهاية (methods) | 129 |
-| CONNECTED | 120 |
+| CONNECTED | 121 |
 | PARTIAL | 0 |
-| NO_UI | 6 |
+| NO_UI | 5 |
 | BACKEND_ONLY | 3 |
 
 ---
@@ -283,7 +283,7 @@
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | Accounts | GET | `/api/accounts` | قائمة شجرة الحسابات | DONE | CONNECTED | `/dashboard/accounts` | HIGH | 1.4 | شجرة هرمية مع توسيع/طي |
 | Accounts | POST | `/api/accounts` | إنشاء حساب | DONE | CONNECTED | `/dashboard/accounts` | HIGH | 1.4 | مودال إنشاء مع parent/type/currency |
-| Accounts | GET | `/api/accounts/{id}` | تفاصيل حساب | DONE | NO_UI | — | HIGH | 1.4 | — |
+| Accounts | GET | `/api/accounts/{id}` | تفاصيل حساب | DONE | CONNECTED | `/dashboard/accounts/[id]` | HIGH | 1.4 | UI-035 — عرض code/name/type/currency/level/normalBalance/isPosting/isActive/system data/children count |
 | Accounts | PATCH | `/api/accounts/{id}` | تحديث حساب | DONE | CONNECTED | `/dashboard/accounts` | HIGH | 1.4 | مودال تعديل (name/parent/isPosting/description) |
 | Accounts | DELETE | `/api/accounts/{id}` | حذف حساب | DONE | CONNECTED | `/dashboard/accounts` | HIGH | 1.4 | ConfirmDialog + عرض رسالة الرفض من backend |
 | Accounts | GET | `/api/accounts/tree` | شجرة الحسابات | DONE | BACKEND_ONLY | — | HIGH | 1.4 | الـ UI يبني الشجرة من flat list; endpoint موجود كمرجع للاستخدام الداخلي |
@@ -363,9 +363,9 @@
 
 | Status | Count |
 |--------|-------|
-| CONNECTED | 120 |
+| CONNECTED | 121 |
 | PARTIAL | 0 |
-| NO_UI | 6 |
+| NO_UI | 5 |
 | BACKEND_ONLY | 3 |
 | UNKNOWN | 0 |
 | BROKEN | 0 |

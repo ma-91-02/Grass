@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ import {
   Plus,
   Pencil,
   Trash2,
+  Eye,
 } from "lucide-react";
 
 interface Account {
@@ -368,12 +370,14 @@ function TreeNode({
   search,
   onEdit,
   onDelete,
+  onView,
 }: {
   node: AccountNode;
   depth: number;
   search: string;
   onEdit: (account: Account) => void;
   onDelete: (account: Account) => void;
+  onView: (account: Account) => void;
 }) {
   const [expanded, setExpanded] = useState(depth < 2);
   const hasChildren = node.children.length > 0;
@@ -441,6 +445,13 @@ function TreeNode({
 
         <div className="mr-auto flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
           <button
+            onClick={() => onView(node)}
+            className="rounded p-1 text-gray-400 hover:bg-muted hover:text-primary"
+            title="عرض التفاصيل"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          <button
             onClick={() => onEdit(node)}
             className="rounded p-1 text-gray-400 hover:bg-muted hover:text-blue-600"
             title="تعديل"
@@ -469,6 +480,7 @@ function TreeNode({
               search={search}
               onEdit={onEdit}
               onDelete={onDelete}
+              onView={onView}
             />
           ))}
         </div>
@@ -479,6 +491,7 @@ function TreeNode({
 
 export default function AccountsPage() {
   const qc = useQueryClient();
+  const router = useRouter();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
@@ -490,8 +503,14 @@ export default function AccountsPage() {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => setUserCompanyId(d.data?.companyId || null))
-      .catch(() => {});
+      .catch(() => {
+        toast("تعذر التحقق من بيانات المستخدم", "error");
+      });
   }, []);
+
+  const openView = (account: Account) => {
+    router.push(`/dashboard/accounts/${account.id}`);
+  };
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["accounts", userCompanyId],
@@ -612,6 +631,7 @@ export default function AccountsPage() {
                   search={search}
                   onEdit={openEdit}
                   onDelete={(a) => setDeleteTarget(a)}
+                  onView={openView}
                 />
               ))}
             </div>

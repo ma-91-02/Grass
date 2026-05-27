@@ -1187,6 +1187,44 @@
 
 ---
 
+#### Task UI-035
+**Title:** Account Detail UI  
+**Status:** `DONE`  
+**Priority:** HIGH  
+**Related APIs:**
+- `GET /api/accounts/{id}`
+**Target UI Pages:**
+- `/dashboard/accounts/[id]/page.tsx`
+- `/dashboard/accounts/page.tsx` (زر عرض)
+**Scope:**
+- إنشاء صفحة تفاصيل حساب للقراءة فقط
+- عرض code/name/type/currency/level/normalBalance/isPosting/isActive/description/subtype/allowManualJournal
+- عرض بيانات النظام (id/createdAt/updatedAt/isSystem/isProtected)
+- عرض عدد الحسابات الفرعية مع رابط للشجرة
+- إضافة زر Eye (عرض التفاصيل) في شجرة الحسابات
+- إصلاح silent catch في شجرة الحسابات
+**Forbidden:**
+- تعديل backend
+- تعديل حسابات أو PATCH أو DELETE
+**Acceptance Criteria:**
+- زر عرض يظهر لكل حساب في الشجرة
+- صفحة تفاصيل تعرض جميع معلومات الحساب
+- خطأ في التحميل يظهر رسالة واضحة
+- زر رجوع للشجرة
+- زر تعديل ينقل لشجرة الحسابات
+**Required Checks:**
+- npm run lint
+- npm run typecheck
+- npm run build
+**Documentation Updates:**
+- API_REGISTRY.md: GET /api/accounts/{id}: NO_UI → CONNECTED
+- UI_BINDING_ROADMAP.md: تحديث 1.4 — accounts/{id} ✅
+- UI_COMPLETION_BACKLOG.md: UI-035 → DONE
+**Commit Hash:** `084d251`
+**Date:** 2026-05-27
+
+---
+
 #### Task UI-034
 **Title:** Purchases Edit UI  
 **Status:** `DONE`  
@@ -1252,6 +1290,7 @@
 | UI-032 | DONE | 750658e | 2026-05-27 |
 | UI-033 | DONE | bf90430 | 2026-05-27 |
 | UI-034 | DONE | 1c5d530 | 2026-05-27 |
+| UI-035 | DONE | 084d251 | 2026-05-27 |
 
 ---
 
