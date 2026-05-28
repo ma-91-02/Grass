@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-28 (PH09-COMPLETE-001 — Employee foundation)
+> آخر تحديث: 2026-05-28 (PH10-PLAN-001 — Internal Project Management planned contracts)
 
 ---
 
@@ -372,6 +372,28 @@
 | Employees | GET    | `/api/employees/{id}` | تفاصيل موظف أساسي            | DONE           | CONNECTED | `/dashboard/employees` | LOW      | 9     | تستخدمه الواجهة عند الحاجة ولا توجد صفحة تفاصيل منفصلة في PH-09     |
 | Employees | PATCH  | `/api/employees/{id}` | تعديل بيانات موظف أساسي      | DONE           | CONNECTED | `/dashboard/employees` | LOW      | 9     | تعديل بيانات الملف فقط؛ لا دوام ولا payroll                         |
 | Employees | DELETE | `/api/employees/{id}` | حذف موظف أساسي               | DONE           | CONNECTED | `/dashboard/employees` | LOW      | 9     | محمي بصلاحية `employees.delete` ومربوط بسجل audit                   |
+
+---
+
+## PH-10 Planned Internal Project Management APIs
+
+> هذه العقود مخططة فقط ولا تدخل في عدّاد endpoints الفعلية حتى إنشاء `route.ts`.
+
+| Module           | Method | Endpoint                                                      | Purpose                 | Backend Status | UI Status | UI Page                              | Priority | Phase | Notes                              |
+| ---------------- | ------ | ------------------------------------------------------------- | ----------------------- | -------------- | --------- | ------------------------------------ | -------- | ----- | ---------------------------------- |
+| InternalProjects | GET    | `/api/internal-projects`                                      | قائمة المشاريع الداخلية | PLANNED        | PLANNED   | `/dashboard/internal-projects`       | HIGH     | 10    | company isolation + filters        |
+| InternalProjects | POST   | `/api/internal-projects`                                      | إنشاء مشروع داخلي       | PLANNED        | PLANNED   | `/dashboard/internal-projects`       | HIGH     | 10    | Zod + audit                        |
+| InternalProjects | GET    | `/api/internal-projects/{id}`                                 | تفاصيل مشروع داخلي      | PLANNED        | PLANNED   | `/dashboard/internal-projects/[id]`  | HIGH     | 10    | project + tasks summary            |
+| InternalProjects | PATCH  | `/api/internal-projects/{id}`                                 | تعديل مشروع داخلي       | PLANNED        | PLANNED   | `/dashboard/internal-projects/[id]`  | HIGH     | 10    | يمنع cross-company                 |
+| InternalProjects | DELETE | `/api/internal-projects/{id}`                                 | حذف/تعطيل مشروع داخلي   | PLANNED        | PLANNED   | `/dashboard/internal-projects/[id]`  | MEDIUM   | 10    | audit إلزامي                       |
+| InternalTasks    | GET    | `/api/internal-project-tasks`                                 | قائمة المهام الداخلية   | PLANNED        | PLANNED   | `/dashboard/internal-projects/tasks` | HIGH     | 10    | filters by project/status/assignee |
+| InternalTasks    | POST   | `/api/internal-project-tasks`                                 | إنشاء مهمة داخلية       | PLANNED        | PLANNED   | task dialog                          | HIGH     | 10    | لا payroll ولا attendance          |
+| InternalTasks    | PATCH  | `/api/internal-project-tasks/{id}`                            | تعديل مهمة داخلية       | PLANNED        | PLANNED   | task drawer                          | HIGH     | 10    | Zod + audit                        |
+| InternalTasks    | POST   | `/api/internal-project-tasks/{id}/status`                     | تغيير حالة مهمة         | PLANNED        | PLANNED   | task drawer/board                    | HIGH     | 10    | state transition validation        |
+| InternalTasks    | POST   | `/api/internal-project-tasks/{id}/assignments`                | إسناد مهمة لموظف        | PLANNED        | PLANNED   | assignment control                   | MEDIUM   | 10    | يستخدم Employee foundation فقط     |
+| InternalTasks    | DELETE | `/api/internal-project-tasks/{id}/assignments/{assignmentId}` | إلغاء إسناد مهمة        | PLANNED        | PLANNED   | assignment control                   | MEDIUM   | 10    | audit إلزامي                       |
+| InternalTasks    | POST   | `/api/internal-project-tasks/{id}/work-logs`                  | تسجيل وقت عمل على مهمة  | PLANNED        | PLANNED   | work log dialog                      | MEDIUM   | 10    | ليس حضوراً ولا payroll             |
+| InternalTasks    | DELETE | `/api/internal-project-tasks/{id}/work-logs/{workLogId}`      | حذف سجل وقت             | PLANNED        | PLANNED   | work log list                        | MEDIUM   | 10    | audit إلزامي                       |
 
 ---
 

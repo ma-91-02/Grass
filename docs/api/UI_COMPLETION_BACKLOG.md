@@ -1845,13 +1845,219 @@
 **Commit Hash:** `4068ace`
 **Date:** 2026-05-28
 
+---
+
+#### Task PH10-PLAN-001
+
+**Title:** Internal Project Management Scope Planning
+**Status:** `DONE`
+**Priority:** HIGH
+**Scope:**
+
+- إعداد خطة PH-10 الرسمية.
+- تحديد مهام Project Management الداخلية.
+- إنشاء `PH10_REPORT_AR.md`.
+- إنشاء `PH10_GATE_VERIFICATION_AR.md`.
+- تحديث tracker وAPI registry وUI binding roadmap.
+
+**Forbidden:**
+
+- تنفيذ Backend/API فعلي.
+- تنفيذ UI فعلي.
+- تعديل Prisma.
+- تنفيذ Attendance أو Payroll أو أي أثر محاسبي.
+
+**Result:**
+
+- PH-10 أصبحت مخططة وجاهزة للتنفيذ التدريجي.
+- PH-10 ليست مكتملة وليست معتمدة للانتقال إلى PH-11.
+
+**Commit Hash:**
+**Date:** 2026-05-28
+
+---
+
+#### Task PM10-DATA-001
+
+**Title:** Create Internal Project Data Model
+**Status:** `TODO`
+**Priority:** HIGH
+**Scope:** إضافة Project model فقط مع companyId وstatus وفهارس أساسية.
+**Forbidden:** إضافة Task/Assignment/WorkLog أو Attendance/Payroll.
+**Commit Hash:**
+
+---
+
+#### Task PM10-DATA-002
+
+**Title:** Create Internal Project Task Data Model
+**Status:** `TODO`
+**Priority:** HIGH
+**Scope:** إضافة ProjectTask model مع status/priority/dueDate وعلاقة project.
+**Forbidden:** أي أثر ledger/stock/payroll.
+**Commit Hash:**
+
+---
+
+#### Task PM10-DATA-003
+
+**Title:** Create Task Assignment Data Model
+**Status:** `TODO`
+**Priority:** MEDIUM
+**Scope:** ربط المهام بالموظفين باستخدام Employee foundation.
+**Forbidden:** اعتبار الإسناد حضوراً أو راتباً.
+**Commit Hash:**
+
+---
+
+#### Task PM10-DATA-004
+
+**Title:** Create Work Log Data Model
+**Status:** `TODO`
+**Priority:** MEDIUM
+**Scope:** تسجيل وقت عمل على مهمة فقط.
+**Forbidden:** Attendance, overtime, payroll posting.
+**Commit Hash:**
+
+---
+
+#### Task PM10-API-001
+
+**Title:** Implement Internal Projects CRUD API
+**Status:** `TODO`
+**Priority:** HIGH
+**Scope:** `/api/internal-projects` مع Zod وpermissions وcompany isolation وaudit.
+**Forbidden:** UI أو models إضافية خارج النطاق.
+**Commit Hash:**
+
+---
+
+#### Task PM10-API-002
+
+**Title:** Implement Internal Project Tasks API
+**Status:** `TODO`
+**Priority:** HIGH
+**Scope:** CRUD وتغيير حالة المهام مع state validation.
+**Forbidden:** Payroll/Attendance/ledger writes.
+**Commit Hash:**
+
+---
+
+#### Task PM10-API-003
+
+**Title:** Implement Task Assignments API
+**Status:** `TODO`
+**Priority:** MEDIUM
+**Scope:** إسناد وإلغاء إسناد المهام للموظفين.
+**Forbidden:** تعديل Employee payroll أو attendance.
+**Commit Hash:**
+
+---
+
+#### Task PM10-API-004
+
+**Title:** Implement Work Logs API
+**Status:** `TODO`
+**Priority:** MEDIUM
+**Scope:** إضافة/حذف سجلات وقت عمل على مهمة.
+**Forbidden:** تحويل الوقت إلى راتب أو حضور.
+**Commit Hash:**
+
+---
+
+#### Task PM10-UI-001
+
+**Title:** Internal Projects List UI
+**Status:** `TODO`
+**Priority:** HIGH
+**Scope:** `/dashboard/internal-projects` مع Arabic RTL وloading/error/empty states.
+**Forbidden:** تعديل UI مراحل أخرى.
+**Commit Hash:**
+
+---
+
+#### Task PM10-UI-002
+
+**Title:** Internal Project Detail UI
+**Status:** `TODO`
+**Priority:** HIGH
+**Scope:** تفاصيل المشروع والمهام والنشاط.
+**Forbidden:** Payroll/attendance widgets.
+**Commit Hash:**
+
+---
+
+#### Task PM10-UI-003
+
+**Title:** Internal Task Dialogs And Drawers
+**Status:** `TODO`
+**Priority:** MEDIUM
+**Scope:** إنشاء/تعديل مهمة وتغيير الحالة.
+**Forbidden:** أي زر ميت أو silent failure.
+**Commit Hash:**
+
+---
+
+#### Task PM10-UI-004
+
+**Title:** My Tasks And Team Tasks UI
+**Status:** `TODO`
+**Priority:** MEDIUM
+**Scope:** صفحات مهامي ومهام الفريق مع filters.
+**Forbidden:** اعتبارها attendance.
+**Commit Hash:**
+
+---
+
+#### Task PM10-SEED-001
+
+**Title:** Add Safe Dummy Data For Internal Projects
+**Status:** `TODO`
+**Priority:** MEDIUM
+**Scope:** بيانات dev/test فقط لاختبار الواجهة.
+**Forbidden:** بيانات حقيقية أو secrets.
+**Commit Hash:**
+
+---
+
+#### Task PM10-SEC-001
+
+**Title:** Internal Project Management Permissions And Audit
+**Status:** `TODO`
+**Priority:** HIGH
+**Scope:** permissions + audit + company isolation لكل writes.
+**Forbidden:** bypass permissions أو silent failures.
+**Commit Hash:**
+
+---
+
+#### Task PM10-QA-001
+
+**Title:** Internal Project Management Tests
+**Status:** `TODO`
+**Priority:** HIGH
+**Scope:** unit/API/smoke tests للـ PH-10.
+**Forbidden:** fake tests أو اختبارات لا تتحقق من السلوك.
+**Commit Hash:**
+
+---
+
+#### Task PM10-GATE-VERIFY-001
+
+**Title:** Verify PH-10 Completion Gate
+**Status:** `TODO`
+**Priority:** CRITICAL
+**Scope:** اعتماد PH-10 بعد التنفيذ فقط.
+**Forbidden:** اعتماد المرحلة قبل اكتمال API/UI/tests/docs.
+**Commit Hash:**
+
 | الأولوية     | العدد  |
 | ------------ | ------ |
-| CRITICAL     | 11     |
-| HIGH         | 7      |
-| MEDIUM       | 10     |
+| CRITICAL     | 12     |
+| HIGH         | 15     |
+| MEDIUM       | 18     |
 | LOW          | 12     |
-| **الإجمالي** | **40** |
+| **الإجمالي** | **57** |
 
 ---
 
@@ -1895,6 +2101,7 @@
 | PH05-COMPLETE-001     | DONE    | 028b5f9     | 2026-05-28 |
 | PH08-COMPLETE-001     | DONE    | ee4a663     | 2026-05-28 |
 | PH09-COMPLETE-001     | DONE    | 4068ace     | 2026-05-28 |
+| PH10-PLAN-001         | DONE    | —           | 2026-05-28 |
 
 ---
 

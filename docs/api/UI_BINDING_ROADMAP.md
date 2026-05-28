@@ -1,7 +1,7 @@
 # UI Binding Roadmap — Grass ERP
 
 > خارطة ربط الواجهة الأمامية بالـ APIs حسب الأولوية.
-> آخر تحديث: 2026-05-28 (PH09-COMPLETE-001 — Employee foundation)
+> آخر تحديث: 2026-05-28 (PH10-PLAN-001 — Internal Project Management planning)
 
 ---
 
@@ -348,6 +348,82 @@
 
 **Priority:** LOW
 **تاريخ الإنجاز:** 2026-05-28
+
+---
+
+## Phase 10.0 — Internal Project Management (مخطط)
+
+### UI Binding 10.1 — Internal Projects List
+
+**Endpoints المخططة:**
+
+- `GET /api/internal-projects` — قائمة المشاريع الداخلية
+- `POST /api/internal-projects` — إنشاء مشروع داخلي
+
+**الصفحات المخططة:**
+
+- `/dashboard/internal-projects/page.tsx` — قائمة + إنشاء + filters + summary cards
+- Sidebar — رابط "المشاريع الداخلية"
+
+**Status:** TODO
+
+---
+
+### UI Binding 10.2 — Internal Project Detail
+
+**Endpoints المخططة:**
+
+- `GET /api/internal-projects/{id}` — تفاصيل مشروع
+- `PATCH /api/internal-projects/{id}` — تعديل مشروع
+- `DELETE /api/internal-projects/{id}` — حذف/تعطيل مشروع
+- `GET /api/internal-project-tasks?projectId=...` — مهام المشروع
+
+**الصفحات المخططة:**
+
+- `/dashboard/internal-projects/[id]/page.tsx` — تفاصيل المشروع + المهام + النشاط
+
+**Status:** TODO
+
+---
+
+### UI Binding 10.3 — Internal Tasks Board / Table
+
+**Endpoints المخططة:**
+
+- `GET /api/internal-project-tasks` — قائمة المهام
+- `POST /api/internal-project-tasks` — إنشاء مهمة
+- `PATCH /api/internal-project-tasks/{id}` — تعديل مهمة
+- `POST /api/internal-project-tasks/{id}/status` — تغيير الحالة
+
+**الصفحات المخططة:**
+
+- `/dashboard/internal-projects/tasks/page.tsx` — جدول/board للمهام
+- task drawer/dialog — إنشاء وتعديل المهمة
+
+**Status:** TODO
+
+---
+
+### UI Binding 10.4 — Assignments & Work Logs
+
+**Endpoints المخططة:**
+
+- `POST /api/internal-project-tasks/{id}/assignments` — إسناد مهمة
+- `DELETE /api/internal-project-tasks/{id}/assignments/{assignmentId}` — إلغاء إسناد
+- `POST /api/internal-project-tasks/{id}/work-logs` — تسجيل وقت عمل على مهمة
+- `DELETE /api/internal-project-tasks/{id}/work-logs/{workLogId}` — حذف سجل وقت
+
+**الصفحات المخططة:**
+
+- `/dashboard/internal-projects/my-tasks/page.tsx` — مهامي
+- داخل task drawer: assignments + work logs
+
+**حدود صارمة:**
+
+- Work Logs ليست Attendance.
+- Work Logs لا تولد Payroll أو قيود مالية.
+
+**Status:** TODO
 
 ---
 

@@ -75,20 +75,20 @@
 
 ## 5. ملخص تنفيذي
 
-| المؤشر                                                               | النتيجة                                                                |
-| -------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| API route files                                                      | 73                                                                     |
-| API methods حسب `API_REGISTRY.md`                                    | 139                                                                    |
-| API methods مربوطة بالواجهة                                          | 136                                                                    |
-| Backend-only endpoints                                               | 3                                                                      |
-| صفحات Dashboard                                                      | 64                                                                     |
-| روابط Sidebar مباشرة                                                 | 31                                                                     |
-| ملفات الاختبار                                                       | 27                                                                     |
-| test cases / describe / it تقريباً                                   | 582                                                                    |
-| النسبة العامة التقريبية للمشروع المؤسسي                              | 56%                                                                    |
-| النسبة التقريبية للنواة القابلة للتجربة بعد تدقيق المبيعات/المشتريات | 64% تقريباً                                                            |
-| المرحلة الحالية                                                      | PH-09 — Employees / HR foundation                                      |
-| المهمة التالية الموصى بها                                            | PH10-PLAN-001 — تعريف نطاق لوحة المشاريع الداخلية فقط بعد اعتماد PH-09 |
+| المؤشر                                                               | النتيجة                                                |
+| -------------------------------------------------------------------- | ------------------------------------------------------ |
+| API route files                                                      | 73                                                     |
+| API methods حسب `API_REGISTRY.md`                                    | 139                                                    |
+| API methods مربوطة بالواجهة                                          | 136                                                    |
+| Backend-only endpoints                                               | 3                                                      |
+| صفحات Dashboard                                                      | 64                                                     |
+| روابط Sidebar مباشرة                                                 | 31                                                     |
+| ملفات الاختبار                                                       | 27                                                     |
+| test cases / describe / it تقريباً                                   | 582                                                    |
+| النسبة العامة التقريبية للمشروع المؤسسي                              | 57%                                                    |
+| النسبة التقريبية للنواة القابلة للتجربة بعد تدقيق المبيعات/المشتريات | 64% تقريباً                                            |
+| المرحلة الحالية                                                      | PH-10 — Internal Project Management planning           |
+| المهمة التالية الموصى بها                                            | PM10-DATA-001 — تنفيذ Project model بعد اعتماد التخطيط |
 
 ### أهم الاستنتاجات
 
@@ -102,35 +102,35 @@
 
 المرحلة الحالية حسب المقارنة بين الخطة والكود هي:
 
-**Phase 9 — Employees / HR / Payroll**
+**Phase 10 — Internal Project Management**
 
 السبب:
 
-- PH-00 إلى PH-08 مكتملة ومعتمدة عبر Gate Verification.
-- PH-09 كانت `FUTURE` وبدأت جزئياً في worktree بدون تقرير أو بوابة.
-- النطاق المعتمد لهذه المرحلة هو Employee foundation فقط: model + APIs + UI + navigation + permissions + tests.
-- الحضور، الورديات، الرواتب، وقيود الرواتب تبقى مستقبلية وغير مطلوبة للإصدار الحالي حتى يتم تصميم قواعدها المحاسبية بأمان.
+- PH-00 إلى PH-09 مكتملة ومعتمدة عبر Gate Verification.
+- PH-10 بدأت عبر `PH10-PLAN-001` كتخطيط نطاق فقط.
+- النطاق المعتمد هو إدارة مشاريع ومهام داخلية، إسناد مهام للموظفين، Work Logs تشغيلية، وملاحظات إدارة.
+- Attendance وPayroll وOvertime والقيود المالية خارج PH-10 تماماً.
 
 ## 7. جدول المراحل الرئيسي
 
-| Phase ID | اسم المرحلة                 | الهدف                                                                | الحالة  | الإنجاز | مطلوبة للتجربة؟             | مطلوبة قبل Coolify؟ | المهمة التالية داخلها                            | ملاحظات                                                                                                           |
-| -------- | --------------------------- | -------------------------------------------------------------------- | ------- | ------: | --------------------------- | ------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| PH-00    | Foundation Core             | Auth, RBAC, Company, Branch, Fiscal Periods, COA, Journal foundation | DONE    |    100% | نعم                         | نعم                 | لا توجد مهمة PH-00 متبقية؛ التالي PUR-AUDIT-001  | تم اعتماد PH-00 بعد PH00-GATE-FIX-001                                                                             |
-| PH-01    | Users & Permissions         | المستخدمون، الأدوار، الصلاحيات، الجلسات                              | DONE    |    100% | نعم                         | نعم                 | تم تدقيق Roles CRUD وpermission coverage         | Roles editor كامل + permission hiding + gate verification                                                         |
-| PH-02    | Dashboard & Navigation      | Sidebar، parent pages، navigation coverage، UI binding               | DONE    |    100% | نعم                         | نعم                 | لا توجد مهمة PH-02 متبقية                        | تم إنجاز NAV-002 إلى NAV-006 بالكامل                                                                              |
-| PH-03    | Customers & Suppliers       | العملاء، الموردون، الذمم، كشوفات العملاء                             | DONE    |    100% | نعم                         | نعم                 | لا توجد مهمة PH-03 متبقية                        | تم إكمال PART-007 (Supplier AP/Statement) وتصحيح GAP B/F/H/I. PART-008 محظور لحين PH-07                           |
-| PH-04    | Accounting & Ledger         | القيود، دليل الحسابات، posting، العملات، السندات                     | DONE    |    100% | نعم                         | نعم                 | PH05 — Inventory Engine                          | تم اعتماد البوابة. ACC-008/009/010 مصنفة NOT_REQUIRED_FOR_CURRENT_RELEASE                                         |
-| PH-05    | Inventory Engine            | مواد، مخازن، حركات، أرصدة، تحويلات، تسويات، تقييم                    | DONE    |    100% | نعم                         | نعم                 | لا توجد مهمة PH-05 متبقية                        | تم إكمال 8/8 مهام داخل النطاق. INV-008/009/010/012 مصنفة NOT_REQUIRED_FOR_CURRENT_RELEASE                         |
-| PH-06    | Sales Cycle                 | فواتير بيع، مرتجعات، تحصيل، stock OUT، COGS، AR                      | DONE    |    100% | نعم                         | نعم                 | لا توجد مهمة PH-06 متبقية                        | تم إصلاح Cancel COGS وإضافة DELETE للمرتجعات. SAL-007 مصنفة NOT_REQUIRED_FOR_CURRENT_RELEASE                      |
-| PH-07    | Purchases Cycle             | مشتريات، مصاريف، supplier AP، stock IN، returns                      | DONE    |    100% | نعم                         | نعم                 | لا توجد مهمة PH-07 متبقية                        | تم إصلاح PaymentAccount.balance. PUR-013/014 مصنفة NOT_REQUIRED_FOR_CURRENT_RELEASE                               |
-| PH-08    | Reports & BI                | تقارير مالية، مبيعات، مخزون، ديون، KPIs، exports                     | DONE    |    100% | نعم                         | نعم                 | لا توجد مهمة PH-08 متبقية                        | 9 تقارير في landing page. P&L + Balance Sheet + Trial Balance + AR Aging + Sales Summary + Inventory + Audit Logs |
-| PH-09    | Employees / HR / Payroll    | موظفون، دوام، رواتب مستقبلية                                         | DONE    |    100% | لا                          | لا                  | لا توجد مهمة PH-09 متبقية                        | Employee foundation مكتمل ومعتمد؛ الحضور والرواتب خارج الإصدار الحالي                                             |
-| PH-10    | Internal Project Management | مشاريع داخلية، مهام، إنتاجية، وقت عمل                                | FUTURE  |      0% | لا                          | لا                  | تعريف blueprint مستقبلي                          | غير موجود في الخطة التنفيذية الحالية                                                                              |
-| PH-11    | Backup & Recovery           | PostgreSQL backup، restore، drills، phase snapshots                  | PARTIAL |     70% | نعم قبل تجربة بيانات حقيقية | نعم                 | backup/restore scripts منفذة، يحتاج drill فعلي   | backup.sh + restore.sh + npm scripts + policy doc موجودة + BAK-004/005/006 متبقية                                 |
-| PH-12    | Security Hardening          | JWT، RBAC، audit، secrets، MFA، anti-fraud                           | PARTIAL |     70% | نعم                         | نعم                 | SEC-002/004 منجز، SEC-003/005/006/007/008 متبقية | All routes use requireDbPermission; env.example hardened                                                          |
-| PH-13    | Testing & QA                | Unit/API/integration/workflow/accounting/inventory tests             | PARTIAL |     60% | نعم                         | نعم                 | QA-006 منجز (21 purchase tests)، QA-010 ينتظر    | 21 purchase test + 555 total; فجوة التقارير باقية                                                                 |
-| PH-14    | Production Readiness        | env، scripts، monitoring، migrations، owner، rollback                | TODO    |     50% | نعم                         | نعم                 | Production readiness checklist                   | PROD-005 (Dockerfile) + PROD-006 (health endpoint) منجزين                                                         |
-| PH-15    | Coolify Trial Release       | تجهيز deploy تجريبي على Coolify                                      | TODO    |     75% | لا                          | نعم                 | لا تبدأ قبل backup + purchase audit              | Dockerfile, compose, deploy plan, env example — الكل جاهز                                                         |
+| Phase ID | اسم المرحلة                 | الهدف                                                                | الحالة      | الإنجاز | مطلوبة للتجربة؟             | مطلوبة قبل Coolify؟ | المهمة التالية داخلها                            | ملاحظات                                                                                                           |
+| -------- | --------------------------- | -------------------------------------------------------------------- | ----------- | ------: | --------------------------- | ------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| PH-00    | Foundation Core             | Auth, RBAC, Company, Branch, Fiscal Periods, COA, Journal foundation | DONE        |    100% | نعم                         | نعم                 | لا توجد مهمة PH-00 متبقية؛ التالي PUR-AUDIT-001  | تم اعتماد PH-00 بعد PH00-GATE-FIX-001                                                                             |
+| PH-01    | Users & Permissions         | المستخدمون، الأدوار، الصلاحيات، الجلسات                              | DONE        |    100% | نعم                         | نعم                 | تم تدقيق Roles CRUD وpermission coverage         | Roles editor كامل + permission hiding + gate verification                                                         |
+| PH-02    | Dashboard & Navigation      | Sidebar، parent pages، navigation coverage، UI binding               | DONE        |    100% | نعم                         | نعم                 | لا توجد مهمة PH-02 متبقية                        | تم إنجاز NAV-002 إلى NAV-006 بالكامل                                                                              |
+| PH-03    | Customers & Suppliers       | العملاء، الموردون، الذمم، كشوفات العملاء                             | DONE        |    100% | نعم                         | نعم                 | لا توجد مهمة PH-03 متبقية                        | تم إكمال PART-007 (Supplier AP/Statement) وتصحيح GAP B/F/H/I. PART-008 محظور لحين PH-07                           |
+| PH-04    | Accounting & Ledger         | القيود، دليل الحسابات، posting، العملات، السندات                     | DONE        |    100% | نعم                         | نعم                 | PH05 — Inventory Engine                          | تم اعتماد البوابة. ACC-008/009/010 مصنفة NOT_REQUIRED_FOR_CURRENT_RELEASE                                         |
+| PH-05    | Inventory Engine            | مواد، مخازن، حركات، أرصدة، تحويلات، تسويات، تقييم                    | DONE        |    100% | نعم                         | نعم                 | لا توجد مهمة PH-05 متبقية                        | تم إكمال 8/8 مهام داخل النطاق. INV-008/009/010/012 مصنفة NOT_REQUIRED_FOR_CURRENT_RELEASE                         |
+| PH-06    | Sales Cycle                 | فواتير بيع، مرتجعات، تحصيل، stock OUT، COGS، AR                      | DONE        |    100% | نعم                         | نعم                 | لا توجد مهمة PH-06 متبقية                        | تم إصلاح Cancel COGS وإضافة DELETE للمرتجعات. SAL-007 مصنفة NOT_REQUIRED_FOR_CURRENT_RELEASE                      |
+| PH-07    | Purchases Cycle             | مشتريات، مصاريف، supplier AP، stock IN، returns                      | DONE        |    100% | نعم                         | نعم                 | لا توجد مهمة PH-07 متبقية                        | تم إصلاح PaymentAccount.balance. PUR-013/014 مصنفة NOT_REQUIRED_FOR_CURRENT_RELEASE                               |
+| PH-08    | Reports & BI                | تقارير مالية، مبيعات، مخزون، ديون، KPIs، exports                     | DONE        |    100% | نعم                         | نعم                 | لا توجد مهمة PH-08 متبقية                        | 9 تقارير في landing page. P&L + Balance Sheet + Trial Balance + AR Aging + Sales Summary + Inventory + Audit Logs |
+| PH-09    | Employees / HR / Payroll    | موظفون، دوام، رواتب مستقبلية                                         | DONE        |    100% | لا                          | لا                  | لا توجد مهمة PH-09 متبقية                        | Employee foundation مكتمل ومعتمد؛ الحضور والرواتب خارج الإصدار الحالي                                             |
+| PH-10    | Internal Project Management | مشاريع داخلية، مهام، إنتاجية، وقت عمل                                | IN_PROGRESS |      6% | لا                          | لا                  | PM10-DATA-001 — Project model                    | تم اعتماد التخطيط عبر PH10-PLAN-001؛ لا Attendance ولا Payroll                                                    |
+| PH-11    | Backup & Recovery           | PostgreSQL backup، restore، drills، phase snapshots                  | PARTIAL     |     70% | نعم قبل تجربة بيانات حقيقية | نعم                 | backup/restore scripts منفذة، يحتاج drill فعلي   | backup.sh + restore.sh + npm scripts + policy doc موجودة + BAK-004/005/006 متبقية                                 |
+| PH-12    | Security Hardening          | JWT، RBAC، audit، secrets، MFA، anti-fraud                           | PARTIAL     |     70% | نعم                         | نعم                 | SEC-002/004 منجز، SEC-003/005/006/007/008 متبقية | All routes use requireDbPermission; env.example hardened                                                          |
+| PH-13    | Testing & QA                | Unit/API/integration/workflow/accounting/inventory tests             | PARTIAL     |     60% | نعم                         | نعم                 | QA-006 منجز (21 purchase tests)، QA-010 ينتظر    | 21 purchase test + 555 total; فجوة التقارير باقية                                                                 |
+| PH-14    | Production Readiness        | env، scripts، monitoring، migrations، owner، rollback                | TODO        |     50% | نعم                         | نعم                 | Production readiness checklist                   | PROD-005 (Dockerfile) + PROD-006 (health endpoint) منجزين                                                         |
+| PH-15    | Coolify Trial Release       | تجهيز deploy تجريبي على Coolify                                      | TODO        |     75% | لا                          | نعم                 | لا تبدأ قبل backup + purchase audit              | Dockerfile, compose, deploy plan, env example — الكل جاهز                                                         |
 
 ## 8. تفاصيل كل مرحلة
 
@@ -319,14 +319,25 @@
 
 ### PH-10 — Internal Project Management
 
-| Task ID    | اسم المهمة                | النوع                 | الحالة | النسبة | Backend | API | UI  | Nav | Tests | Docs | قبل التجربة؟ | قبل Coolify؟ | مؤجل؟ | الأولوية | الدليل من المشروع      | الملاحظات |
-| ---------- | ------------------------- | --------------------- | ------ | -----: | ------- | --- | --- | --- | ----- | ---- | ------------ | ------------ | ----- | -------- | ---------------------- | --------- |
-| PM-INT-001 | Projects model            | Project Management    | FUTURE |     0% | لا      | لا  | لا  | لا  | لا    | لا   | لا           | لا           | نعم   | LOW      | طلب المستخدم المستقبلي | غير منفذ  |
-| PM-INT-002 | Tasks model               | Project Management    | FUTURE |     0% | لا      | لا  | لا  | لا  | لا    | لا   | لا           | لا           | نعم   | LOW      | طلب المستخدم المستقبلي | غير منفذ  |
-| PM-INT-003 | Assign tasks to employees | Project Management/HR | FUTURE |     0% | لا      | لا  | لا  | لا  | لا    | لا   | لا           | لا           | نعم   | LOW      | يعتمد على HR           | غير منفذ  |
-| PM-INT-004 | Work time tracking        | Project Management    | FUTURE |     0% | لا      | لا  | لا  | لا  | لا    | لا   | لا           | لا           | نعم   | LOW      | طلب المستخدم المستقبلي | غير منفذ  |
-| PM-INT-005 | Productivity reports      | Reports               | FUTURE |     0% | لا      | لا  | لا  | لا  | لا    | لا   | لا           | لا           | نعم   | LOW      | طلب المستخدم المستقبلي | غير منفذ  |
-| PM-INT-006 | Management notes + audit  | Audit/PM              | FUTURE |     0% | لا      | لا  | لا  | لا  | لا    | لا   | لا           | لا           | نعم   | LOW      | طلب المستخدم المستقبلي | غير منفذ  |
+| Task ID              | اسم المهمة                              | النوع                      | الحالة | النسبة | Backend | API   | UI   | Nav  | Tests | Docs | قبل التجربة؟ | قبل Coolify؟ | مؤجل؟ | الأولوية | الدليل من المشروع                                   | الملاحظات                           |
+| -------------------- | --------------------------------------- | -------------------------- | ------ | -----: | ------- | ----- | ---- | ---- | ----- | ---- | ------------ | ------------ | ----- | -------- | --------------------------------------------------- | ----------------------------------- |
+| PH10-PLAN-001        | تخطيط نطاق PH-10                        | Documentation/Architecture | DONE   |   100% | لا      | لا    | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | HIGH     | `PH10_REPORT_AR.md`, `PH10_GATE_VERIFICATION_AR.md` | تخطيط فقط، لا اعتماد تنفيذ          |
+| PM10-DATA-001        | Project model                           | Data Model                 | TODO   |     0% | مخطط    | لا    | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | HIGH     | PH10 report                                         | يتطلب companyId وفهارس              |
+| PM10-DATA-002        | ProjectTask model                       | Data Model                 | TODO   |     0% | مخطط    | لا    | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | HIGH     | PH10 report                                         | status/priority/dueDate             |
+| PM10-DATA-003        | TaskAssignment model                    | Data Model                 | TODO   |     0% | مخطط    | لا    | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | PH10 report                                         | يعتمد على Employee foundation       |
+| PM10-DATA-004        | WorkLog model                           | Data Model                 | TODO   |     0% | مخطط    | لا    | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | PH10 report                                         | ليس حضوراً ولا payroll              |
+| PM10-API-001         | Projects CRUD API                       | API/Backend                | TODO   |     0% | مخطط    | مخطط  | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | HIGH     | API planned contracts                               | `/api/internal-projects`            |
+| PM10-API-002         | Project Tasks API                       | API/Backend                | TODO   |     0% | مخطط    | مخطط  | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | HIGH     | API planned contracts                               | CRUD + status transitions           |
+| PM10-API-003         | Assignments API                         | API/Backend                | TODO   |     0% | مخطط    | مخطط  | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | API planned contracts                               | assign/unassign                     |
+| PM10-API-004         | Work Logs API                           | API/Backend                | TODO   |     0% | مخطط    | مخطط  | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | API planned contracts                               | time logs بدون payroll              |
+| PM10-UI-001          | صفحة المشاريع الداخلية                  | UI                         | TODO   |     0% | يعتمد   | يعتمد | مخطط | مخطط | لا    | نعم  | لا           | لا           | لا    | HIGH     | UI roadmap                                          | `/dashboard/internal-projects`      |
+| PM10-UI-002          | صفحة تفاصيل المشروع                     | UI                         | TODO   |     0% | يعتمد   | يعتمد | مخطط | لا   | لا    | نعم  | لا           | لا           | لا    | HIGH     | UI roadmap                                          | `/dashboard/internal-projects/[id]` |
+| PM10-UI-003          | Task dialogs/drawers                    | UI                         | TODO   |     0% | يعتمد   | يعتمد | مخطط | لا   | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | UI roadmap                                          | إنشاء/تعديل/حالة                    |
+| PM10-UI-004          | مهامي / مهام الفريق                     | UI                         | TODO   |     0% | يعتمد   | يعتمد | مخطط | مخطط | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | UI roadmap                                          | فلترة حسب الموظف                    |
+| PM10-SEED-001        | Dummy data آمنة                         | Seed/QA                    | TODO   |     0% | مخطط    | لا    | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | PH10 report                                         | dev/test فقط                        |
+| PM10-SEC-001         | Permissions + Audit + company isolation | Security                   | TODO   |     0% | مخطط    | مخطط  | مخطط | لا   | لا    | نعم  | لا           | لا           | لا    | HIGH     | PH10 report                                         | لا silent failures                  |
+| PM10-QA-001          | اختبارات PH-10                          | QA                         | TODO   |     0% | مخطط    | مخطط  | مخطط | لا   | مخطط  | نعم  | لا           | لا           | لا    | HIGH     | PH10 report                                         | unit/API/smoke                      |
+| PM10-GATE-VERIFY-001 | اعتماد PH-10 بعد التنفيذ                | QA/Governance              | TODO   |     0% | لا      | لا    | لا   | لا   | مخطط  | نعم  | لا           | لا           | لا    | CRITICAL | `PH10_GATE_VERIFICATION_AR.md`                      | مطلوب قبل PH-11                     |
 
 ### PH-11 — Backup & Recovery
 
@@ -563,20 +574,26 @@
 
 ## 19. قسم خاص بلوحة إدارة المشاريع والمهام الداخلية
 
-هذه فكرة مستقبلية مطلوبة من المالك وليست منفذة حالياً. المرحلة يجب أن تبقى `FUTURE` وتشمل لاحقاً:
+تم اعتماد تخطيط PH-10 عبر `PH10-PLAN-001` كمرحلة إدارة مشاريع داخلية خفيفة. المرحلة ليست منفذة بعد، لكنها لم تعد فكرة غير محددة. النطاق التنفيذي يشمل:
 
 - مشاريع.
 - مهام.
 - توزيع المهام على الموظفين.
 - حالة كل مهمة.
-- وقت العمل.
+- وقت العمل على المهمة كـ WorkLog تشغيلي فقط.
 - تقارير لكل موظف.
 - إنتاجية الموظف.
 - ملاحظات الإدارة.
 - صلاحيات.
 - Audit.
 
-لا يجب تنفيذها قبل وجود HR foundation أو قبل اكتمال ERP operational core.
+حدود صارمة:
+
+- WorkLog ليس حضوراً وانصرافاً.
+- WorkLog لا يولد رواتب ولا overtime.
+- لا يوجد أثر ledger أو stock.
+- Dummy Data مسموحة لاحقاً للتجربة فقط وبلا بيانات حقيقية.
+- لا تعتمد PH-10 للانتقال إلى PH-11 قبل تنفيذ `PM10-GATE-VERIFY-001`.
 
 ## 20. قسم خاص بالاختبارات
 
@@ -648,26 +665,25 @@
 
 ## 24. المهمة التالية الموصى بها
 
-المهمة التالية المنطقية الآن بعد اعتماد PH-09:
+المهمة التالية المنطقية الآن بعد اعتماد تخطيط PH-10:
 
-**PH10-PLAN-001 — تعريف نطاق لوحة المشاريع والمهام الداخلية**
+**PM10-DATA-001 — تنفيذ Project model**
 
 ### السبب
 
-- PH-00 إلى PH-09 أصبحت مكتملة حسب tracker والبوابات.
-- PH-09 أنجز Employee foundation فقط بدون حضور أو رواتب، وهذا يكفي كنقطة ربط مستقبلية للمهام الداخلية.
-- المرحلة التالية في tracker هي PH-10، لكنها يجب أن تبدأ بتخطيط نطاق فقط قبل أي تنفيذ.
-- لوحة المشاريع الداخلية تعتمد على Employee foundation لتوزيع المهام على الموظفين.
-- لا يجوز بدء Payroll أو Attendance ضمن PH-10.
+- `PH10-PLAN-001` وثّقت النطاق والحدود والمهام الصغيرة.
+- أول تنفيذ آمن يجب أن يبدأ بالـ Data Model قبل API أو UI.
+- Project model هو الجذر الذي تعتمد عليه ProjectTask وAssignment وWorkLog.
+- لا يجوز تنفيذ UI أو dummy data قبل وجود model وAPI واضحين.
+- لا يجوز إدخال Attendance أو Payroll ضمن هذا المسار.
 
 ### نطاق المهمة التالية المقترح
 
-- لا تنفيذ كود في البداية.
-- تعريف entities المطلوبة: Project, Task, Assignment, WorkLog, TaskStatus.
-- تحديد الصلاحيات والـ audit المطلوبين.
-- تحديد علاقة الموظفين بالمهام بدون payroll.
-- تحديد UI/API/task breakdown قبل أي migration.
-- تحديث tracker بقرار بدء PH-10 فقط بعد اعتماد gate الحالي.
+- إضافة Project model فقط مع companyId وstatus وmetadata الأساسية.
+- عدم إضافة Task/Assignment/WorkLog في نفس المهمة إلا إذا نصت المهمة الجديدة صراحة.
+- إضافة migration واختبارات model/API لاحقة حسب ترتيب PH-10.
+- تحديث tracker/backlog بعد التنفيذ.
+- عدم إضافة Attendance أو Payroll أو أي أثر مالي.
 
 ## 25. طريقة تحديث هذا الملف مستقبلاً
 
