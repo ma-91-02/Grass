@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, checkPermission, canAccessCompany } from "@/lib/auth";
+import { getCurrentUser, requireDbPermission, canAccessCompany } from "@/lib/auth";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -12,7 +12,7 @@ vi.mock("@/lib/prisma", () => ({
 
 vi.mock("@/lib/auth", () => ({
   getCurrentUser: vi.fn(),
-  checkPermission: vi.fn(),
+  requireDbPermission: vi.fn(),
   canAccessCompany: vi.fn(),
 }));
 
@@ -26,7 +26,7 @@ describe("accounts tree route company isolation", () => {
       roles: ["محاسب"],
       permissions: ["accounts.tree"],
     });
-    (checkPermission as ReturnType<typeof vi.fn>).mockReturnValue(true);
+    (requireDbPermission as ReturnType<typeof vi.fn>).mockReturnValue(true);
   });
 
   it("rejects tree access when user cannot access requested company", async () => {
