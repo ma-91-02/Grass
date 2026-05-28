@@ -1811,30 +1811,39 @@
 - إنشاء `PH09_REPORT_AR.md`
 - إنشاء `PH09_GATE_VERIFICATION_AR.md`
 - تحديث tracker و API registry و UI binding roadmap
-  **Forbidden:**
+
+**Forbidden:**
+
 - تنفيذ PH-10
 - تنفيذ attendance أو shifts أو overtime
 - تنفيذ payroll أو أي posting محاسبي للرواتب
 - تعديل Sales/Purchases/Reports/Coolify
 - تعديل stock أو ledger خارج نطاق الموظفين
-  **Result:**
+
+**Result:**
+
 - تم إكمال Employee foundation فقط.
 - الحضور والرواتب والتقارير الخاصة بالموظفين مصنفة `NOT_REQUIRED_FOR_CURRENT_RELEASE`.
 - القرار: `PH-09 APPROVED FOR PH-10`.
-  **Required Checks:**
+
+**Required Checks:**
+
 - `npm run lint`
 - `npm run typecheck`
 - `npm run build`
 - `npm test -- --run`
-  **Documentation Updates:**
+
+**Documentation Updates:**
+
 - `docs/PROJECT_PROGRESS_TRACKER_AR.md`
 - `docs/phase-reports/PH09_REPORT_AR.md`
 - `docs/qa/phase-gates/PH09_GATE_VERIFICATION_AR.md`
 - `docs/api/API_REGISTRY.md`
 - `docs/api/UI_BINDING_ROADMAP.md`
 - `docs/api/UI_COMPLETION_BACKLOG.md`
-  **Commit Hash:**
-  **Date:** 2026-05-28
+
+**Commit Hash:** `4068ace`
+**Date:** 2026-05-28
 
 | الأولوية     | العدد  |
 | ------------ | ------ |
@@ -1885,7 +1894,7 @@
 | PH04-FINAL-VERIFY-001 | DONE    | 389e1f4     | 2026-05-28 |
 | PH05-COMPLETE-001     | DONE    | 028b5f9     | 2026-05-28 |
 | PH08-COMPLETE-001     | DONE    | ee4a663     | 2026-05-28 |
-| PH09-COMPLETE-001     | DONE    | —           | 2026-05-28 |
+| PH09-COMPLETE-001     | DONE    | 4068ace     | 2026-05-28 |
 
 ---
 
