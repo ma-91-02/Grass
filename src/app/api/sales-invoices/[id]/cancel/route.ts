@@ -195,6 +195,73 @@ export async function POST(
         });
       }
 
+      // --- Reverse COGS journal entry ---
+      const cogsJournal = lockedInvoice.journalEntryId
+        ? await tx.journalEntry.findFirst({
+            where: {
+              sourceType: "SalesInvoiceCOGS",
+              sourceId: id,
+              reversedAt: null,
+            },
+            include: { lines: true },
+          })
+        : null;
+
+      if (cogsJournal) {
+        const cogsReverseLines = cogsJournal.lines.map((l) => ({
+          accountId: l.accountId,
+          debit: Number(l.credit),
+          credit: Number(l.debit),
+          description: `عكس COGS - فاتورة ${lockedInvoice.invoiceNumber}`,
+        }));
+
+        const cogsReverseValidation =
+          LedgerValidator.validateLines(cogsReverseLines);
+        if (!cogsReverseValidation.valid) {
+          throw new Error(
+            `قيد عكس COGS غير متوازن: ${cogsReverseValidation.errors.join(" | ")}`,
+          );
+        }
+
+        const cogsJeCount = await tx.journalEntry.count({
+          where: { companyId },
+        });
+        const cogsReversalNumber = `JE-${String(cogsJeCount + 1).padStart(5, "0")}`;
+
+        await tx.journalEntry.create({
+          data: {
+            companyId,
+            branchId: invoice.warehouse?.branchId || null,
+            entryNumber: cogsReversalNumber,
+            entryDate: cancelDate,
+            currency: cogsJournal.currency,
+            exchangeRateSnapshot: Number(
+              cogsJournal.exchangeRateSnapshot ?? 1,
+            ),
+            description: `عكس COGS - فاتورة ${lockedInvoice.invoiceNumber}`,
+            sourceType: "SalesInvoiceCancel",
+            sourceId: id,
+            status: "POSTED",
+            postedAt: new Date(),
+            reversalEntryId: cogsJournal.id,
+            createdById: currentUser.userId,
+            lines: {
+              create: cogsReverseLines.map((l) => ({
+                accountId: l.accountId,
+                debit: l.debit,
+                credit: l.credit,
+                description: l.description,
+              })),
+            },
+          },
+        });
+
+        await tx.journalEntry.update({
+          where: { id: cogsJournal.id },
+          data: { reversedAt: new Date() },
+        });
+      }
+
       if (lockedInvoice.customerId && remaining > 0) {
         await tx.customer.update({
           where: { id: lockedInvoice.customerId },

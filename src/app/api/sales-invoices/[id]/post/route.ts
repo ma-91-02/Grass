@@ -486,7 +486,7 @@ export async function POST(
                 1,
             ),
             description: `تكلفة بضاعة مباعة - فاتورة ${lockedInvoice.invoiceNumber}`,
-            sourceType: "SalesInvoice",
+            sourceType: "SalesInvoiceCOGS",
             sourceId: id,
             status: "POSTED",
             postedAt: new Date(),

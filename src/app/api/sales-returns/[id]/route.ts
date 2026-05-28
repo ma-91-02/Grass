@@ -119,7 +119,7 @@ export async function PATCH(
   if (
     !(await requireDbPermission(
       user.userId,
-      PERMISSIONS.SALES_RETURNS_CREATE,
+      PERMISSIONS.SALES_RETURNS_EDIT,
     ))
   ) {
     return forbiddenError("لا تملك صلاحية تعديل مرتجع البيع");
@@ -307,6 +307,69 @@ export async function PATCH(
     }
     const message =
       error instanceof Error ? error.message : "فشل تحديث المرتجع";
+    return errorResponse(message, 500);
+  }
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const user = await getCurrentUser();
+  if (!user) return unauthorizedError();
+
+  if (
+    !(await requireDbPermission(
+      user.userId,
+      PERMISSIONS.SALES_RETURNS_DELETE,
+    ))
+  ) {
+    return forbiddenError("لا تملك صلاحية حذف مرتجع البيع");
+  }
+
+  const { id } = await params;
+
+  try {
+    const salesReturn = await prisma.salesReturn.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        companyId: true,
+        status: true,
+        returnNumber: true,
+      },
+    });
+
+    if (!salesReturn) return notFoundError("المرتجع غير موجود");
+    if (salesReturn.status !== "DRAFT") {
+      return errorResponse("لا يمكن حذف مرتجع غير مسودة", 400);
+    }
+
+    if (
+      salesReturn.companyId &&
+      !(await canAccessCompany(user, salesReturn.companyId))
+    ) {
+      return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+    }
+
+    await prisma.salesReturn.delete({ where: { id } });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: user.userId,
+        action: "DELETE",
+        entity: "SalesReturn",
+        entityId: id,
+        details: {
+          returnNumber: salesReturn.returnNumber,
+        } as never,
+      },
+    });
+
+    return successResponse({ id, deleted: true });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "فشل حذف المرتجع";
     return errorResponse(message, 500);
   }
 }
