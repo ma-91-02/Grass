@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach, describe, it, expect, vi, beforeEach } from "vitest";
 import { canAccessCompany, requireDbPermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { TokenPayload } from "@/lib/auth";
@@ -102,8 +102,34 @@ describe("canAccessCompany", () => {
 });
 
 describe("requireDbPermission", () => {
+  const originalOwnerEmail = process.env["SYSTEM_OWNER_EMAIL"];
+
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    if (originalOwnerEmail === undefined) {
+      delete process.env["SYSTEM_OWNER_EMAIL"];
+    } else {
+      process.env["SYSTEM_OWNER_EMAIL"] = originalOwnerEmail;
+    }
+  });
+
+  it("allows system owner even when DB role permissions are missing", async () => {
+    process.env["SYSTEM_OWNER_EMAIL"] = "owner@grass.local";
+    (
+      prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({
+      id: "owner-id",
+      email: "owner@grass.local",
+      isActive: true,
+      roles: [],
+    });
+
+    const result = await requireDbPermission("owner-id", "employees.view");
+
+    expect(result).toBe(true);
   });
 
   it("returns true when DB shows user has permission", async () => {

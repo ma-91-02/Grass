@@ -217,6 +217,31 @@ const PERMISSIONS = [
   { key: "employees.create", name: "إنشاء موظف", module: "employees" },
   { key: "employees.edit", name: "تعديل موظف", module: "employees" },
   { key: "employees.delete", name: "حذف موظف", module: "employees" },
+  {
+    key: "internalProjects.view",
+    name: "عرض المشاريع الداخلية",
+    module: "internalProjects",
+  },
+  {
+    key: "internalProjects.create",
+    name: "إنشاء مشروع داخلي",
+    module: "internalProjects",
+  },
+  {
+    key: "internalProjects.edit",
+    name: "تعديل مشروع داخلي",
+    module: "internalProjects",
+  },
+  {
+    key: "internalProjects.delete",
+    name: "حذف مشروع داخلي",
+    module: "internalProjects",
+  },
+  {
+    key: "internalProjects.manage",
+    name: "إدارة المشاريع الداخلية",
+    module: "internalProjects",
+  },
   { key: "accounts.view", name: "عرض الحسابات", module: "accounts" },
   { key: "accounts.manage", name: "إدارة الحسابات", module: "accounts" },
   { key: "purchases.view", name: "عرض المشتريات", module: "purchases" },

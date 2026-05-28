@@ -16,7 +16,7 @@ import {
 import { loginSchema } from "./auth/validation";
 import { recordAuthAudit } from "./auth/audit";
 import { checkRateLimit, resetRateLimit } from "./auth/rate-limit";
-import { PERMISSIONS } from "./permissions";
+import { ALL_PERMISSION_KEYS, PERMISSIONS } from "./permissions";
 
 export {
   hashPassword,
@@ -37,6 +37,23 @@ export {
 };
 
 export type { TokenPayload, AuthContext };
+
+export function isSystemOwnerEmail(email?: string | null): boolean {
+  const ownerEmail = process.env["SYSTEM_OWNER_EMAIL"]?.trim().toLowerCase();
+  if (!ownerEmail || !email) return false;
+  return email.trim().toLowerCase() === ownerEmail;
+}
+
+export function canBypassPermissions(user: TokenPayload | null): boolean {
+  return isSystemOwnerEmail(user?.email);
+}
+
+export function resolvePermissionsForUser(
+  user: Pick<TokenPayload, "email" | "permissions">,
+): string[] {
+  if (isSystemOwnerEmail(user.email)) return [...ALL_PERMISSION_KEYS];
+  return user.permissions;
+}
 
 export async function authenticateUser(email: string, password: string) {
   const user = await prisma.user.findUnique({
@@ -85,6 +102,7 @@ export async function authenticateUser(email: string, password: string) {
 export async function hasPermission(permissionKey: string): Promise<boolean> {
   const user = await getSessionUser();
   if (!user) return false;
+  if (canBypassPermissions(user)) return true;
   return user.permissions.includes(permissionKey);
 }
 
@@ -99,6 +117,7 @@ export function checkPermission(
   permissionKey: string,
 ): boolean {
   if (!user) return false;
+  if (canBypassPermissions(user)) return true;
   return user.permissions.includes(permissionKey);
 }
 
@@ -115,6 +134,8 @@ export async function checkDbPermission(
   permissionKey: string,
 ): Promise<boolean> {
   try {
+    if (await isSystemOwnerById(userId)) return true;
+
     const dbUser = await prisma.user.findUnique({
       where: { id: userId, isActive: true },
       include: {
@@ -165,20 +186,16 @@ export async function logAudit(
  * System owner bypasses ALL permission and company checks.
  */
 export async function isSystemOwner(user: TokenPayload): Promise<boolean> {
-  const ownerEmail = process.env["SYSTEM_OWNER_EMAIL"];
-  if (!ownerEmail) return false;
-  return user.email === ownerEmail;
+  return canBypassPermissions(user);
 }
 
 export async function isSystemOwnerById(userId: string): Promise<boolean> {
-  const ownerEmail = process.env["SYSTEM_OWNER_EMAIL"];
-  if (!ownerEmail) return false;
   const dbUser = await prisma.user.findUnique({
     where: { id: userId },
     select: { email: true },
   });
   if (!dbUser) return false;
-  return dbUser.email === ownerEmail;
+  return isSystemOwnerEmail(dbUser.email);
 }
 
 /**
@@ -223,6 +240,5 @@ export async function requireDbPermission(
   userId: string,
   permissionKey: string,
 ): Promise<boolean> {
-  if (await isSystemOwnerById(userId)) return true;
   return checkDbPermission(userId, permissionKey);
 }

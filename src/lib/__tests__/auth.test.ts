@@ -1,8 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect } from "vitest";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { loginSchema } from "@/lib/auth/validation";
 import { checkRateLimit, resetRateLimit } from "@/lib/auth/rate-limit";
-import { checkPermission, checkRole } from "@/lib/auth";
+import {
+  canBypassPermissions,
+  checkPermission,
+  checkRole,
+  resolvePermissionsForUser,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -232,6 +237,7 @@ describe("login success response shape", () => {
 });
 
 describe("checkPermission", () => {
+  const originalOwnerEmail = process.env["SYSTEM_OWNER_EMAIL"];
   const mockUser: TokenPayload = {
     userId: "test-id",
     email: "test@grass.com",
@@ -239,6 +245,14 @@ describe("checkPermission", () => {
     roles: ["admin"],
     permissions: ["users.view", "users.edit", "roles.view"],
   } as TokenPayload;
+
+  afterEach(() => {
+    if (originalOwnerEmail === undefined) {
+      delete process.env["SYSTEM_OWNER_EMAIL"];
+    } else {
+      process.env["SYSTEM_OWNER_EMAIL"] = originalOwnerEmail;
+    }
+  });
 
   it("returns true when user has permission", () => {
     expect(checkPermission(mockUser, PERMISSIONS.USERS_VIEW)).toBe(true);
@@ -254,6 +268,41 @@ describe("checkPermission", () => {
 
   it("returns false when user is null", () => {
     expect(checkPermission(null, PERMISSIONS.USERS_VIEW)).toBe(false);
+  });
+
+  it("allows system owner even when role permission rows are missing", () => {
+    process.env["SYSTEM_OWNER_EMAIL"] = "owner@grass.local";
+    const ownerUser: TokenPayload = {
+      userId: "owner-id",
+      email: "owner@grass.local",
+      name: "مالك النظام",
+      roles: [],
+      permissions: [],
+    } as TokenPayload;
+
+    expect(canBypassPermissions(ownerUser)).toBe(true);
+    expect(checkPermission(ownerUser, PERMISSIONS.USERS_DELETE)).toBe(true);
+    expect(checkPermission(ownerUser, PERMISSIONS.EMPLOYEES_VIEW)).toBe(true);
+    expect(
+      resolvePermissionsForUser({
+        email: ownerUser.email,
+        permissions: [],
+      }),
+    ).toContain(PERMISSIONS.EMPLOYEES_VIEW);
+  });
+
+  it("does not grant bypass to normal users without permission", () => {
+    process.env["SYSTEM_OWNER_EMAIL"] = "owner@grass.local";
+    const normalUser: TokenPayload = {
+      userId: "normal-id",
+      email: "normal@grass.local",
+      name: "Normal User",
+      roles: [],
+      permissions: [],
+    } as TokenPayload;
+
+    expect(canBypassPermissions(normalUser)).toBe(false);
+    expect(checkPermission(normalUser, PERMISSIONS.EMPLOYEES_VIEW)).toBe(false);
   });
 });
 

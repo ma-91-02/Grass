@@ -122,4 +122,11 @@ export const PERMISSIONS = {
   EMPLOYEES_CREATE: "employees.create",
   EMPLOYEES_EDIT: "employees.edit",
   EMPLOYEES_DELETE: "employees.delete",
+  PROJECTS_VIEW: "internalProjects.view",
+  PROJECTS_CREATE: "internalProjects.create",
+  PROJECTS_EDIT: "internalProjects.edit",
+  PROJECTS_DELETE: "internalProjects.delete",
+  PROJECTS_MANAGE: "internalProjects.manage",
 } as const;
+
+export const ALL_PERMISSION_KEYS = Object.values(PERMISSIONS);

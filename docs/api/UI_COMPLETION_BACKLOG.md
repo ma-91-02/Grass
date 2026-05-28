@@ -1877,14 +1877,71 @@
 
 ---
 
+#### Task OWNER-PERM-FIX-001
+
+**Title:** Fix System Owner Full Permissions
+**Status:** `DONE`
+**Priority:** CRITICAL
+**Scope:**
+
+- إضافة/تثبيت تجاوز مركزي لمالك النظام المطابق لـ `SYSTEM_OWNER_EMAIL`.
+- السماح لمالك النظام بتجاوز backend permission checks دون حذفها.
+- جعل `/api/auth/me` يعيد صلاحيات كاملة لمالك النظام حتى تعمل واجهات مثل الموظفين.
+- إثبات أن المستخدم العادي بدون صلاحية ما زال ممنوعاً.
+- إضافة اختبارات للمالك والمستخدم العادي وصلاحية `employees.view`.
+
+**Forbidden:**
+
+- منح كل المستخدمين صلاحيات كاملة.
+- حذف permission checks.
+- تنفيذ PH-10 UI أو APIs.
+- إضافة بيانات إنتاج أو أسرار.
+
+**Checks:**
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm run build`
+- `npm test -- --run`
+
+**Commit Hash:**
+**Date:** 2026-05-28
+
+---
+
 #### Task PM10-DATA-001
 
 **Title:** Create Internal Project Data Model
-**Status:** `TODO`
+**Status:** `DONE`
 **Priority:** HIGH
-**Scope:** إضافة Project model فقط مع companyId وstatus وفهارس أساسية.
-**Forbidden:** إضافة Task/Assignment/WorkLog أو Attendance/Payroll.
+**Scope:**
+
+- إضافة `Project` model فقط.
+- ربط المشروع بـ `companyId`.
+- إضافة `code`, `name`, `description`, `status`, `priority`, `startDate`, `dueDate`, `completedAt`.
+- إضافة `managerUserId`, `createdById`, `updatedById`.
+- إضافة unique آمن داخل الشركة: `@@unique([companyId, code])`.
+- إضافة migration واختبار schema.
+- إضافة صلاحيات seed الدنيا للمشاريع الداخلية.
+
+**Forbidden:**
+
+- إضافة `ProjectTask`.
+- إضافة `TaskAssignment`.
+- إضافة `WorkLog`.
+- إنشاء APIs أو UI.
+- إنشاء بيانات تجريبية أو إنتاجية.
+- تنفيذ Attendance أو Payroll.
+
+**Checks:**
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm run build`
+- `npm test -- --run`
+
 **Commit Hash:**
+**Date:** 2026-05-28
 
 ---
 
@@ -2057,7 +2114,7 @@
 | HIGH         | 15     |
 | MEDIUM       | 18     |
 | LOW          | 12     |
-| **الإجمالي** | **57** |
+| **الإجمالي** | **58** |
 
 ---
 
@@ -2102,6 +2159,8 @@
 | PH08-COMPLETE-001     | DONE    | ee4a663     | 2026-05-28 |
 | PH09-COMPLETE-001     | DONE    | 4068ace     | 2026-05-28 |
 | PH10-PLAN-001         | DONE    | 37ceee1     | 2026-05-28 |
+| OWNER-PERM-FIX-001    | DONE    |             | 2026-05-28 |
+| PM10-DATA-001         | DONE    |             | 2026-05-28 |
 
 ---
 

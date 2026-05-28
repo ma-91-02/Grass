@@ -43,6 +43,9 @@ model User {
   createdSalesReturns     SalesReturn[]        @relation("SalesReturnCreatedBy")
   supplierPaymentsCreated SupplierPayment[]    @relation("SupplierPaymentCreatedBy")
   employeesCreated        Employee[]           @relation("EmployeeCreatedBy")
+  managedProjects         Project[]            @relation("ProjectManager")
+  createdProjects         Project[]            @relation("ProjectCreatedBy")
+  updatedProjects         Project[]            @relation("ProjectUpdatedBy")
 
   @@index([companyId])
 }
@@ -112,6 +115,21 @@ enum PostingOperationStatus {
   FAILED_VALIDATION
   FAILED_ROLLED_BACK
   RETRY_PENDING
+}
+
+enum ProjectStatus {
+  PLANNED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum ProjectPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }
 
 enum JournalEntryStatus {
@@ -832,6 +850,7 @@ model Company {
   stockTransfers      StockTransfer[]
   stockAdjustments    StockAdjustment[]
   employees           Employee[]
+  projects            Project[]
 
   @@index([code])
 }
@@ -875,6 +894,33 @@ model Employee {
 
   @@unique([companyId, code])
   @@index([companyId])
+}
+
+model Project {
+  id            String          @id @default(cuid())
+  companyId     String
+  company       Company         @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  code          String
+  name          String
+  description   String?
+  status        ProjectStatus   @default(PLANNED)
+  priority      ProjectPriority @default(MEDIUM)
+  startDate     DateTime?
+  dueDate       DateTime?
+  completedAt   DateTime?
+  managerUserId String?
+  managerUser   User?           @relation("ProjectManager", fields: [managerUserId], references: [id], onDelete: SetNull)
+  createdById   String?
+  createdBy     User?           @relation("ProjectCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById   String?
+  updatedBy     User?           @relation("ProjectUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@index([companyId, status])
+  @@index([managerUserId])
 }
 
 model FiscalPeriod {

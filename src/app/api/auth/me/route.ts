@@ -1,4 +1,8 @@
-import { validateSessionWithDb, isSystemOwner } from "@/lib/auth";
+import {
+  validateSessionWithDb,
+  isSystemOwner,
+  resolvePermissionsForUser,
+} from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { successResponse, unauthorizedError } from "@/lib/api-response";
 
@@ -25,12 +29,18 @@ export async function GET() {
 
   if (!dbUser || !dbUser.isActive) return unauthorizedError();
 
-  const permissions = dbUser.roles.flatMap((ur) =>
+  const rolePermissions = dbUser.roles.flatMap((ur) =>
     ur.role.permissions.map((rp) => rp.permission.key),
   );
 
   const isOwner = await isSystemOwner(session.user);
-  const displayRole = isOwner ? "مالك النظام" : (session.user.roles?.[0] || "مستخدم");
+  const permissions = resolvePermissionsForUser({
+    email: session.user.email,
+    permissions: rolePermissions,
+  });
+  const displayRole = isOwner
+    ? "مالك النظام"
+    : session.user.roles?.[0] || "مستخدم";
 
   return successResponse({
     userId: session.user.userId,
