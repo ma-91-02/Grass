@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   getCurrentUser,
-  checkPermission,
   logAudit,
   requireDbPermission,
 } from "@/lib/auth";
@@ -20,7 +19,7 @@ import { z } from "zod";
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.COMPANIES_VIEW))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.COMPANIES_VIEW)))
     return forbiddenError();
 
   const dbUser = await prisma.user.findUnique({
@@ -49,7 +48,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.COMPANIES_CREATE))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.COMPANIES_CREATE)))
     return forbiddenError();
 
   try {

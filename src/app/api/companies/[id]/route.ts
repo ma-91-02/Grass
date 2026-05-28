@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   getCurrentUser,
-  checkPermission,
+  requireDbPermission,
   canAccessCompany,
   logAudit,
 } from "@/lib/auth";
@@ -33,7 +33,7 @@ export async function GET(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.COMPANIES_VIEW))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.COMPANIES_VIEW)))
     return forbiddenError();
 
   const { id } = await params;
@@ -52,7 +52,7 @@ export async function PATCH(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.COMPANIES_EDIT))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.COMPANIES_EDIT)))
     return forbiddenError();
 
   const { id } = await params;
@@ -99,7 +99,7 @@ export async function DELETE(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.COMPANIES_EDIT))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.COMPANIES_EDIT)))
     return forbiddenError();
 
   const { id } = await params;

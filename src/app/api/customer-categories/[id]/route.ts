@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, logAudit, checkPermission } from "@/lib/auth";
+import { getCurrentUser, logAudit, requireDbPermission } from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -49,7 +49,7 @@ export async function PATCH(
   const currentUser = await getCurrentUser();
   if (!currentUser) return unauthorizedError();
 
-  if (!checkPermission(currentUser, PERMISSIONS.CUSTOMER_CATEGORIES_EDIT)) {
+  if (!(await requireDbPermission(currentUser.userId, PERMISSIONS.CUSTOMER_CATEGORIES_EDIT))) {
     return forbiddenError("لا تملك صلاحية تعديل قسم");
   }
 
@@ -101,7 +101,7 @@ export async function DELETE(
   const currentUser = await getCurrentUser();
   if (!currentUser) return unauthorizedError();
 
-  if (!checkPermission(currentUser, PERMISSIONS.CUSTOMER_CATEGORIES_DELETE)) {
+  if (!(await requireDbPermission(currentUser.userId, PERMISSIONS.CUSTOMER_CATEGORIES_DELETE))) {
     return forbiddenError("لا تملك صلاحية حذف قسم");
   }
 

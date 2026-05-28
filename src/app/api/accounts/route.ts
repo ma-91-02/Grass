@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   getCurrentUser,
-  checkPermission,
+  requireDbPermission,
   logAudit,
   canAccessCompany,
 } from "@/lib/auth";
@@ -20,7 +20,7 @@ import { z } from "zod";
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.ACCOUNTS_VIEW))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.ACCOUNTS_VIEW)))
     return forbiddenError();
 
   const { searchParams } = new URL(request.url);
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.ACCOUNTS_CREATE))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.ACCOUNTS_CREATE)))
     return forbiddenError();
 
   try {

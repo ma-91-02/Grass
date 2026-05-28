@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, checkPermission } from "@/lib/auth";
+import { getCurrentUser, requireDbPermission } from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   const currentUser = await getCurrentUser();
   if (!currentUser) return unauthorizedError();
 
-  if (!checkPermission(currentUser, PERMISSIONS.PAYMENT_ACCOUNTS_MANAGE)) {
+  if (!(await requireDbPermission(currentUser.userId, PERMISSIONS.PAYMENT_ACCOUNTS_MANAGE))) {
     return forbiddenError("لا تملك صلاحية إدارة حسابات التسديد");
   }
 

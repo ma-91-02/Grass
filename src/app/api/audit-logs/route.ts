@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, checkPermission } from "@/lib/auth";
+import { getCurrentUser, requireDbPermission } from "@/lib/auth";
 import { PERMISSIONS } from "@/lib/permissions";
 import {
   successResponse,
@@ -10,7 +10,7 @@ import {
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.AUDIT_LOGS_VIEW))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.AUDIT_LOGS_VIEW)))
     return forbiddenError();
 
   const logs = await prisma.auditLog.findMany({

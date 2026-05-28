@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, checkPermission, canAccessCompany } from "@/lib/auth";
+import { getCurrentUser, requireDbPermission, canAccessCompany } from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -40,7 +40,7 @@ function buildTree(
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.ACCOUNTS_TREE))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.ACCOUNTS_TREE)))
     return forbiddenError();
 
   const { searchParams } = new URL(request.url);

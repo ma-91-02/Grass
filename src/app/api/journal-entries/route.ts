@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   getCurrentUser,
-  checkPermission,
   canAccessCompany,
   requireDbPermission,
 } from "@/lib/auth";
@@ -23,7 +22,7 @@ import { z } from "zod";
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.JOURNALS_CREATE))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.JOURNALS_CREATE)))
     return forbiddenError();
 
   const { searchParams } = new URL(request.url);

@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   getCurrentUser,
-  checkPermission,
   canAccessCompany,
   requireDbPermission,
 } from "@/lib/auth";
@@ -27,7 +26,7 @@ export async function GET(
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
-  if (!checkPermission(user, PERMISSIONS.JOURNALS_CREATE))
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.JOURNALS_CREATE)))
     return forbiddenError();
 
   const { id } = await params;
