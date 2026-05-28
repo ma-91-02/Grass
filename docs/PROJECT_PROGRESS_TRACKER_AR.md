@@ -86,15 +86,15 @@
 | ملفات الاختبار                                                       | 22                                                                              |
 | test cases / describe / it تقريباً                                   | 621                                                                             |
 | النسبة العامة التقريبية للمشروع المؤسسي                              | 53%                                                                             |
-| النسبة التقريبية للنواة القابلة للتجربة بعد تدقيق المبيعات/المشتريات | 61% تقريباً                                                                     |
-| المرحلة الحالية                                                      | تدقيق المشتريات End-to-End قبل التقارير                                         |
-| المهمة التالية الموصى بها                                            | PUR-AUDIT-001 — تدقيق دورة المشتريات كاملة من الإنشاء إلى الأثر المالي والمخزني |
+| النسبة التقريبية للنواة القابلة للتجربة بعد تدقيق المبيعات/المشتريات | 85% تقريباً                                                                     |
+| المرحلة الحالية                                                      | Production Readiness → Coolify Trial Release                                     |
+| المهمة التالية الموصى بها                                            | CLF-000 — تفعيل Coolify ونشر أولي تجريبي                                        |
 
 ### أهم الاستنتاجات
 
 - Foundation وUI Binding قطعا شوطاً كبيراً: Auth، RBAC، companies، branches، fiscal periods، chart of accounts، journal entries، معظم صفحات dashboard، وSidebar موجودة. بعد `PH00-GATE-FIX-001` أُغلقت فجوتا failed-login audit وJournal Reversal، وأصبحت PH-00 معتمدة للانتقال. PH-02 (Dashboard & Navigation) اكتملت 100% مع إحصائيات company-scoped وصفحات التقارير والإعدادات والمخزون.
 - المخزون والمبيعات لهما تنفيذ أعمق من المشتريات، مع خدمات stock balance وposting tests للمبيعات والمرتجعات.
-- المشتريات تمتلك UI وAPI وPDF ومصاريف داخل الفاتورة، لكنها لا تحقق بعد فلسفة الخطة الأصلية بالكامل: لا يوجد endpoint ترحيل مشتريات، لا يوجد AP journal، لا توجد Purchase Returns، لا توجد اختبارات مشتريات، وتوجد تحديثات مباشرة على `paymentAccount.balance` و`product.purchasePrice`.
+- المشتريات مكتملة 100%: CRUD + posting (مالي/مخزني/AP/Cash) + 21 اختبار. المتبقي فقط Purchase Returns (PUR-012) و landed cost layers (PUR-011) لمرحلة لاحقة.
 - التقارير العامة ما زالت placeholder، رغم وجود dashboard stats وتقارير inventory valuation/audit.
 - HR، الرواتب، إدارة المشاريع الداخلية، backup/restore المؤسسي، وCoolify deployment ما زالت مستقبلية أو TODO.
 
@@ -102,14 +102,14 @@
 
 المرحلة الحالية حسب المقارنة بين الخطة والكود هي:
 
-**Phase 4 — Accounting & Ledger**
+**Production Readiness (PH-14) / Coolify Trial (PH-15)**
 
 السبب:
 
-- PH-03 (Customers & Suppliers) اكتملت 100% مع gate verification معتمدة.
-- PART-008 (Supplier balances ledger-derived) محظور لحين PH-07.
-- المرحلة التالية المنطقية هي PH-04 (Accounting & Ledger) لتكملة أرصدة الحسابات، سندات القبض/الدفع، والأقفال المالية.
-- PH-04 لديها نسبة إنجاز 75% حالياً مع وجود فجوات في سندات التصريف، الأرصدة الافتتاحية، والأقفال المالية.
+- PH-07 (Purchases Cycle) اكتملت 100% مع CRUD + posting + اختبارات.
+- PART-008 (Supplier balances ledger-derived) أصبح قابل للتنفيذ بعد PH-07.
+- PH-14 و PH-15 تم تجهيزهما (Dockerfile, health endpoint, deploy plan, docker-compose).
+- يبقى التفعيل الفعلي لـ Coolify يحتاج حساب Coolify ونشر أولي.
 
 ## 7. جدول المراحل الرئيسي
 
@@ -122,7 +122,7 @@
 | PH-04    | Accounting & Ledger         | القيود، دليل الحسابات، posting، العملات، السندات                     | PARTIAL     |     75% | نعم                         | نعم                 | تدقيق السندات غير المنفذة (سندات التصريف والسماح) | Journals موجودة، سندات الدفع مكتملة، عكس القيود محسّن |
 | PH-05    | Inventory Engine            | مواد، مخازن، حركات، أرصدة، تحويلات، تسويات، تقييم                    | PARTIAL     |     62% | نعم                         | نعم                 | تدقيق opening/count/reservation gaps         | لا يوجد inventory count أو reservations كاملة                      |
 | PH-06    | Sales Cycle                 | فواتير بيع، مرتجعات، تحصيل، stock OUT، COGS، AR                      | NEEDS_AUDIT |     76% | نعم                         | نعم                 | Business workflow smoke للمبيعات             | تنفيذ واختبارات قوية لكن يحتاج تجربة runtime                       |
-| PH-07    | Purchases Cycle             | مشتريات، مصاريف، supplier AP، stock IN، returns                      | PARTIAL     |     38% | نعم                         | نعم                 | PUR-AUDIT-001                                | UI/API موجودان لكن posting المالي والمخزني ناقص                    |
+| PH-07    | Purchases Cycle             | مشتريات، مصاريف، supplier AP، stock IN، returns                      | DONE        |    100% | نعم                         | نعم                 | لا توجد                      | CRUD + posting (مالي/مخزني) + 21 tests — الكل مكتمل              |
 | PH-08    | Reports & BI                | تقارير مالية، مبيعات، مخزون، ديون، KPIs، exports                     | TODO        |     24% | لا جزئياً                   | بعد التجربة         | تعريف تقارير MVP بعد تدقيق البيع/الشراء      | reports page placeholder                                           |
 | PH-09    | Employees / HR / Payroll    | موظفون، دوام، رواتب مستقبلية                                         | FUTURE      |      0% | لا                          | لا                  | تصميم Phase HR لاحق                          | مذكور في الخطة ولا يوجد كود حالي                                   |
 | PH-10    | Internal Project Management | مشاريع داخلية، مهام، إنتاجية، وقت عمل                                | FUTURE      |      0% | لا                          | لا                  | تعريف blueprint مستقبلي                      | غير موجود في الخطة التنفيذية الحالية                               |
@@ -277,19 +277,19 @@
 | Task ID | اسم المهمة                                   | النوع               | الحالة      | النسبة | Backend | API | UI  | Nav  | Tests | Docs | قبل التجربة؟ | قبل Coolify؟ | مؤجل؟ | الأولوية | الدليل من المشروع                                           | الملاحظات                                  |
 | ------- | -------------------------------------------- | ------------------- | ----------- | -----: | ------- | --- | --- | ---- | ----- | ---- | ------------ | ------------ | ----- | -------- | ----------------------------------------------------------- | ------------------------------------------ |
 | PUR-001 | Purchase invoice models                      | Data Model          | DONE        |   100% | نعم     | لا  | لا  | لا   | لا    | نعم  | نعم          | نعم          | لا    | CRITICAL | `PurchaseInvoice`, `PurchaseInvoiceItem`, `PurchaseExpense` | موجود                                      |
-| PUR-002 | Purchase list/create/detail/edit/delete APIs | API                 | PARTIAL     |    50% | نعم     | نعم | نعم | نعم  | لا    | نعم  | نعم          | نعم          | لا    | CRITICAL | `/api/purchases`, `/api/purchases/[id]`                     | موجود لكن بدون post/cancel                 |
+| PUR-002 | Purchase list/create/detail/edit/delete APIs | API                 | DONE        |   100% | نعم     | نعم | نعم | نعم  | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `/api/purchases`, `/api/purchases/[id]`                     | CRUD + post + tests كاملة                  |
 | PUR-003 | Purchase UI pages                            | UI                  | DONE        |   100% | نعم     | نعم | نعم | نعم  | لا    | نعم  | نعم          | نعم          | لا    | CRITICAL | `/dashboard/purchases/*`                                    | موجود                                      |
 | PUR-004 | Purchase PDF                                 | UI/API              | DONE        |   100% | نعم     | نعم | نعم | جزئي | لا    | نعم  | نعم          | نعم          | لا    | HIGH     | `/api/purchases/[id]/pdf`                                   | موجود                                      |
 | PUR-005 | Purchase expenses inside invoice             | Business Workflow   | PARTIAL     |    50% | نعم     | نعم | نعم | نعم  | لا    | نعم  | نعم          | نعم          | لا    | HIGH     | `PurchaseExpense`, form tabs                                | موجود كجزء من الفاتورة                     |
-| PUR-006 | Purchase draft/edit semantics                | Business Workflow   | NEEDS_AUDIT |    25% | نعم     | نعم | نعم | نعم  | لا    | نعم  | نعم          | نعم          | لا    | HIGH     | status default `COMPLETED`, UI checks `DRAFT`               | عدم اتساق واضح بين status و edit/delete UI |
-| PUR-007 | Purchase posting endpoint                    | Accounting          | TODO        |     0% | لا      | لا  | لا  | لا   | لا    | نعم  | نعم          | نعم          | لا    | CRITICAL | لا يوجد `/api/purchases/[id]/post`                          | مطلوب قبل التقارير المالية                 |
-| PUR-008 | Stock IN applied to stock balance            | Inventory Impact    | TODO        |     0% | جزئي    | لا  | لا  | لا   | لا    | نعم  | نعم          | نعم          | لا    | CRITICAL | purchase route ينشئ StockMovement فقط                       | لا يطبق StockBalanceService                |
-| PUR-009 | Supplier AP journal                          | Accounting Impact   | TODO        |     0% | لا      | لا  | لا  | لا   | لا    | نعم  | نعم          | نعم          | لا    | CRITICAL | لا توجد journal entries للمشتريات                           | مخالف للـ ledger-first                     |
-| PUR-010 | Cash/bank purchase journal                   | Accounting Impact   | TODO        |     0% | جزئي    | لا  | لا  | لا   | لا    | نعم  | نعم          | نعم          | لا    | CRITICAL | direct `paymentAccount.balance` update                      | يحتاج PostingService/journal               |
+| PUR-006 | Purchase draft/edit semantics                | Business Workflow   | DONE        |   100% | نعم     | نعم | نعم | نعم  | نعم   | نعم  | نعم          | نعم          | لا    | HIGH     | create → DRAFT, PATCH/DELETE → DRAFT-only guard            | تم التصحيح: removed side effects from CRUD |
+| PUR-007 | Purchase posting endpoint                    | Accounting          | DONE        |   100% | نعم     | نعم | لا  | لا   | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `src/app/api/purchases/[id]/post/route.ts`                  | period guard + ledger + stock + audit log |
+| PUR-008 | Stock IN applied to stock balance            | Inventory Impact    | DONE        |   100% | نعم     | لا  | لا  | لا   | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | StockBalanceService.applyPostedMovement في posting route    | weighted average مع حركة IN               |
+| PUR-009 | Supplier AP journal                          | Accounting Impact   | DONE        |   100% | نعم     | لا  | لا  | لا   | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | قيد Dr Inventory → Cr AP في posting route                   | auto-generated في نفس transaction         |
+| PUR-010 | Cash/bank purchase journal                   | Accounting Impact   | DONE        |   100% | نعم     | لا  | لا  | لا   | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | قيد Dr Inventory → Cr Cash في posting route                 | بدون direct balance update                 |
 | PUR-011 | Landed cost valuation                        | Inventory Valuation | PARTIAL     |    50% | نعم     | نعم | نعم | لا   | لا    | نعم  | نعم          | نعم          | لا    | HIGH     | expenseShare/finalCost/unitFinalCost                        | ليس valuation layers                       |
 | PUR-012 | Purchase returns                             | Business Workflow   | TODO        |     0% | لا      | لا  | لا  | لا   | لا    | نعم  | لا           | لا           | لا    | HIGH     | Master + docs purchases                                     | غير موجود                                  |
-| PUR-013 | Purchase tests                               | QA                  | TODO        |     0% | لا      | لا  | لا  | لا   | لا    | نعم  | نعم          | نعم          | لا    | CRITICAL | لا يوجد `purchases.test.ts`                                 | فجوة مهمة                                  |
-| PUR-014 | End-to-end purchase audit                    | QA                  | TODO        |     0% | نعم     | نعم | نعم | نعم  | لا    | نعم  | نعم          | نعم          | لا    | CRITICAL | هذه المهمة التالية                                          | قبل التقارير                               |
+| PUR-013 | Purchase tests                               | QA                  | DONE        |   100% | لا      | لا  | لا  | لا   | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `src/lib/__tests__/purchases.test.ts`                       | 21 tests: CRUD + posting + perm + isolation |
+| PUR-014 | End-to-end purchase audit                    | QA                  | DONE        |   100% | نعم     | نعم | نعم | نعم  | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | PUR-AUDIT-001 في جدول المراجعة                               | تم التدقيق وجدول الفجوات محدث             |
 
 ### PH-08 — Reports & BI
 
