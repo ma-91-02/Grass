@@ -28,6 +28,7 @@ import {
   Search,
   ArrowLeftRight,
   Truck,
+  UserCheck,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -186,6 +187,11 @@ const menuItems = [
     title: "الأدوار",
     href: "/dashboard/roles",
     icon: Settings,
+  },
+  {
+    title: "الموظفون",
+    href: "/dashboard/employees",
+    icon: UserCheck,
   },
 ];
 

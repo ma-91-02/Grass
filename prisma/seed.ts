@@ -72,10 +72,26 @@ const PERMISSIONS = [
     module: "products",
   },
   { key: "products.editPrice", name: "تعديل الأسعار", module: "products" },
-  { key: "productCategories.view", name: "عرض تصنيفات المواد", module: "products" },
-  { key: "productCategories.create", name: "إنشاء تصنيف مادة", module: "products" },
-  { key: "productCategories.edit", name: "تعديل تصنيف مادة", module: "products" },
-  { key: "productCategories.delete", name: "حذف تصنيف مادة", module: "products" },
+  {
+    key: "productCategories.view",
+    name: "عرض تصنيفات المواد",
+    module: "products",
+  },
+  {
+    key: "productCategories.create",
+    name: "إنشاء تصنيف مادة",
+    module: "products",
+  },
+  {
+    key: "productCategories.edit",
+    name: "تعديل تصنيف مادة",
+    module: "products",
+  },
+  {
+    key: "productCategories.delete",
+    name: "حذف تصنيف مادة",
+    module: "products",
+  },
   { key: "units.view", name: "عرض وحدات القياس", module: "units" },
   { key: "units.create", name: "إنشاء وحدة قياس", module: "units" },
   { key: "units.edit", name: "تعديل وحدة قياس", module: "units" },
@@ -197,6 +213,10 @@ const PERMISSIONS = [
   { key: "reports.view", name: "عرض التقارير", module: "reports" },
   { key: "settings.view", name: "عرض الإعدادات", module: "settings" },
   { key: "settings.manage", name: "إدارة الإعدادات", module: "settings" },
+  { key: "employees.view", name: "عرض الموظفين", module: "employees" },
+  { key: "employees.create", name: "إنشاء موظف", module: "employees" },
+  { key: "employees.edit", name: "تعديل موظف", module: "employees" },
+  { key: "employees.delete", name: "حذف موظف", module: "employees" },
   { key: "accounts.view", name: "عرض الحسابات", module: "accounts" },
   { key: "accounts.manage", name: "إدارة الحسابات", module: "accounts" },
   { key: "purchases.view", name: "عرض المشتريات", module: "purchases" },
@@ -350,6 +370,7 @@ const ROLES = [
     description: "عرض التقارير فقط",
     permissions: [
       "reports.view",
+      "employees.view",
       "customers.view",
       "products.view",
       "invoices.view",
@@ -396,7 +417,6 @@ async function main() {
     }
     console.log(`Role "${roleData.name}" created/updated`);
   }
-
 
   await prisma.paymentAccount.upsert({
     where: { name: "صندوق IQD" },
@@ -551,12 +571,24 @@ async function main() {
   await prisma.unit.upsert({
     where: { companyId_code: { companyId: company.id, code: "PC" } },
     update: { name: "قطعة", symbol: "قطعة", type: "PIECE" },
-    create: { companyId: company.id, name: "قطعة", code: "PC", symbol: "قطعة", type: "PIECE" },
+    create: {
+      companyId: company.id,
+      name: "قطعة",
+      code: "PC",
+      symbol: "قطعة",
+      type: "PIECE",
+    },
   });
   await prisma.unit.upsert({
     where: { companyId_code: { companyId: company.id, code: "BOX" } },
     update: { name: "كارتون", symbol: "كرتون", type: "BOX" },
-    create: { companyId: company.id, name: "كارتون", code: "BOX", symbol: "كرتون", type: "BOX" },
+    create: {
+      companyId: company.id,
+      name: "كارتون",
+      code: "BOX",
+      symbol: "كرتون",
+      type: "BOX",
+    },
   });
 
   // Product categories
@@ -608,7 +640,11 @@ async function main() {
   if (demoCategory && demoUnit) {
     await prisma.product.upsert({
       where: { companyId_code: { companyId: company.id, code: "DEMO" } },
-      update: { name: "مادة تجريبية", categoryId: demoCategory.id, unitId: demoUnit.id },
+      update: {
+        name: "مادة تجريبية",
+        categoryId: demoCategory.id,
+        unitId: demoUnit.id,
+      },
       create: {
         companyId: company.id,
         code: "DEMO",

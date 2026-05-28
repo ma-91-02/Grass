@@ -340,6 +340,30 @@ export const salesReturnLineSchema = z.object({
   notes: z.string().optional().nullable(),
 });
 
+export const employeeFormSchema = z.object({
+  companyId: z.string().min(1, "الشركة مطلوبة"),
+  code: z.string().min(1, "كود الموظف مطلوب"),
+  name: z.string().min(1, "الاسم مطلوب"),
+  phone: z.string().optional().nullable(),
+  email: z
+    .string()
+    .trim()
+    .transform((value) => (value === "" ? null : value))
+    .pipe(z.string().email("البريد الإلكتروني غير صحيح").nullable())
+    .optional()
+    .nullable(),
+  address: z.string().optional().nullable(),
+  position: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  isActive: z.boolean().optional().default(true),
+});
+
+export type EmployeeFormData = z.infer<typeof employeeFormSchema>;
+
+export const employeeUpdateSchema = employeeFormSchema.partial();
+
+export type EmployeeUpdateData = z.infer<typeof employeeUpdateSchema>;
+
 export const salesReturnSchema = z.object({
   companyId: z.string().min(1, "الشركة مطلوبة"),
   originalInvoiceId: z.string().min(1, "الفاتورة الأصلية مطلوبة"),

@@ -45,6 +45,7 @@ const MODULE_LABELS: Record<string, string> = {
   journals: "القيود",
   reports: "التقارير",
   settings: "الإعدادات",
+  employees: "الموظفون",
   audit: "التدقيق",
   exchangeRates: "أسعار الصرف",
   paymentAccounts: "حسابات الدفع",

@@ -118,4 +118,8 @@ export const PERMISSIONS = {
   JOURNALS_REVERSE: "journals.reverse",
   PAYMENTS_VIEW: "payments.view",
   PAYMENTS_CREATE: "payments.create",
+  EMPLOYEES_VIEW: "employees.view",
+  EMPLOYEES_CREATE: "employees.create",
+  EMPLOYEES_EDIT: "employees.edit",
+  EMPLOYEES_DELETE: "employees.delete",
 } as const;
