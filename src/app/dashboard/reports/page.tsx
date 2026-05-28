@@ -1,9 +1,30 @@
 "use client";
 
-import { BarChart3, Search, Package, FileText, BookOpen, TrendingUp } from "lucide-react";
+import { BarChart3, Search, Package, FileText, BookOpen, TrendingUp, Landmark, Users, DollarSign } from "lucide-react";
 import Link from "next/link";
 
 const reportLinks = [
+  {
+    title: "الأرباح والخسائر",
+    desc: "تقرير الأرباح والخسائر من قيود الأستاذ",
+    href: "/dashboard/reports/profit-loss",
+    icon: TrendingUp,
+    color: "text-emerald-600",
+  },
+  {
+    title: "الميزانية العمومية",
+    desc: "مركز الأصول والخصوم وحقوق الملكية",
+    href: "/dashboard/reports/balance-sheet",
+    icon: Landmark,
+    color: "text-blue-600",
+  },
+  {
+    title: "أعمار الذمم المدينة",
+    desc: "تحليل المبالغ المستحقة حسب الفترات الزمنية",
+    href: "/dashboard/reports/ar-aging",
+    icon: Users,
+    color: "text-orange-600",
+  },
   {
     title: "ميزان المراجعة",
     desc: "عرض أرصدة الحسابات مع إجمالي الديون والائتمانات",

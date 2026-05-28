@@ -25,7 +25,7 @@
 - ✅ Payment Accounts (list + create)
 - ✅ Exchange Rates (list + create + delete)
 - ✅ Audit Logs (list)
-- ✅ Reports (dashboard stats)
+- ✅ Reports (dashboard stats, P&L, balance sheet, AR aging, trial balance, sales summary)
 
 ---
 

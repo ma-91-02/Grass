@@ -9,9 +9,9 @@
 
 | المقياس | العدد |
 |---------|-------|
-| إجمالي الملفات (route.ts) | 68 |
-| إجمالي نقاط النهاية (methods) | 129 |
-| CONNECTED | 126 |
+| إجمالي الملفات (route.ts) | 71 |
+| إجمالي نقاط النهاية (methods) | 134 |
+| CONNECTED | 131 |
 | PARTIAL | 0 |
 | NO_UI | 0 |
 | BACKEND_ONLY | 3 |
@@ -342,6 +342,16 @@
 | Module | Method | Endpoint | Purpose | Backend Status | UI Status | UI Page | Priority | Phase | Notes |
 |--------|--------|----------|---------|---------------|-----------|---------|----------|-------|-------|
 | Reports | GET | `/api/dashboard/stats` | إحصائيات لوحة التحكم | DONE | CONNECTED | `/dashboard` | HIGH | 0 | — |
+| Reports | GET | `/api/reports/profit-loss` | تقرير الأرباح والخسائر | DONE | CONNECTED | `/dashboard/reports/profit-loss` | HIGH | 8 | Ledger-first (JournalLine) |
+| Reports | GET | `/api/reports/balance-sheet` | الميزانية العمومية | DONE | CONNECTED | `/dashboard/reports/balance-sheet` | HIGH | 8 | Ledger-first (JournalLine) |
+| Reports | GET | `/api/reports/ar-aging` | أعمار الذمم المدينة | DONE | CONNECTED | `/dashboard/reports/ar-aging` | HIGH | 8 | يعتمد على الفواتير المرحلة |
+| Reports | GET | `/api/reports/trial-balance` | ميزان المراجعة | DONE | CONNECTED | `/dashboard/reports/trial-balance` | HIGH | 8 | Ledger-first (JournalLine) |
+| Reports | GET | `/api/reports/sales-summary` | ملخص المبيعات | DONE | CONNECTED | `/dashboard/reports/sales-summary` | MEDIUM | 8 | يعتمد على فواتير البيع المرحلة |
+| Reports | GET | `/api/reports/profit-loss` | تقرير الأرباح والخسائر من قيود الأستاذ | DONE | CONNECTED | `/dashboard/reports/profit-loss` | HIGH | 8 | Ledger-first: JournalLine by INCOME/EXPENSE |
+| Reports | GET | `/api/reports/balance-sheet` | الميزانية العمومية من قيود الأستاذ | DONE | CONNECTED | `/dashboard/reports/balance-sheet` | HIGH | 8 | Ledger-first: JournalLine by ASSET/LIABILITY/EQUITY |
+| Reports | GET | `/api/reports/ar-aging` | أعمار الذمم المدينة | DONE | CONNECTED | `/dashboard/reports/ar-aging` | HIGH | 8 | يعتمد على الفواتير المرحلة |
+| Reports | GET | `/api/reports/trial-balance` | ميزان المراجعة | DONE | CONNECTED | `/dashboard/reports/trial-balance` | HIGH | 8 | Ledger-first: JournalLine aggregation |
+| Reports | GET | `/api/reports/sales-summary` | ملخص المبيعات | DONE | CONNECTED | `/dashboard/reports/sales-summary` | MEDIUM | 8 | يعتمد على فواتير البيع المرحلة |
 
 ---
 
@@ -365,10 +375,10 @@
 
 | Status | Count |
 |--------|-------|
-| CONNECTED | 126 |
+| CONNECTED | 131 |
 | PARTIAL | 0 |
 | NO_UI | 0 |
 | BACKEND_ONLY | 3 |
 | UNKNOWN | 0 |
 | BROKEN | 0 |
-| **Total** | **129** |
+| **Total** | **134** |
