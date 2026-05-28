@@ -88,8 +88,6 @@ export default function EmployeesPage() {
   const [form, setForm] = useState<EmployeeFormState>(emptyForm);
 
   useEffect(() => {
-    setIsLoadingAuth(true);
-    setAuthError(null);
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => {
