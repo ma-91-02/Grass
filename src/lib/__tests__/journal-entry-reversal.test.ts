@@ -153,7 +153,11 @@ describe("journal entry reversal transaction", () => {
 
     expect(tx.journalEntry.update).toHaveBeenCalledWith({
       where: { id: "je-1" },
-      data: { status: "REVERSED" },
+      data: expect.objectContaining({
+        status: "REVERSED",
+        reversalEntryId: "je-2",
+        reversedAt: expect.any(Date),
+      }),
     });
     expect(tx.auditLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -190,6 +194,23 @@ describe("journal entry reversal transaction", () => {
     ).rejects.toThrow("audit failed");
 
     expect(tx.journalEntry.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects reversal when original is already reversed", async () => {
+    (prisma.journalEntry.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+      { ...postedJournal, status: "REVERSED", reversalEntryId: "je-2" },
+    );
+
+    const { POST } =
+      await import("@/app/api/journal-entries/[id]/reverse/route");
+    const response = await POST(new Request("http://localhost") as never, {
+      params: Promise.resolve({ id: "je-1" }),
+    });
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.error).toBe("القيد معكوس مسبقاً");
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
   it("does not mark the original reversed when reversal creation fails", async () => {

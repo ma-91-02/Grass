@@ -16,6 +16,7 @@ import { PERMISSIONS } from "@/lib/permissions";
 import { StockBalanceService } from "@/lib/services/stock-balance-service";
 import { PeriodGuard } from "@/lib/services/period-guard";
 import { LedgerValidator } from "@/lib/services/ledger-validator";
+import { CurrencyGuard } from "@/lib/services/currency-guard";
 
 /**
  * Sales Invoice Posting Engine
@@ -190,6 +191,28 @@ export async function POST(
       "حساب تكلفة البضاعة المباعة غير موجود في شجرة الحسابات",
       500,
     );
+
+  const accountCurrencies = new Map<string, string>();
+  accountCurrencies.set(revenueAccount.id, revenueAccount.currency);
+  accountCurrencies.set(inventoryAccount.id, inventoryAccount.currency);
+  accountCurrencies.set(cogsAccount.id, cogsAccount.currency);
+  accountCurrencies.set(cashAccount.id, cashAccount.currency);
+  accountCurrencies.set(arAccount.id, arAccount.currency);
+
+  const currencyCheck = CurrencyGuard.validateJournalCurrency(
+    invoice.currency,
+    [
+      { accountId: cashAccount.id, debit: 1, credit: 0 },
+      { accountId: arAccount.id, debit: 1, credit: 0 },
+      { accountId: revenueAccount.id, debit: 0, credit: 1 },
+      { accountId: cogsAccount.id, debit: 1, credit: 0 },
+      { accountId: inventoryAccount.id, debit: 0, credit: 1 },
+    ],
+    accountCurrencies,
+  );
+  if (!currencyCheck.allowed) {
+    return errorResponse(`تضارب في عملة الحسابات: ${currencyCheck.errors.join(" | ")}`, 500);
+  }
 
   // 6. Atomic posting transaction
   try {

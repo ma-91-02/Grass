@@ -17,6 +17,7 @@ import { StockBalanceService } from "@/lib/services/stock-balance-service";
 import { PeriodGuard } from "@/lib/services/period-guard";
 import { LedgerValidator } from "@/lib/services/ledger-validator";
 import { ACCOUNT_CODES } from "@/lib/account-codes";
+import { CurrencyGuard } from "@/lib/services/currency-guard";
 
 export async function POST(
   _request: NextRequest,
@@ -119,6 +120,24 @@ export async function POST(
   }
   if (invoice.paymentMethod !== "CREDIT" && !cashAccount) {
     return errorResponse("حساب الصندوق غير موجود في شجرة الحسابات", 500);
+  }
+
+  const accountCurrencies = new Map<string, string>();
+  accountCurrencies.set(inventoryAccount.id, inventoryAccount.currency);
+  accountCurrencies.set(apAccount.id, apAccount.currency);
+  if (cashAccount) accountCurrencies.set(cashAccount.id, cashAccount.currency);
+
+  const currencyCheck = CurrencyGuard.validateJournalCurrency(
+    currency,
+    [
+      { accountId: inventoryAccount.id, debit: 1, credit: 0 },
+      { accountId: apAccount.id, debit: 0, credit: 1 },
+      ...(cashAccount ? [{ accountId: cashAccount.id, debit: 0, credit: 1 }] : []),
+    ],
+    accountCurrencies,
+  );
+  if (!currencyCheck.allowed) {
+    return errorResponse(`تضارب في عملة الحسابات: ${currencyCheck.errors.join(" | ")}`, 500);
   }
 
   try {

@@ -37,6 +37,8 @@ export async function POST(
   if (!(await canAccessCompany(user, original.companyId))) {
     return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
   }
+  if (original.reversalEntryId)
+    return errorResponse("القيد معكوس مسبقاً");
   if (original.status !== "POSTED")
     return errorResponse("يمكن عكس القيود المرحلة فقط");
 
