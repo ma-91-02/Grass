@@ -1904,7 +1904,7 @@
 - `npm run build`
 - `npm test -- --run`
 
-**Commit Hash:**
+**Commit Hash:** `07feb96`
 **Date:** 2026-05-28
 
 ---
@@ -1940,7 +1940,7 @@
 - `npm run build`
 - `npm test -- --run`
 
-**Commit Hash:**
+**Commit Hash:** `07feb96`
 **Date:** 2026-05-28
 
 ---
@@ -2159,8 +2159,8 @@
 | PH08-COMPLETE-001     | DONE    | ee4a663     | 2026-05-28 |
 | PH09-COMPLETE-001     | DONE    | 4068ace     | 2026-05-28 |
 | PH10-PLAN-001         | DONE    | 37ceee1     | 2026-05-28 |
-| OWNER-PERM-FIX-001    | DONE    |             | 2026-05-28 |
-| PM10-DATA-001         | DONE    |             | 2026-05-28 |
+| OWNER-PERM-FIX-001    | DONE    | 07feb96     | 2026-05-28 |
+| PM10-DATA-001         | DONE    | 07feb96     | 2026-05-28 |
 
 ---
 
