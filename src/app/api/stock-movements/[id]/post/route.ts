@@ -16,6 +16,7 @@ import {
   conflictError,
 } from "@/lib/api-response";
 import { StockBalanceService } from "@/lib/services/stock-balance-service";
+import { PeriodGuard } from "@/lib/services/period-guard";
 
 export async function POST(
   _request: NextRequest,
@@ -49,6 +50,15 @@ export async function POST(
   // Only DRAFT can be posted
   if (movement.status !== "DRAFT") {
     return conflictError("لا يمكن ترحيل حركة مخزون غير مسودة");
+  }
+
+  // Check fiscal period is open
+  const periodCheck = await PeriodGuard.checkPeriodOpen(
+    movement.companyId!,
+    movement.movementDate,
+  );
+  if (!periodCheck.allowed) {
+    return conflictError(periodCheck.error || "الفترة المالية غير مفتوحة");
   }
 
   // Validate product/warehouse still active

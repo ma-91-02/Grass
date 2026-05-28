@@ -113,6 +113,8 @@ export const stockMovementFormSchema = z.object({
     "ADJUSTMENT_OUT",
     "TRANSFER_OUT",
     "TRANSFER_IN",
+    "RETURN_IN",
+    "RETURN_OUT",
   ]),
   quantity: z.coerce.number().int().min(1, "الكمية يجب أن تكون أكبر من 0"),
   unitCost: z.coerce.number().min(0).optional().nullable(),

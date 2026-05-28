@@ -9,7 +9,7 @@ const INCREASE_TYPES = new Set([
   "RETURN_IN",
 ]);
 
-const DECREASE_TYPES = new Set(["OUT", "ADJUSTMENT_OUT", "TRANSFER_OUT"]);
+const DECREASE_TYPES = new Set(["OUT", "ADJUSTMENT_OUT", "TRANSFER_OUT", "RETURN_OUT"]);
 
 export interface ApplyMovementResult {
   success: boolean;

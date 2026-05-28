@@ -16,6 +16,7 @@ import {
   conflictError,
 } from "@/lib/api-response";
 import { TransferService } from "@/lib/services/transfer-service";
+import { PeriodGuard } from "@/lib/services/period-guard";
 
 export async function POST(
   _request: NextRequest,
@@ -54,6 +55,15 @@ export async function POST(
   // Only DRAFT can be posted
   if (transfer.status !== "DRAFT") {
     return conflictError("لا يمكن ترحيل تحويل غير مسود");
+  }
+
+  // Check fiscal period is open
+  const periodCheck = await PeriodGuard.checkPeriodOpen(
+    transfer.companyId!,
+    transfer.transferDate,
+  );
+  if (!periodCheck.allowed) {
+    return conflictError(periodCheck.error || "الفترة المالية غير مفتوحة");
   }
 
   // Validate warehouses still active

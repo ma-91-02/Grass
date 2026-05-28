@@ -16,6 +16,7 @@ import {
   conflictError,
 } from "@/lib/api-response";
 import { AdjustmentService } from "@/lib/services/adjustment-service";
+import { PeriodGuard } from "@/lib/services/period-guard";
 
 export async function POST(
   _request: NextRequest,
@@ -55,6 +56,15 @@ export async function POST(
 
   if (adjustment.status !== "DRAFT") {
     return conflictError("لا يمكن ترحيل تسوية غير مسودة");
+  }
+
+  // Check fiscal period is open
+  const periodCheck = await PeriodGuard.checkPeriodOpen(
+    adjustment.companyId!,
+    adjustment.adjustmentDate,
+  );
+  if (!periodCheck.allowed) {
+    return conflictError(periodCheck.error || "الفترة المالية غير مفتوحة");
   }
 
   if (!adjustment.warehouse?.isActive) {
