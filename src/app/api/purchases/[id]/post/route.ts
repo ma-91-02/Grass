@@ -271,6 +271,14 @@ export async function POST(
         include: { lines: true },
       });
 
+      // Update PaymentAccount.balance if cash payment
+      if (invoice.paymentMethod !== "CREDIT" && paid > 0 && lockedInvoice.paymentAccountId) {
+        await tx.paymentAccount.update({
+          where: { id: lockedInvoice.paymentAccountId },
+          data: { balance: { decrement: paid } },
+        });
+      }
+
       const postedInvoice = await tx.purchaseInvoice.update({
         where: { id },
         data: {

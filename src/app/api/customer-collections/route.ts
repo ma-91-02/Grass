@@ -448,6 +448,14 @@ export async function POST(request: NextRequest) {
         data: { sourceId: collection.id },
       });
 
+      // Update PaymentAccount.balance for cash receipt
+      if (paymentAccountId) {
+        await tx.paymentAccount.update({
+          where: { id: paymentAccountId },
+          data: { balance: { increment: amount } },
+        });
+      }
+
       // Audit inside transaction
       await tx.auditLog.create({
         data: {

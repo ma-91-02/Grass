@@ -271,6 +271,19 @@ export async function POST(
         });
       }
 
+      // --- Reverse PaymentAccount.balance for cash/mixed payments ---
+      const paidAmount = Number(lockedInvoice.paid ?? 0);
+      if (
+        lockedInvoice.paymentType !== "CREDIT" &&
+        paidAmount > 0 &&
+        lockedInvoice.paymentAccountId
+      ) {
+        await tx.paymentAccount.update({
+          where: { id: lockedInvoice.paymentAccountId },
+          data: { balance: { decrement: paidAmount } },
+        });
+      }
+
       const cancelledInvoice = await tx.invoice.update({
         where: { id },
         data: {

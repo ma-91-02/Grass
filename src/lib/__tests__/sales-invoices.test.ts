@@ -35,6 +35,7 @@ vi.mock("@/lib/prisma", () => ({
     },
     paymentAccount: {
       findUnique: vi.fn(),
+      update: vi.fn(),
     },
     user: {
       findUnique: vi.fn(),
@@ -1405,6 +1406,7 @@ describe("sales-invoices route", () => {
           }),
           count: vi.fn().mockResolvedValue(0),
         },
+        paymentAccount: { findUnique: vi.fn(), update: vi.fn() },
       };
 
       (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
@@ -1434,10 +1436,6 @@ describe("sales-invoices route", () => {
       const res = await POST(req as never, {
         params: Promise.resolve({ id: "inv1" }),
       });
-      if (res.status !== 200) {
-        const debugJson = await res.json();
-        console.log("DEBUG CASH POST:", res.status, debugJson);
-      }
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json.data.status).toBe("POSTED");
@@ -1706,6 +1704,7 @@ describe("sales-invoices route", () => {
           }),
           update: vi.fn().mockResolvedValue({ id: "cus1", currentBalance: 70 }),
         },
+        paymentAccount: { findUnique: vi.fn(), update: vi.fn() },
       };
 
       (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
@@ -1833,6 +1832,7 @@ describe("sales-invoices route", () => {
             }),
           count: vi.fn().mockResolvedValue(0),
         },
+        paymentAccount: { findUnique: vi.fn(), update: vi.fn() },
       };
 
       (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
@@ -1954,6 +1954,7 @@ describe("sales-invoices route", () => {
             }),
           count: vi.fn().mockResolvedValue(0),
         },
+        paymentAccount: { findUnique: vi.fn(), update: vi.fn() },
       };
 
       (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
@@ -2104,6 +2105,7 @@ describe("sales-invoices route", () => {
           }),
           count: vi.fn().mockResolvedValue(0),
         },
+        paymentAccount: { findUnique: vi.fn(), update: vi.fn() },
       };
 
       (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(
@@ -2196,6 +2198,7 @@ describe("sales-invoices route", () => {
           }),
           count: vi.fn().mockResolvedValue(0),
         },
+        paymentAccount: { findUnique: vi.fn(), update: vi.fn() },
       };
 
       (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(

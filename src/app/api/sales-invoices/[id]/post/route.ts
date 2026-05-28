@@ -514,6 +514,18 @@ export async function POST(
         });
       }
 
+      // --- Update PaymentAccount.balance for cash/mixed payments ---
+      if (
+        lockedInvoice.paymentType !== "CREDIT" &&
+        paid > 0 &&
+        lockedInvoice.paymentAccountId
+      ) {
+        await tx.paymentAccount.update({
+          where: { id: lockedInvoice.paymentAccountId },
+          data: { balance: { increment: paid } },
+        });
+      }
+
       // --- Update invoice to POSTED ---
       const postedInvoice = await tx.invoice.update({
         where: { id },

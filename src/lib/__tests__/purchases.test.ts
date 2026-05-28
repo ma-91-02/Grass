@@ -23,7 +23,7 @@ vi.mock("@/lib/prisma", () => ({
     supplier: { findUnique: vi.fn(), findFirst: vi.fn() },
     warehouse: { findUnique: vi.fn(), findFirst: vi.fn() },
     product: { findMany: vi.fn() },
-    paymentAccount: { findUnique: vi.fn(), findFirst: vi.fn() },
+    paymentAccount: { findUnique: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
     stockMovement: { create: vi.fn() },
     stockBalance: { findUnique: vi.fn() },
     journalEntry: { create: vi.fn() },
@@ -441,6 +441,7 @@ describe("purchases route", () => {
         create: vi.fn().mockResolvedValue({ id: "je1", entryNumber: "JE-001" }),
         count: vi.fn().mockResolvedValue(0),
       },
+      paymentAccount: { findUnique: vi.fn(), update: vi.fn() },
       account: { findFirst: vi.fn() },
       product: { update: vi.fn() },
     };

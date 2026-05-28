@@ -27,6 +27,7 @@ vi.mock("@/lib/prisma", () => ({
     },
     paymentAccount: {
       findUnique: vi.fn(),
+      update: vi.fn(),
     },
     account: {
       findFirst: vi.fn(),
@@ -441,6 +442,7 @@ describe("customer-collections route", () => {
         count: vi.fn().mockResolvedValue(0),
         update: vi.fn().mockResolvedValue({ id: "je1" }),
       },
+      paymentAccount: { findUnique: vi.fn(), update: vi.fn() },
       customerCollection: {
         create: vi.fn().mockResolvedValue({
           id: "col1",
@@ -838,6 +840,7 @@ describe("customer-collections route", () => {
         count: vi.fn().mockResolvedValue(0),
         update: vi.fn().mockResolvedValue({ id: "je1" }),
       },
+      paymentAccount: { findUnique: vi.fn(), update: vi.fn() },
       customerCollection: {
         create: vi.fn().mockResolvedValue({
           id: "col1",
