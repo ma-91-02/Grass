@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import {
   getCurrentUser,
   logAudit,
-  checkDbPermission,
+  requireDbPermission,
   canAccessCompany,
 } from "@/lib/auth";
 import {
@@ -115,7 +115,7 @@ export async function GET() {
   try {
     const user = await getCurrentUser();
     if (!user) return unauthorizedError();
-    if (!(await checkDbPermission(user.userId, PERMISSIONS.PURCHASES_VIEW))) {
+    if (!(await requireDbPermission(user.userId, PERMISSIONS.PURCHASES_VIEW))) {
       return forbiddenError("لا تملك صلاحية عرض فواتير المشتريات");
     }
 
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
   if (!currentUser) return unauthorizedError();
 
   if (
-    !(await checkDbPermission(currentUser.userId, PERMISSIONS.PURCHASES_CREATE))
+    !(await requireDbPermission(currentUser.userId, PERMISSIONS.PURCHASES_CREATE))
   ) {
     return forbiddenError("لا تملك صلاحية إنشاء فاتورة مشتريات");
   }

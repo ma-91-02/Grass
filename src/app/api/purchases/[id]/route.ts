@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import {
   getCurrentUser,
   logAudit,
-  checkDbPermission,
+  requireDbPermission,
   canAccessCompany,
 } from "@/lib/auth";
 import {
@@ -117,13 +117,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) return unauthorizedError();
-    if (!(await checkDbPermission(user.userId, PERMISSIONS.PURCHASES_VIEW))) {
-      return forbiddenError("لا تملك صلاحية عرض فواتير المشتريات");
+    if (!(await requireDbPermission(user.userId, PERMISSIONS.PURCHASES_VIEW))) {
+      return forbiddenError("لا تملك صلاحية عرض فاتورة المشتريات");
     }
 
-    const { id } = await params;
     const invoice = await prisma.purchaseInvoice.findUnique({
       where: { id },
       include: {
@@ -160,7 +160,7 @@ export async function PATCH(
     if (!currentUser) return unauthorizedError();
 
     if (
-      !(await checkDbPermission(currentUser.userId, PERMISSIONS.PURCHASES_EDIT))
+      !(await requireDbPermission(currentUser.userId, PERMISSIONS.PURCHASES_EDIT))
     ) {
       return forbiddenError("لا تملك صلاحية تعديل فاتورة مشتريات");
     }
@@ -329,7 +329,7 @@ export async function DELETE(
     if (!currentUser) return unauthorizedError();
 
     if (
-      !(await checkDbPermission(
+      !(await requireDbPermission(
         currentUser.userId,
         PERMISSIONS.PURCHASES_DELETE,
       ))

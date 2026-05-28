@@ -1638,6 +1638,38 @@
 
 ---
 
+#### Task PH04-FINAL-VERIFY-001
+**Title:** Final Verification For PH-04 Accounting & Ledger Before Moving To PH-05
+**Status:** `DONE`
+**Priority:** CRITICAL
+**Scope:**
+- تدقيق PH-04 كاملة: PROJECT_PROGRESS_TRACKER_AR.md, PH04_GATE_VERIFICATION_AR.md, PH04_REPORT_AR.md, UI_COMPLETION_BACKLOG.md
+- تصنيف البنود المتبقية: ACC-008/009/010 → NOT_REQUIRED_FOR_CURRENT_RELEASE
+- تحديث حالة PH-04 إلى DONE 100% في tracker
+- تحديث التقارير بقرار البوابة النهائي
+**Forbidden:**
+- تنفيذ PH-05
+- تعديل Backend/Frontend/Prisma
+**Acceptance Criteria:**
+- PH-04 أصبحت DONE 100% مع قرار APPROVED FOR PH-05
+- جميع بنود PH-04 إما DONE أو NOT_REQUIRED_FOR_CURRENT_RELEASE
+- لا توجد بنود STILL_REQUIRED
+- 564/564 اختبارات ناجحة
+- typecheck و build ناجحان
+**Required Checks:**
+- `npm run typecheck`
+- `npm run build`
+- `npm test -- --run`
+**Documentation Updates:**
+- `docs/PROJECT_PROGRESS_TRACKER_AR.md`
+- `docs/qa/phase-gates/PH04_GATE_VERIFICATION_AR.md`
+- `docs/phase-reports/PH04_REPORT_AR.md`
+- `docs/api/UI_COMPLETION_BACKLOG.md`
+**Commit Hash:** TBD
+**Date:** 2026-05-28
+
+---
+
 #### Task PH02-COMPLETE-001
 **Title:** Complete Dashboard & Navigation Phase To 100%
 **Status:** `DONE`
@@ -1672,11 +1704,11 @@
 
 | الأولوية | العدد |
 |----------|-------|
-| CRITICAL | 10 |
+| CRITICAL | 11 |
 | HIGH | 7 |
 | MEDIUM | 10 |
 | LOW | 11 |
-| **الإجمالي** | **38** |
+| **الإجمالي** | **39** |
 
 ---
 
@@ -1716,6 +1748,7 @@
 | PH00-GATE-FIX-001 | DONE | 4bec87c | 2026-05-28 |
 | PH01-COMPLETE-001 | DONE | 61facf9 | 2026-05-28 |
 | PH02-COMPLETE-001 | DONE | e74ecc3 | 2026-05-28 |
+| PH04-FINAL-VERIFY-001 | DONE | TBD | 2026-05-28 |
 
 ---
 

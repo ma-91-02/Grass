@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
   let page = parseInt(pageParam || "1", 10);
   let limit = parseInt(limitParam || "50", 10);
   if (Number.isNaN(page) || page < 1) page = 1;
-  if (Number.isNaN(limit) || limit < 1) limit = 1;
+  if (Number.isNaN(limit) || limit < 1) limit = 50;
   if (limit > 200) limit = 200;
 
   if (!accountId) {
