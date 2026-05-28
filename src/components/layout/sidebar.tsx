@@ -53,6 +53,11 @@ const menuItems = [
     icon: DollarSign,
   },
   {
+    title: "المدفوعات",
+    href: "/dashboard/payments",
+    icon: Wallet,
+  },
+  {
     title: "مرتجعات المبيعات",
     href: "/dashboard/sales-returns",
     icon: RotateCcw,

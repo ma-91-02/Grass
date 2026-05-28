@@ -85,7 +85,7 @@
 | روابط Sidebar مباشرة                                                 | 30                                                                              |
 | ملفات الاختبار                                                       | 22                                                                              |
 | test cases / describe / it تقريباً                                   | 621                                                                             |
-| النسبة العامة التقريبية للمشروع المؤسسي                              | 50%                                                                             |
+| النسبة العامة التقريبية للمشروع المؤسسي                              | 53%                                                                             |
 | النسبة التقريبية للنواة القابلة للتجربة بعد تدقيق المبيعات/المشتريات | 61% تقريباً                                                                     |
 | المرحلة الحالية                                                      | تدقيق المشتريات End-to-End قبل التقارير                                         |
 | المهمة التالية الموصى بها                                            | PUR-AUDIT-001 — تدقيق دورة المشتريات كاملة من الإنشاء إلى الأثر المالي والمخزني |
@@ -109,7 +109,7 @@
 - PH-03 (Customers & Suppliers) اكتملت 100% مع gate verification معتمدة.
 - PART-008 (Supplier balances ledger-derived) محظور لحين PH-07.
 - المرحلة التالية المنطقية هي PH-04 (Accounting & Ledger) لتكملة أرصدة الحسابات، سندات القبض/الدفع، والأقفال المالية.
-- PH-04 لديها نسبة إنجاز 58% حالياً مع وجود فجوات في سندات الدفع، سندات التصريف، الأرصدة الافتتاحية، والأقفال المالية.
+- PH-04 لديها نسبة إنجاز 75% حالياً مع وجود فجوات في سندات التصريف، الأرصدة الافتتاحية، والأقفال المالية.
 
 ## 7. جدول المراحل الرئيسي
 
@@ -119,7 +119,7 @@
 | PH-01    | Users & Permissions         | المستخدمون، الأدوار، الصلاحيات، الجلسات                              | DONE        |   100% | نعم                         | نعم                 | تم تدقيق Roles CRUD وpermission coverage     | Roles editor كامل + permission hiding + gate verification |
 | PH-02    | Dashboard & Navigation      | Sidebar، parent pages، navigation coverage، UI binding               | DONE        |   100% | نعم                         | نعم                 | لا توجد مهمة PH-02 متبقية | تم إنجاز NAV-002 إلى NAV-006 بالكامل |
 | PH-03    | Customers & Suppliers       | العملاء، الموردون، الذمم، كشوفات العملاء                             | DONE        |   100% | نعم                         | نعم                 | لا توجد مهمة PH-03 متبقية | تم إكمال PART-007 (Supplier AP/Statement) وتصحيح GAP B/F/H/I. PART-008 محظور لحين PH-07 |
-| PH-04    | Accounting & Ledger         | القيود، دليل الحسابات، posting، العملات، السندات                     | PARTIAL     |     58% | نعم                         | نعم                 | تدقيق السندات غير المنفذة                    | Journals موجودة، vouchers الكاملة غير موجودة                       |
+| PH-04    | Accounting & Ledger         | القيود، دليل الحسابات، posting، العملات، السندات                     | PARTIAL     |     75% | نعم                         | نعم                 | تدقيق السندات غير المنفذة (سندات التصريف والسماح) | Journals موجودة، سندات الدفع مكتملة، عكس القيود محسّن |
 | PH-05    | Inventory Engine            | مواد، مخازن، حركات، أرصدة، تحويلات، تسويات، تقييم                    | PARTIAL     |     62% | نعم                         | نعم                 | تدقيق opening/count/reservation gaps         | لا يوجد inventory count أو reservations كاملة                      |
 | PH-06    | Sales Cycle                 | فواتير بيع، مرتجعات، تحصيل، stock OUT، COGS، AR                      | NEEDS_AUDIT |     76% | نعم                         | نعم                 | Business workflow smoke للمبيعات             | تنفيذ واختبارات قوية لكن يحتاج تجربة runtime                       |
 | PH-07    | Purchases Cycle             | مشتريات، مصاريف، supplier AP، stock IN، returns                      | PARTIAL     |     38% | نعم                         | نعم                 | PUR-AUDIT-001                                | UI/API موجودان لكن posting المالي والمخزني ناقص                    |
@@ -232,12 +232,12 @@
 | ACC-001 | دليل الحسابات                      | Accounting/UI     | DONE    |   100% | نعم     | نعم  | نعم  | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `Account`, `/dashboard/accounts`     | موجود                                                      |
 | ACC-002 | القيود اليومية CRUD                | Accounting/API/UI | DONE    |   100% | نعم     | نعم  | نعم  | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `/api/journal-entries`               | موجود                                                      |
 | ACC-003 | ترحيل القيود اليدوية               | Posting           | DONE    |   100% | نعم     | نعم  | نعم  | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `PostingService.postJournal`         | جيد                                                        |
-| ACC-004 | عكس القيود                         | Posting           | PARTIAL |    50% | نعم     | نعم  | نعم  | نعم | نعم   | نعم  | نعم          | نعم          | لا    | HIGH     | `/api/journal-entries/[id]/reverse`  | ينشئ قيد عكسي DRAFT ويعلم الأصل REVERSED؛ يحتاج audit أعمق |
+| ACC-004 | عكس القيود                         | Posting           | PARTIAL |    50% | نعم     | نعم  | نعم  | نعم | نعم   | نعم  | نعم          | نعم          | لا    | HIGH     | `/api/journal-entries/[id]/reverse`  | POSTED مع reversalEntryId + reversedAt؛ يحتاج audit أعمق |
 | ACC-005 | Currency isolation                 | Accounting        | PARTIAL |    50% | نعم     | جزئي | لا   | لا  | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `CurrencyGuard`, schemas             | مطبق في journal أكثر من كل الوثائق                         |
 | ACC-006 | سند قبض                            | Accounting        | PARTIAL |    50% | نعم     | نعم  | نعم  | نعم | نعم   | نعم  | نعم          | نعم          | لا    | HIGH     | `CustomerCollection`                 | ليس باسم Voucher موحد                                      |
-| ACC-007 | سند دفع                            | Accounting        | TODO    |     0% | لا      | لا   | لا   | لا  | لا    | نعم  | نعم          | نعم          | لا    | HIGH     | Master vouchers                      | غير منفذ                                                   |
-| ACC-008 | سند تصريف / سماح / قيد             | Accounting        | TODO    |     0% | لا      | لا   | لا   | لا  | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | Master vouchers                      | مؤجل                                                       |
-| ACC-009 | أرصدة افتتاحية للحسابات            | Accounting        | TODO    |     0% | لا      | لا   | لا   | لا  | لا    | نعم  | نعم          | نعم          | لا    | HIGH     | Master `account_opening_balances`    | غير موجود في Prisma                                        |
+| ACC-007 | سند دفع                            | Accounting        | DONE    |   100% | نعم     | نعم  | نعم  | نعم | لا    | نعم  | نعم          | نعم          | لا    | HIGH     | `SupplierPayment`, `/api/payments`, `/dashboard/payments/*` | إنشاء + قائمة + صلاحيات + كشف حساب |
+| ACC-008 | سند تصريف / سماح / قيد             | Accounting        | FUTURE  |     0% | لا      | لا   | لا   | لا  | لا    | نعم  | لا           | لا           | نعم   | MEDIUM   | Master vouchers                      | مؤجل — يتطلب multi-currency معقدة |
+| ACC-009 | أرصدة افتتاحية للحسابات            | Accounting        | TODO    |     0% | لا      | لا   | لا   | لا  | لا    | نعم  | نعم          | نعم          | نعم   | HIGH     | Master `account_opening_balances`    | مؤجل — يتطلب معالج إعداد محاسبي |
 | ACC-010 | Financial closing                  | Accounting        | FUTURE  |     0% | لا      | لا   | لا   | لا  | لا    | نعم  | لا           | لا           | نعم   | MEDIUM   | docs/accounting/FINANCIAL_CLOSING.md | Enterprise future                                          |
 | ACC-011 | Immutable posted financial records | Accounting        | PARTIAL |    50% | نعم     | نعم  | جزئي | لا  | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | journal/sales guards                 | يحتاج منع شامل لكل posted source                           |
 

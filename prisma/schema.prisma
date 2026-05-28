@@ -39,8 +39,9 @@ model User {
   createdSuppliers Supplier[] @relation("SupplierCreatedBy")
   createdStockTransfers StockTransfer[]
   createdStockAdjustments StockAdjustment[]
-  collectionsCreated CustomerCollection[] @relation("CollectionCreatedBy")
-  createdSalesReturns SalesReturn[] @relation("SalesReturnCreatedBy")
+  collectionsCreated       CustomerCollection[] @relation("CollectionCreatedBy")
+  createdSalesReturns      SalesReturn[] @relation("SalesReturnCreatedBy")
+  supplierPaymentsCreated  SupplierPayment[] @relation("SupplierPaymentCreatedBy")
 
   @@index([companyId])
 }
@@ -231,8 +232,9 @@ model Supplier {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  accounts      SupplierAccount[]
+  accounts         SupplierAccount[]
   purchaseInvoices PurchaseInvoice[]
+  supplierPayments SupplierPayment[]
 
   @@unique([companyId, code])
   @@index([companyId])
@@ -531,6 +533,7 @@ model CustomerCollection {
   currency         Currency @default(IQD)
   collectionDate   DateTime @default(now())
   journalEntryId   String?
+  journalEntry     JournalEntry? @relation(fields: [journalEntryId], references: [id])
   notes            String?
   createdById      String?
   createdBy        User?    @relation("CollectionCreatedBy", fields: [createdById], references: [id])
@@ -540,6 +543,32 @@ model CustomerCollection {
   @@index([companyId])
   @@index([customerId])
   @@index([invoiceId])
+}
+
+model SupplierPayment {
+  id                String          @id @default(cuid())
+  companyId         String?
+  company           Company?        @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  supplierId        String
+  supplier          Supplier        @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  purchaseInvoiceId String?
+  purchaseInvoice   PurchaseInvoice? @relation(fields: [purchaseInvoiceId], references: [id], onDelete: SetNull)
+  paymentAccountId  String?
+  paymentAccount    PaymentAccount? @relation(fields: [paymentAccountId], references: [id], onDelete: SetNull)
+  amount            Decimal
+  currency          Currency        @default(IQD)
+  paymentDate       DateTime        @default(now())
+  journalEntryId    String?
+  journalEntry      JournalEntry?   @relation(fields: [journalEntryId], references: [id])
+  notes             String?
+  createdById       String?
+  createdBy         User?           @relation("SupplierPaymentCreatedBy", fields: [createdById], references: [id])
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([companyId])
+  @@index([supplierId])
+  @@index([purchaseInvoiceId])
 }
 
 model PurchaseInvoice {
@@ -571,6 +600,7 @@ model PurchaseInvoice {
 
   items                  PurchaseInvoiceItem[]
   expenses               PurchaseExpense[]
+  supplierPayments       SupplierPayment[]
 
   @@index([companyId])
 }
@@ -614,12 +644,15 @@ model PaymentAccount {
   currency  Currency @default(IQD)
   balance   Decimal  @default(0)
   isActive  Boolean  @default(true)
+  accountId String?
+  account   Account? @relation(fields: [accountId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  purchaseInvoices PurchaseInvoice[]
-  invoices Invoice[]
+  purchaseInvoices   PurchaseInvoice[]
+  invoices           Invoice[]
   customerCollections CustomerCollection[]
+  supplierPayments   SupplierPayment[]
 }
 
 model StockMovement {
@@ -787,10 +820,11 @@ model Company {
   customers     Customer[]
   suppliers     Supplier[]
   customerCollections CustomerCollection[]
-  salesReturns    SalesReturn[]
-  stockMovements StockMovement[]
-  stockTransfers StockTransfer[]
-  stockAdjustments StockAdjustment[]
+  supplierPayments     SupplierPayment[]
+  salesReturns         SalesReturn[]
+  stockMovements       StockMovement[]
+  stockTransfers       StockTransfer[]
+  stockAdjustments     StockAdjustment[]
 
   @@index([code])
 }
@@ -860,7 +894,8 @@ model Account {
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
-  journalLines JournalLine[]
+  journalLines   JournalLine[]
+  paymentAccounts PaymentAccount[]
 
   @@unique([companyId, code])
   @@index([companyId, parentId])
@@ -885,12 +920,18 @@ model JournalEntry {
   sourceId             String?
   status               JournalEntryStatus @default(DRAFT)
   postedAt             DateTime?
+  reversalEntryId      String?            @unique
+  reversalEntry        JournalEntry?      @relation("JournalReversal", fields: [reversalEntryId], references: [id])
+  reversedEntries      JournalEntry[]     @relation("JournalReversal")
+  reversedAt           DateTime?
   createdById          String?
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 
-  lines             JournalLine[]
-  postingOperations PostingOperation[]
+  lines                JournalLine[]
+  postingOperations    PostingOperation[]
+  customerCollections  CustomerCollection[]
+  supplierPayments     SupplierPayment[]
 
   @@unique([companyId, entryNumber])
   @@index([companyId, fiscalPeriodId])

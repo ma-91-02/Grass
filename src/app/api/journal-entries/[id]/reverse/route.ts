@@ -111,7 +111,11 @@ export async function POST(
 
     await tx.journalEntry.update({
       where: { id: original.id },
-      data: { status: "REVERSED" as never },
+      data: {
+        status: "REVERSED" as never,
+        reversalEntryId: created.id,
+        reversedAt: reversalDate,
+      },
     });
 
     return created;

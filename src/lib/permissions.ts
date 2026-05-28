@@ -110,4 +110,6 @@ export const PERMISSIONS = {
   JOURNALS_CREATE: "journals.create",
   JOURNALS_POST: "journals.post",
   JOURNALS_REVERSE: "journals.reverse",
+  PAYMENTS_VIEW: "payments.view",
+  PAYMENTS_CREATE: "payments.create",
 } as const;
