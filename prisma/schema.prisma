@@ -217,8 +217,10 @@ model CustomerAccount {
 
 model Supplier {
   id            String   @id @default(cuid())
+  companyId     String?
+  company       Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   name          String
-  code          String   @unique
+  code          String
   phone         String?
   address       String?
   governorate   String?
@@ -231,6 +233,9 @@ model Supplier {
 
   accounts      SupplierAccount[]
   purchaseInvoices PurchaseInvoice[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
 }
 
 model SupplierAccount {
@@ -780,6 +785,7 @@ model Company {
   units         Unit[]
   warehouses    Warehouse[]
   customers     Customer[]
+  suppliers     Supplier[]
   customerCollections CustomerCollection[]
   salesReturns    SalesReturn[]
   stockMovements StockMovement[]

@@ -85,7 +85,7 @@
 | روابط Sidebar مباشرة                                                 | 30                                                                              |
 | ملفات الاختبار                                                       | 22                                                                              |
 | test cases / describe / it تقريباً                                   | 621                                                                             |
-| النسبة العامة التقريبية للمشروع المؤسسي                              | 48%                                                                             |
+| النسبة العامة التقريبية للمشروع المؤسسي                              | 50%                                                                             |
 | النسبة التقريبية للنواة القابلة للتجربة بعد تدقيق المبيعات/المشتريات | 61% تقريباً                                                                     |
 | المرحلة الحالية                                                      | تدقيق المشتريات End-to-End قبل التقارير                                         |
 | المهمة التالية الموصى بها                                            | PUR-AUDIT-001 — تدقيق دورة المشتريات كاملة من الإنشاء إلى الأثر المالي والمخزني |
@@ -102,26 +102,14 @@
 
 المرحلة الحالية حسب المقارنة بين الخطة والكود هي:
 
-**Phase 7 — Purchases End-to-End Audit & Posting Hardening**
+**Phase 4 — Accounting & Ledger**
 
 السبب:
 
-- `docs/api/API_REGISTRY.md` يوضح أن endpoints المشتريات مربوطة بالواجهة.
-- توجد صفحات:
-  - `/dashboard/purchases`
-  - `/dashboard/purchases/new`
-  - `/dashboard/purchases/[id]`
-  - `/dashboard/purchases/[id]/edit`
-- يوجد Prisma model: `PurchaseInvoice`, `PurchaseInvoiceItem`, `PurchaseExpense`.
-- يوجد PDF: `/api/purchases/{id}/pdf`.
-- لكن الخطة الأصلية تتطلب purchase posting، supplier AP، stock IN posted movement، valuation layers، purchase returns، وimmutability.
-- الكود الحالي ينشئ `StockMovement` بحالة افتراضية `DRAFT` ولا يطبق `StockBalanceService.applyPostedMovement`.
-- الكود الحالي يحدث `paymentAccount.balance` مباشرة داخل purchase routes.
-- لا يوجد `POST /api/purchases/{id}/post`.
-- لا يوجد model أو API أو UI لـ `PurchaseReturn`.
-- لا توجد اختبارات مشتريات في `src/lib/__tests__`.
-
-لذلك لا يُنصح بالانتقال إلى التقارير المالية قبل تدقيق المشتريات وتحديد فجواتها بدقة.
+- PH-03 (Customers & Suppliers) اكتملت 100% مع gate verification معتمدة.
+- PART-008 (Supplier balances ledger-derived) محظور لحين PH-07.
+- المرحلة التالية المنطقية هي PH-04 (Accounting & Ledger) لتكملة أرصدة الحسابات، سندات القبض/الدفع، والأقفال المالية.
+- PH-04 لديها نسبة إنجاز 58% حالياً مع وجود فجوات في سندات الدفع، سندات التصريف، الأرصدة الافتتاحية، والأقفال المالية.
 
 ## 7. جدول المراحل الرئيسي
 
@@ -130,7 +118,7 @@
 | PH-00    | Foundation Core             | Auth, RBAC, Company, Branch, Fiscal Periods, COA, Journal foundation | DONE        |    100% | نعم                         | نعم                 | لا توجد مهمة PH-00 متبقية؛ التالي PUR-AUDIT-001 | تم اعتماد PH-00 بعد PH00-GATE-FIX-001 |
 | PH-01    | Users & Permissions         | المستخدمون، الأدوار، الصلاحيات، الجلسات                              | DONE        |   100% | نعم                         | نعم                 | تم تدقيق Roles CRUD وpermission coverage     | Roles editor كامل + permission hiding + gate verification |
 | PH-02    | Dashboard & Navigation      | Sidebar، parent pages، navigation coverage، UI binding               | DONE        |   100% | نعم                         | نعم                 | لا توجد مهمة PH-02 متبقية | تم إنجاز NAV-002 إلى NAV-006 بالكامل |
-| PH-03    | Customers & Suppliers       | العملاء، الموردون، الذمم، كشوفات العملاء                             | PARTIAL     |     80% | نعم                         | نعم                 | تدقيق supplier AP مع المشتريات               | العملاء أقوى من الموردين بسبب collections/receivables              |
+| PH-03    | Customers & Suppliers       | العملاء، الموردون، الذمم، كشوفات العملاء                             | DONE        |   100% | نعم                         | نعم                 | لا توجد مهمة PH-03 متبقية | تم إكمال PART-007 (Supplier AP/Statement) وتصحيح GAP B/F/H/I. PART-008 محظور لحين PH-07 |
 | PH-04    | Accounting & Ledger         | القيود، دليل الحسابات، posting، العملات، السندات                     | PARTIAL     |     58% | نعم                         | نعم                 | تدقيق السندات غير المنفذة                    | Journals موجودة، vouchers الكاملة غير موجودة                       |
 | PH-05    | Inventory Engine            | مواد، مخازن، حركات، أرصدة، تحويلات، تسويات، تقييم                    | PARTIAL     |     62% | نعم                         | نعم                 | تدقيق opening/count/reservation gaps         | لا يوجد inventory count أو reservations كاملة                      |
 | PH-06    | Sales Cycle                 | فواتير بيع، مرتجعات، تحصيل، stock OUT، COGS، AR                      | NEEDS_AUDIT |     76% | نعم                         | نعم                 | Business workflow smoke للمبيعات             | تنفيذ واختبارات قوية لكن يحتاج تجربة runtime                       |
@@ -234,8 +222,8 @@
 | PART-004 | Customer statement               | Accounting/API    | PARTIAL |    50% | نعم     | نعم | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `/api/customers/{id}/statement`                           | ليس ledger-line source كاملاً   |
 | PART-005 | Customer collections             | Accounting/API/UI | PARTIAL |    50% | نعم     | نعم | نعم | نعم | نعم   | نعم  | نعم          | نعم          | لا    | CRITICAL | `/api/customer-collections`, tests                        | جيد لكنه يحتاج runtime workflow |
 | PART-006 | Suppliers CRUD                   | API/UI            | DONE    |   100% | نعم     | نعم | نعم | نعم | جزئي  | نعم  | نعم          | نعم          | لا    | HIGH     | `Supplier`, `/api/suppliers`, `/dashboard/suppliers/[id]` | موجود                           |
-| PART-007 | Supplier AP statement            | Accounting        | TODO    |     0% | جزئي    | لا  | لا  | لا  | لا    | نعم  | نعم          | نعم          | لا    | HIGH     | Master + SupplierAccount                                  | لم يوجد API كشف مورد            |
-| PART-008 | Supplier balances ledger-derived | Accounting        | TODO    |     0% | جزئي    | لا  | لا  | لا  | لا    | نعم  | نعم          | نعم          | لا    | HIGH     | `SupplierAccount` موجود                                   | لا يوجد AP posting للمشتريات    |
+| PART-007 | Supplier AP statement            | Accounting        | DONE    |   100% | نعم     | نعم | نعم | نعم  | لا    | نعم  | نعم          | نعم          | لا    | HIGH     | `/api/suppliers/{id}/payables`, `/api/suppliers/{id}/statement` | Supplier payables + statement APIs مكتملة |
+| PART-008 | Supplier balances ledger-derived | Accounting        | BLOCKED |     0% | جزئي    | لا  | لا  | لا  | لا    | نعم  | نعم          | نعم          | لا    | HIGH     | `SupplierAccount` موجود                                   | محظور — يتطلب PH-07 (Purchase posting engine) |
 
 ### PH-04 — Accounting & Ledger
 

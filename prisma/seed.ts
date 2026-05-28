@@ -585,8 +585,8 @@ async function main() {
   });
 
   // Demo supplier
-  const existingSupplier = await prisma.supplier.findUnique({
-    where: { code: "DEMO" },
+  const existingSupplier = await prisma.supplier.findFirst({
+    where: { code: "DEMO", companyId: company.id },
   });
   if (!existingSupplier) {
     await prisma.supplier.create({

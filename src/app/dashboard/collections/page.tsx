@@ -8,7 +8,6 @@ import { Printer } from "lucide-react";
 
 interface Collection {
   id: string;
-  collectionNumber: string;
   collectionDate: string;
   customerName: string | null;
   invoiceNumber: string | null;
@@ -46,16 +45,20 @@ export default function CollectionsPage() {
   const filtered = collections.filter(
     (c) =>
       !search ||
-      c.collectionNumber?.includes(search) ||
+      c.id?.includes(search) ||
       c.customerName?.includes(search) ||
       c.invoiceNumber?.includes(search),
   );
 
   const columns: Column<Collection>[] = [
     {
-      key: "collectionNumber",
+      key: "id",
       header: "رقم التحصيل",
-      render: (c) => <span className="font-medium">{c.collectionNumber}</span>,
+      render: (c) => (
+        <span className="font-medium text-xs font-mono">
+          {c.id.slice(-8)}
+        </span>
+      ),
     },
     {
       key: "collectionDate",

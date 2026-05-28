@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, logAudit, checkPermission } from "@/lib/auth";
+import {
+  getCurrentUser,
+  logAudit,
+  requireDbPermission,
+  canAccessCompany,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -24,7 +29,22 @@ export async function GET() {
     const user = await getCurrentUser();
     if (!user) return unauthorizedError();
 
+    if (!(await requireDbPermission(user.userId, PERMISSIONS.SUPPLIERS_VIEW))) {
+      return forbiddenError("لا تملك صلاحية عرض الموردين");
+    }
+
+    const userRecord = await prisma.user.findUnique({
+      where: { id: user.userId },
+      select: { companyId: true },
+    });
+
+    const where: Record<string, unknown> = {};
+    if (userRecord?.companyId) {
+      where.companyId = userRecord.companyId;
+    }
+
     const suppliers = await prisma.supplier.findMany({
+      where,
       include: { accounts: true },
       orderBy: { createdAt: "desc" },
     });
@@ -37,6 +57,7 @@ export async function GET() {
       address: s.address,
       notes: s.notes,
       isActive: s.isActive,
+      companyId: s.companyId,
       accounts: s.accounts.map((a) => ({
         id: a.id,
         supplierId: a.supplierId,
@@ -57,7 +78,9 @@ export async function POST(request: NextRequest) {
   const currentUser = await getCurrentUser();
   if (!currentUser) return unauthorizedError();
 
-  if (!checkPermission(currentUser, PERMISSIONS.SUPPLIERS_CREATE)) {
+  if (
+    !(await requireDbPermission(currentUser.userId, PERMISSIONS.SUPPLIERS_CREATE))
+  ) {
     return forbiddenError("لا تملك صلاحية إنشاء مورد");
   }
 
@@ -65,7 +88,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = supplierSchema.parse(body);
 
-    const count = await prisma.supplier.count();
+    const userRecord = await prisma.user.findUnique({
+      where: { id: currentUser.userId },
+      select: { companyId: true },
+    });
+    const companyId = userRecord?.companyId;
+
+    const count = await prisma.supplier.count({
+      where: companyId ? { companyId } : {},
+    });
     const code = `SUP-${String(count + 1).padStart(5, "0")}`;
 
     const supplier = await prisma.supplier.create({
@@ -75,6 +106,7 @@ export async function POST(request: NextRequest) {
         phone: parsed.phone || null,
         address: parsed.address || null,
         notes: parsed.notes || null,
+        companyId: companyId || null,
         createdById: currentUser.userId,
         accounts: {
           create: [
@@ -103,6 +135,7 @@ export async function POST(request: NextRequest) {
         address: supplier.address,
         notes: supplier.notes,
         isActive: supplier.isActive,
+        companyId: supplier.companyId,
         accounts: supplier.accounts.map((a) => ({
           id: a.id,
           supplierId: a.supplierId,

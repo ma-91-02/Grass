@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, logAudit, checkPermission } from "@/lib/auth";
+import {
+  getCurrentUser,
+  logAudit,
+  requireDbPermission,
+  canAccessCompany,
+} from "@/lib/auth";
 import {
   successResponse,
   errorResponse,
@@ -22,11 +27,15 @@ const supplierSchema = z.object({
 });
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await getCurrentUser();
   if (!user) return unauthorizedError();
+
+  if (!(await requireDbPermission(user.userId, PERMISSIONS.SUPPLIERS_VIEW))) {
+    return forbiddenError("لا تملك صلاحية عرض الموردين");
+  }
 
   const { id } = await params;
   const supplier = await prisma.supplier.findUnique({
@@ -34,6 +43,13 @@ export async function GET(
     include: { accounts: true },
   });
   if (!supplier) return notFoundError();
+
+  if (
+    supplier.companyId &&
+    !(await canAccessCompany(user, supplier.companyId))
+  ) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
 
   return successResponse({
     id: supplier.id,
@@ -43,6 +59,7 @@ export async function GET(
     address: supplier.address,
     notes: supplier.notes,
     isActive: supplier.isActive,
+    companyId: supplier.companyId,
     accounts: supplier.accounts.map((a) => ({
       id: a.id,
       supplierId: a.supplierId,
@@ -60,13 +77,22 @@ export async function PATCH(
   const currentUser = await getCurrentUser();
   if (!currentUser) return unauthorizedError();
 
-  if (!checkPermission(currentUser, PERMISSIONS.SUPPLIERS_EDIT)) {
+  if (
+    !(await requireDbPermission(currentUser.userId, PERMISSIONS.SUPPLIERS_EDIT))
+  ) {
     return forbiddenError("لا تملك صلاحية تعديل مورد");
   }
 
   const { id } = await params;
   const existing = await prisma.supplier.findUnique({ where: { id } });
   if (!existing) return notFoundError();
+
+  if (
+    existing.companyId &&
+    !(await canAccessCompany(currentUser, existing.companyId))
+  ) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
 
   try {
     const body = await request.json();
@@ -148,16 +174,28 @@ export async function DELETE(
   const currentUser = await getCurrentUser();
   if (!currentUser) return unauthorizedError();
 
-  if (!checkPermission(currentUser, PERMISSIONS.SUPPLIERS_DELETE)) {
+  if (
+    !(await requireDbPermission(
+      currentUser.userId,
+      PERMISSIONS.SUPPLIERS_DELETE,
+    ))
+  ) {
     return forbiddenError("لا تملك صلاحية حذف مورد");
   }
 
+  const { id } = await params;
+
+  const supplier = await prisma.supplier.findUnique({ where: { id } });
+  if (!supplier) return notFoundError();
+
+  if (
+    supplier.companyId &&
+    !(await canAccessCompany(currentUser, supplier.companyId))
+  ) {
+    return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
+  }
+
   try {
-    const { id } = await params;
-
-    const supplier = await prisma.supplier.findUnique({ where: { id } });
-    if (!supplier) return notFoundError();
-
     await prisma.supplierAccount.deleteMany({ where: { supplierId: id } });
     await prisma.supplier.delete({ where: { id } });
 
