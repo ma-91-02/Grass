@@ -180,6 +180,10 @@ export async function PATCH(
       return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
     }
 
+    if (existing.status !== "DRAFT") {
+      return errorResponse("يمكن تعديل الفواتير المسودة فقط", 403);
+    }
+
     const body = await request.json();
     const parsed = purchaseUpdateSchema.parse(body);
     const errors: string[] = [];
@@ -223,30 +227,6 @@ export async function PATCH(
     const remaining = totalCost - parsed.paid;
 
     const result = await prisma.$transaction(async (tx) => {
-      const oldPaid = Number(existing.paid);
-      const oldPaymentAccountId = existing.paymentAccountId;
-
-      if (
-        existing.paymentMethod !== "CREDIT" &&
-        oldPaid > 0 &&
-        oldPaymentAccountId
-      ) {
-        const oldAccount = await tx.paymentAccount.findUnique({
-          where: { id: oldPaymentAccountId },
-        });
-        if (oldAccount) {
-          const reversedBalance = Number(oldAccount.balance) - oldPaid;
-          await tx.paymentAccount.update({
-            where: { id: oldPaymentAccountId },
-            data: { balance: reversedBalance },
-          });
-        }
-      }
-
-      await tx.stockMovement.deleteMany({
-        where: { referenceType: "PURCHASE_INVOICE", referenceId: id },
-      });
-
       await tx.purchaseExpense.deleteMany({
         where: { purchaseInvoiceId: id },
       });
@@ -319,53 +299,6 @@ export async function PATCH(
         },
       });
 
-      for (const item of parsed.items) {
-        await tx.stockMovement.create({
-          data: {
-            companyId: existing.companyId,
-            productId: item.productId,
-            warehouseId: parsed.warehouseId,
-            movementType: "IN",
-            quantity: item.quantity,
-            referenceType: "PURCHASE_INVOICE",
-            referenceId: id,
-          },
-        });
-      }
-
-      for (const item of parsed.items) {
-        const product = await tx.product.findUnique({
-          where: { id: item.productId },
-          select: { purchasePrice: true },
-        });
-        if (
-          product &&
-          Number(item.purchasePrice) > Number(product.purchasePrice)
-        ) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { purchasePrice: item.purchasePrice },
-          });
-        }
-      }
-
-      if (
-        parsed.paymentMethod !== "CREDIT" &&
-        parsed.paid > 0 &&
-        parsed.paymentAccountId
-      ) {
-        const account = await tx.paymentAccount.findUnique({
-          where: { id: parsed.paymentAccountId },
-        });
-        if (account) {
-          const newBalance = Number(account.balance) + parsed.paid;
-          await tx.paymentAccount.update({
-            where: { id: parsed.paymentAccountId },
-            data: { balance: newBalance },
-          });
-        }
-      }
-
       return invoice;
     });
 
@@ -419,32 +352,15 @@ export async function DELETE(
       return forbiddenError("لا يمكنك الوصول إلى هذه الشركة");
     }
 
-    await prisma.$transaction(async (tx) => {
-      await tx.stockMovement.deleteMany({
-        where: { referenceType: "PURCHASE_INVOICE", referenceId: id },
-      });
+    if (invoice.status !== "DRAFT") {
+      return errorResponse("يمكن حذف الفواتير المسودة فقط", 403);
+    }
 
+    await prisma.$transaction(async (tx) => {
       await tx.purchaseExpense.deleteMany({ where: { purchaseInvoiceId: id } });
       await tx.purchaseInvoiceItem.deleteMany({
         where: { purchaseInvoiceId: id },
       });
-
-      if (
-        invoice.paymentMethod !== "CREDIT" &&
-        Number(invoice.paid) > 0 &&
-        invoice.paymentAccountId
-      ) {
-        const account = await tx.paymentAccount.findUnique({
-          where: { id: invoice.paymentAccountId },
-        });
-        if (account) {
-          const newBalance = Number(account.balance) - Number(invoice.paid);
-          await tx.paymentAccount.update({
-            where: { id: invoice.paymentAccountId },
-            data: { balance: newBalance },
-          });
-        }
-      }
 
       await tx.purchaseInvoice.delete({ where: { id } });
     });

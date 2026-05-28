@@ -127,6 +127,7 @@ export default function PurchaseDetailPage() {
     const map: Record<string, { label: string; color: string }> = {
       DRAFT: { label: "مسودة", color: "bg-gray-100 text-gray-700" },
       COMPLETED: { label: "مكتملة", color: "bg-green-100 text-green-700" },
+      POSTED: { label: "مرحلة", color: "bg-green-100 text-green-700" },
       CANCELLED: { label: "ملغاة", color: "bg-red-100 text-red-700" },
     };
     const s = map[status] || { label: status, color: "bg-gray-100" };

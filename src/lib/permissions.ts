@@ -91,6 +91,7 @@ export const PERMISSIONS = {
   PURCHASES_CREATE: "purchases.create",
   PURCHASES_EDIT: "purchases.edit",
   PURCHASES_DELETE: "purchases.delete",
+  PURCHASES_POST: "purchases.post",
   PURCHASES_PRINT: "purchases.print",
   PAYMENT_ACCOUNTS_VIEW: "paymentAccounts.view",
   PAYMENT_ACCOUNTS_MANAGE: "paymentAccounts.manage",

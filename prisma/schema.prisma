@@ -594,7 +594,11 @@ model PurchaseInvoice {
   remaining              Decimal              @default(0)
   paymentAccountId       String?
   paymentAccount         PaymentAccount?      @relation(fields: [paymentAccountId], references: [id])
-  status                 String               @default("COMPLETED")
+  status                 String               @default("DRAFT")
+  postedAt               DateTime?
+  postedById             String?
+  journalEntryId         String?              @unique
+  journalEntry           JournalEntry?        @relation("PurchaseInvoiceJournal", fields: [journalEntryId], references: [id])
   createdById            String?
   createdAt              DateTime             @default(now())
   updatedAt              DateTime             @updatedAt
@@ -933,6 +937,7 @@ model JournalEntry {
   postingOperations    PostingOperation[]
   customerCollections  CustomerCollection[]
   supplierPayments     SupplierPayment[]
+  purchaseInvoices     PurchaseInvoice[]     @relation("PurchaseInvoiceJournal")
 
   @@unique([companyId, entryNumber])
   @@index([companyId, fiscalPeriodId])

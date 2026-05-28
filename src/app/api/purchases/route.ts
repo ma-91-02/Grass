@@ -219,7 +219,7 @@ export async function POST(request: NextRequest) {
     const totalCost = subtotal + totalExpensesInInvoiceCurrency;
     const remaining = totalCost - parsed.paid;
 
-    const result = await prisma.$transaction(async (tx) => {
+      const result = await prisma.$transaction(async (tx) => {
       const invoice = await tx.purchaseInvoice.create({
         data: {
           companyId: userCompanyId,
@@ -240,7 +240,7 @@ export async function POST(request: NextRequest) {
           paid: parsed.paid,
           remaining,
           paymentAccountId: parsed.paymentAccountId || null,
-          status: "COMPLETED",
+          status: "DRAFT",
           createdById: currentUser.userId,
           items: {
             create: parsed.items.map((item) => {
@@ -287,53 +287,6 @@ export async function POST(request: NextRequest) {
           paymentAccount: { select: { name: true } },
         },
       });
-
-      for (const item of parsed.items) {
-        await tx.stockMovement.create({
-          data: {
-            companyId: invoice.companyId,
-            productId: item.productId,
-            warehouseId: parsed.warehouseId,
-            movementType: "IN",
-            quantity: item.quantity,
-            referenceType: "PURCHASE_INVOICE",
-            referenceId: invoice.id,
-          },
-        });
-      }
-
-      for (const item of parsed.items) {
-        const product = await tx.product.findUnique({
-          where: { id: item.productId },
-          select: { purchasePrice: true },
-        });
-        if (
-          product &&
-          Number(item.purchasePrice) > Number(product.purchasePrice)
-        ) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { purchasePrice: item.purchasePrice },
-          });
-        }
-      }
-
-      if (
-        parsed.paymentMethod !== "CREDIT" &&
-        parsed.paid > 0 &&
-        parsed.paymentAccountId
-      ) {
-        const account = await tx.paymentAccount.findUnique({
-          where: { id: parsed.paymentAccountId },
-        });
-        if (account) {
-          const newBalance = Number(account.balance) + parsed.paid;
-          await tx.paymentAccount.update({
-            where: { id: parsed.paymentAccountId },
-            data: { balance: newBalance },
-          });
-        }
-      }
 
       return invoice;
     });
