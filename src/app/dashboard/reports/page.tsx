@@ -1,9 +1,23 @@
 "use client";
 
-import { BarChart3, Search, Package, FileText } from "lucide-react";
+import { BarChart3, Search, Package, FileText, BookOpen, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 const reportLinks = [
+  {
+    title: "ميزان المراجعة",
+    desc: "عرض أرصدة الحسابات مع إجمالي الديون والائتمانات",
+    href: "/dashboard/reports/trial-balance",
+    icon: BookOpen,
+    color: "text-purple-600",
+  },
+  {
+    title: "ملخص المبيعات",
+    desc: "تقرير إجمالي المبيعات حسب الفترة",
+    href: "/dashboard/reports/sales-summary",
+    icon: TrendingUp,
+    color: "text-blue-600",
+  },
   {
     title: "تقييم المخزون",
     desc: "تقرير تقييم المخزون حسب المواد والمخازن",
