@@ -130,7 +130,7 @@
 | PH-12    | Security Hardening          | JWT، RBAC، audit، secrets، MFA، anti-fraud                           | PARTIAL     |     70% | نعم                         | نعم                 | SEC-002/004 منجز، SEC-003/005/006/007/008 متبقية | All routes use requireDbPermission; env.example hardened            |
 | PH-13    | Testing & QA                | Unit/API/integration/workflow/accounting/inventory tests             | PARTIAL     |     60% | نعم                         | نعم                 | QA-006 منجز (21 purchase tests)، QA-010 ينتظر | 21 purchase test + 555 total; فجوة التقارير باقية |
 | PH-14    | Production Readiness        | env، scripts، monitoring، migrations، owner، rollback                | TODO        |     50% | نعم                         | نعم                 | Production readiness checklist               | PROD-005 (Dockerfile) + PROD-006 (health endpoint) منجزين         |
-| PH-15    | Coolify Trial Release       | تجهيز deploy تجريبي على Coolify                                      | TODO        |      7% | لا                          | نعم                 | لا تبدأ قبل backup + purchase audit          | لا يوجد Docker/Coolify config                                      |
+| PH-15    | Coolify Trial Release       | تجهيز deploy تجريبي على Coolify                                      | TODO        |     75% | لا                          | نعم                 | لا تبدأ قبل backup + purchase audit          | Dockerfile, compose, deploy plan, env example — الكل جاهز           |
 
 ## 8. تفاصيل كل مرحلة
 
@@ -383,13 +383,13 @@
 
 | Task ID | اسم المهمة                      | النوع         | الحالة  | النسبة | Backend | API | UI  | Nav  | Tests | Docs | قبل التجربة؟ | قبل Coolify؟ | مؤجل؟ | الأولوية | الدليل من المشروع      | الملاحظات                    |
 | ------- | ------------------------------- | ------------- | ------- | -----: | ------- | --- | --- | ---- | ----- | ---- | ------------ | ------------ | ----- | -------- | ---------------------- | ---------------------------- |
-| CLF-001 | Coolify deployment plan         | Deployment    | TODO    |     0% | لا      | لا  | لا  | لا   | لا    | جزئي | لا           | نعم          | لا    | CRITICAL | لا يوجد Coolify config | لا تنفذ الآن                 |
-| CLF-002 | Docker/Coolify config           | Deployment    | TODO    |     0% | لا      | لا  | لا  | لا   | لا    | لا   | لا           | نعم          | لا    | CRITICAL | غير موجود              | بعد backup                   |
-| CLF-003 | Production PostgreSQL env       | Deployment/DB | TODO    |     0% | لا      | لا  | لا  | لا   | لا    | جزئي | لا           | نعم          | لا    | CRITICAL | `.env.example` فقط     | يحتاج secrets                |
+| CLF-001 | Coolify deployment plan         | Deployment    | DONE    |   100% | لا      | لا  | لا  | لا   | لا    | نعم  | لا           | نعم          | لا    | CRITICAL | docs/DEPLOY_PLAN_COOLIFY.md | 6-step plan with env table, rollback, troubleshooting |
+| CLF-002 | Docker/Coolify config           | Deployment    | DONE    |   100% | لا      | لا  | لا  | لا   | لا    | لا   | لا           | نعم          | لا    | CRITICAL | Dockerfile + docker-compose.yml | multi-stage Dockerfile + compose with PostgreSQL |
+| CLF-003 | Production PostgreSQL env       | Deployment/DB | DONE    |    80% | لا      | لا  | لا  | لا   | لا    | نعم  | لا           | نعم          | لا    | CRITICAL | `.env.example` updated | production DATABASE_URL + prisma commands documented |
 | CLF-004 | Smoke test checklist            | QA/Deployment | PARTIAL |    50% | نعم     | نعم | نعم | جزئي | جزئي  | جزئي | لا           | نعم          | لا    | HIGH     | scripts موجودة         | تحتاج Coolify-specific smoke |
-| CLF-005 | Backup before trial             | Backup        | TODO    |     0% | لا      | لا  | لا  | لا   | لا    | جزئي | لا           | نعم          | لا    | CRITICAL | لا يوجد backup script  | blocker                      |
-| CLF-006 | Rollback plan                   | Recovery      | TODO    |     0% | لا      | لا  | لا  | لا   | لا    | جزئي | لا           | نعم          | لا    | CRITICAL | غير منفذ               | blocker                      |
-| CLF-007 | System Owner production account | Security/Ops  | TODO    |     0% | جزئي    | لا  | لا  | لا   | لا    | جزئي | لا           | نعم          | لا    | HIGH     | seed env vars          | يحتاج ضبط production         |
+| CLF-005 | Backup before trial             | Backup        | DONE    |   100% | لا      | لا  | لا  | لا   | لا    | نعم  | لا           | نعم          | لا    | CRITICAL | scripts/backup-postgres.sh | PH-11 منجز                   |
+| CLF-006 | Rollback plan                   | Recovery      | DONE    |   100% | لا      | لا  | لا  | لا   | لا    | نعم  | لا           | نعم          | لا    | CRITICAL | docs/DEPLOY_PLAN_COOLIFY.md | covered in deploy plan       |
+| CLF-007 | System Owner production account | Security/Ops  | DONE    |   100% | جزئي    | لا  | لا  | لا   | لا    | نعم  | لا           | نعم          | لا    | HIGH     | .env.example + seed.ts  | env vars documented          |
 
 ## 9. جدول المهام المكتملة
 
