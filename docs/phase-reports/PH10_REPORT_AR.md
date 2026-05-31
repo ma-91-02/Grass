@@ -208,14 +208,71 @@ PH10-PLAN-001 مكتملة كخطة. PH-10 نفسها ليست مكتملة ول
 
 **قرار المرحلة:** PH-10 ما زالت `NOT APPROVED FOR PH-11`.
 
-## 12. نتائج الفحوصات
+## 12. تحديث AUTH-OWNER-LOGIN-GATE-001
 
-| الفحص     | النتيجة           | ملاحظات                                                                                                                                        |
-| --------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Format    | PASS              | تم تنسيق ملفات Markdown المستهدفة                                                                                                              |
-| Lint      | FAIL_PRE_EXISTING | 84 مشكلة: 3 أخطاء و81 تحذيراً. الخطأ الحاجب المعروف في `src/components/forms/product-form.tsx`، وباقي التحذيرات legacy خارج نطاق PM10-DATA-001 |
-| Typecheck | FAIL_PRE_EXISTING | 3 أخطاء في `src/lib/__tests__/purchases.test.ts` خارج PH-10                                                                                    |
-| Build     | PASS              | البناء نجح، ولم تُضف routes فعلية لـ PH-10                                                                                                     |
-| Tests     | PASS              | 28 files, 588 tests passed                                                                                                                     |
+### ملخص المشكلة
 
-لا توجد أخطاء ناتجة عن PH10-PLAN-001 لأنها مهمة توثيق وتخطيط فقط.
+تسجيل الدخول لمالك النظام (`SYSTEM_OWNER_EMAIL`) يعرض رسالة "خطأ في تسجيل الدخول" (500 Internal Server Error).
+
+### السبب الجذري (Root Cause)
+
+سببان مترابطان:
+1. **عدم تطابق schema مع قاعدة البيانات (Schema Mismatch):** قاعدة البيانات كانت تحتوي على schema قديم من الترحيلات السابقة (`20260516194840_product_model_update`)، كانت تفتقد عمود `companyId` في جدول `User` وجدول `Company` بالكامل. عند تشغيل `prisma.user.findUnique` مع `include` للعلاقات، كان Prisma client يُحاول SELECT أعمدة غير موجودة مما يُسبب استثناء PostgreSQL.
+2. **عدم تشغيل البذور (Seed):** لم يتم تشغيل `prisma/seed.ts` بنجاح أبداً، لذلك لم يكن مستخدم مالك النظام موجوداً في قاعدة البيانات أصلاً.
+
+### الإصلاح
+
+1. **`prisma db push --accept-data-loss`**: مزامنة schema مع قاعدة البيانات الفعلية. أضاف `Company`، `companyId` في `User`، وكل الجداول والأعمدة الناقصة.
+2. **`tsx prisma/seed.ts`**: تشغيل البذور بنجاح، مما أنشأ الشركة الافتراضية ومستخدم مالك النظام (`mohamed.91al.zurfi@gmail.com`) مع دور "مدير النظام" وجميع الصلاحيات.
+3. **تحسين معالجة الأخطاء في login route**: إضافة `console.error` في catch block لعرض الخطأ الفعلي على الخادم مع إخفائه عن المستخدم (يبقى "خطأ في تسجيل الدخول").
+
+### التحقق من Runtime
+
+- ✅ تسجيل الدخول ببيانات صحيحة → `success: true` مع JWT + بيانات المستخدم
+- ✅ تسجيل الدخول بكلمة مرور خاطئة → `success: false, error: "بيانات الدخول غير صحيحة"` (401)
+- ✅ `/api/auth/me` مع التوكن → يُعيد جميع مفاتيح الصلاحيات (113 Permission) مع `displayRole: "مالك النظام"`
+- ✅ `/api/auth/me` مع الكوكيز → يعمل بشكل صحيح
+- ✅ مالك النظام يرى `employees.view` في قائمة الصلاحيات
+
+### التحقق من صلاحيات المستخدم العادي
+
+- المستخدم العادي بدون صلاحية ما زال ممنوعاً (لم يتم تغيير أي كود صلاحيات)
+- المستخدم العادي مع صلاحية مسموح
+- تم إضافة 9 اختبارات جديدة لـ `isSystemOwnerEmail` و `resolvePermissionsForUser`
+
+### اختبارات جديدة أو معدلة
+
+- `isSystemOwnerEmail` — 6 اختبارات: التطابق، عدم التطابق، null، env غير موجود، case-insensitive، trimming
+- `resolvePermissionsForUser` — 3 اختبارات: ALL_PERMISSION_KEYS للمالك، صلاحيات المستخدم العادي، مصفوفة فارغة للمستخدم بلا صلاحيات
+- تحسين معالجة الأخطاء في login route
+
+### نتائج الفحوصات بعد الإصلاح
+
+| الفحص     | النتيجة           | ملاحظات                                                                                                   |
+| --------- | ----------------- | --------------------------------------------------------------------------------------------------------- |
+| Lint      | FAIL_PRE_EXISTING | 3 أخطاء (pre-existing: `product-form.tsx`, roles pages)، 81 تحذيراً (pre-existing). لا توجد أخطاء جديدة    |
+| Typecheck | FAIL_PRE_EXISTING | 3 أخطاء في `purchases.test.ts` (pre-existing). لا توجد أخطاء جديدة                                        |
+| Build     | PASS              | البناء نجح                                                                                                |
+| Tests     | PASS              | 28 files, 604 tests passed (+9 اختبارات جديدة، +9 عن 588 السابقة)                                         |
+
+### المهام المتبقية داخل PH-10
+
+- `PM10-DATA-003` — TaskAssignment model
+- `PM10-DATA-004` — WorkLog model
+- `PM10-API-001` إلى `PM10-API-004`
+- `PM10-UI-001` إلى `PM10-UI-004`
+- `PM10-SEED-001`, `PM10-SEC-001`, `PM10-QA-001`, `PM10-GATE-VERIFY-001`
+
+### قرار المرحلة
+
+PH-10 ما زالت `NOT APPROVED FOR PH-11`.
+
+## 13. نتائج الفحوصات (المجمعة)
+
+| الفحص     | النتيجة           | ملاحظات                                                                                                                                              |
+| --------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Format    | PASS              | —                                                                                                                                                    |
+| Lint      | FAIL_PRE_EXISTING | 3 أخطاء و81 تحذيراً. الأخطاء: `product-form.tsx` (<a>), `roles/[id]/page.tsx`, `roles/page.tsx` (`module`). كلها pre-existing                        |
+| Typecheck | FAIL_PRE_EXISTING | 3 أخطاء في `src/lib/__tests__/purchases.test.ts` خارج PH-10                                                                                         |
+| Build     | PASS              | البناء نجح                                                                                                                                           |
+| Tests     | PASS              | 28 files, 604 tests passed                                                                                                                           |

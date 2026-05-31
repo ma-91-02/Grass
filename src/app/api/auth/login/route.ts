@@ -69,7 +69,8 @@ export async function POST(request: NextRequest) {
       },
       token: result.token,
     });
-  } catch {
+  } catch (err) {
+    console.error("Login route error:", err);
     return errorResponse("خطأ في تسجيل الدخول", 500);
   }
 }

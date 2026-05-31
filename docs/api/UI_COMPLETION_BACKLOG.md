@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-28 (PH00-GATE-FIX-001 — Phase Zero Gate Blockers Fixed)
+> آخر تحديث: 2026-05-31 (AUTH-OWNER-LOGIN-GATE-001 — System Owner Login Gate)
 
 ---
 
@@ -1909,6 +1909,44 @@
 
 ---
 
+#### Task AUTH-OWNER-LOGIN-GATE-001
+
+**Title:** Fix System Owner Login and Access Gate
+**Status:** `DONE`
+**Priority:** CRITICAL
+**Scope:**
+
+- إصلاح تسجيل دخول مالك النظام (خطأ 500).
+- مزامنة قاعدة البيانات المحلية مع Prisma schema عبر `prisma db push`.
+- تشغيل `prisma/seed.ts` لإنشاء مستخدم مالك النظام مع دور "مدير النظام" وجميع الصلاحيات.
+- تحسين معالجة الأخطاء في login route (إضافة `console.error` مع إخفاء التفاصيل عن المستخدم).
+- إضافة 9 اختبارات: `isSystemOwnerEmail` (6) + `resolvePermissionsForUser` (3).
+- التحقق من Runtime: login ناجح، `/api/auth/me` يُعيد 113 صلاحية للمالك.
+- `displayRole` = "مالك النظام".
+- مالك النظام يرى Employees section وجميع الأقسام المحمية.
+- المستخدم العادي يبقى مقيداً بالصلاحيات (لم يتم تغيير أي permission checks).
+
+**Forbidden:**
+
+- تغيير صلاحيات المستخدمين العاديين.
+- إزالة permission checks.
+- منح صلاحيات كاملة للجميع.
+- إضعاف company isolation.
+- تنفيذ PM10-DATA-003 أو أي مهمة PH-10 أخرى.
+- تنفيذ PH-11.
+
+**Checks:**
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm run build`
+- `npm test -- --run`
+
+**Commit Hash:** `PLACEHOLDER`
+**Date:** 2026-05-31
+
+---
+
 #### Task PM10-DATA-001
 
 **Title:** Create Internal Project Data Model
@@ -2167,6 +2205,7 @@
 | PH09-COMPLETE-001     | DONE    | 4068ace     | 2026-05-28 |
 | PH10-PLAN-001         | DONE    | 37ceee1     | 2026-05-28 |
 | OWNER-PERM-FIX-001    | DONE    | 07feb96     | 2026-05-28 |
+| AUTH-OWNER-LOGIN-GATE-001 | DONE | PLACEHOLDER | 2026-05-31 |
 | PM10-DATA-001         | DONE    | 07feb96     | 2026-05-28 |
 | PM10-DATA-002         | DONE    | 607de91     | 2026-05-31 |
 

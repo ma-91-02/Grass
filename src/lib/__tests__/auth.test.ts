@@ -6,14 +6,15 @@ import {
   canBypassPermissions,
   checkPermission,
   checkRole,
+  isSystemOwnerEmail,
   resolvePermissionsForUser,
 } from "@/lib/auth";
+import { PERMISSIONS, ALL_PERMISSION_KEYS } from "@/lib/permissions";
 import {
   successResponse,
   errorResponse,
   forbiddenError,
 } from "@/lib/api-response";
-import { PERMISSIONS } from "@/lib/permissions";
 import type { TokenPayload } from "@/lib/auth";
 
 describe("hashPassword and verifyPassword", () => {
@@ -352,5 +353,83 @@ describe("forbiddenError", () => {
     const res = forbiddenError();
     const body = await res.json();
     expect(body.error).toBe("لا تملك الصلاحية");
+  });
+});
+
+describe("isSystemOwnerEmail", () => {
+  const originalOwner = process.env["SYSTEM_OWNER_EMAIL"];
+
+  afterEach(() => {
+    process.env["SYSTEM_OWNER_EMAIL"] = originalOwner;
+  });
+
+  it("returns true when email matches SYSTEM_OWNER_EMAIL", () => {
+    process.env["SYSTEM_OWNER_EMAIL"] = "owner@test.com";
+    expect(isSystemOwnerEmail("owner@test.com")).toBe(true);
+  });
+
+  it("returns false when email does not match", () => {
+    process.env["SYSTEM_OWNER_EMAIL"] = "owner@test.com";
+    expect(isSystemOwnerEmail("other@test.com")).toBe(false);
+  });
+
+  it("returns false when email is null", () => {
+    process.env["SYSTEM_OWNER_EMAIL"] = "owner@test.com";
+    expect(isSystemOwnerEmail(null)).toBe(false);
+  });
+
+  it("returns false when SYSTEM_OWNER_EMAIL is not set", () => {
+    delete process.env["SYSTEM_OWNER_EMAIL"];
+    expect(isSystemOwnerEmail("owner@test.com")).toBe(false);
+  });
+
+  it("is case-insensitive", () => {
+    process.env["SYSTEM_OWNER_EMAIL"] = "Owner@Test.Com";
+    expect(isSystemOwnerEmail("owner@test.com")).toBe(true);
+    expect(isSystemOwnerEmail("OWNER@TEST.COM")).toBe(true);
+  });
+
+  it("trims whitespace", () => {
+    process.env["SYSTEM_OWNER_EMAIL"] = "  owner@test.com  ";
+    expect(isSystemOwnerEmail("owner@test.com")).toBe(true);
+  });
+});
+
+describe("resolvePermissionsForUser", () => {
+  const originalOwner = process.env["SYSTEM_OWNER_EMAIL"];
+
+  afterEach(() => {
+    process.env["SYSTEM_OWNER_EMAIL"] = originalOwner;
+  });
+
+  it("returns ALL_PERMISSION_KEYS for System Owner", () => {
+    process.env["SYSTEM_OWNER_EMAIL"] = "owner@test.com";
+    const result = resolvePermissionsForUser({
+      email: "owner@test.com",
+      permissions: [],
+    });
+    expect(result).toEqual(ALL_PERMISSION_KEYS);
+    expect(result).toContain(PERMISSIONS.EMPLOYEES_VIEW);
+    expect(result).toContain(PERMISSIONS.USERS_VIEW);
+    expect(result).toContain(PERMISSIONS.COMPANIES_VIEW);
+  });
+
+  it("returns user permissions for normal user", () => {
+    process.env["SYSTEM_OWNER_EMAIL"] = "owner@test.com";
+    const result = resolvePermissionsForUser({
+      email: "normal@test.com",
+      permissions: ["users.view", "users.edit"],
+    });
+    expect(result).toEqual(["users.view", "users.edit"]);
+    expect(result).not.toContain(PERMISSIONS.EMPLOYEES_VIEW);
+  });
+
+  it("returns empty array for normal user with no permissions", () => {
+    process.env["SYSTEM_OWNER_EMAIL"] = "owner@test.com";
+    const result = resolvePermissionsForUser({
+      email: "normal@test.com",
+      permissions: [],
+    });
+    expect(result).toEqual([]);
   });
 });

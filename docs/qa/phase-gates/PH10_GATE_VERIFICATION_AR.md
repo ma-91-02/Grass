@@ -1,9 +1,9 @@
 # بوابة تخطيط المرحلة العاشرة — PH-10: Internal Project Management
 
 - **تاريخ التحقق:** 2026-05-28
-- **آخر تحديث:** 2026-05-31 (PM10-DATA-002)
-- **Task:** PH10-PLAN-001 + OWNER-PERM-FIX-001 + PM10-DATA-001 + PM10-DATA-002
-- **نوع التحقق:** Planning Gate فقط، وليس Gate اعتماد تنفيذ.
+- **آخر تحديث:** 2026-05-31 (AUTH-OWNER-LOGIN-GATE-001)
+- **Task:** PH10-PLAN-001 + OWNER-PERM-FIX-001 + PM10-DATA-001 + PM10-DATA-002 + AUTH-OWNER-LOGIN-GATE-001
+- **نوع التحقق:** Planning Gate + Auth/Login Verification.
 - **القرار:** PH-10 NOT APPROVED FOR PH-11 حتى تنفيذ المهام واجتياز `PH10-GATE-VERIFY-001`.
 
 ## 1. Gate Summary
@@ -23,6 +23,11 @@
 | Testing Gate           | NOT_STARTED    | tests مخططة فقط                                        | BLOCKS_PHASE_COMPLETION     |
 | Documentation Gate     | PASS           | tracker/report/gate/backlog/roadmap محدثة              | PLAN_APPROVED               |
 | Coolify Readiness Gate | NOT_APPLICABLE | لا deployment في PH10-PLAN-001                         | NOT_APPLICABLE              |
+| Auth/Login Gate        | PASS           | مالك النظام يسجل دخول بنجاح؛ الخطأ 500 اختفى بعد إصلاح schema و seed | AUTH-OWNER-LOGIN-GATE-001_DONE |
+| System Owner Full Access Gate | PASS    | `/api/auth/me` يرجع ALL_PERMISSION_KEYS للمالك؛ Sidebar يعرض كل الأقسام | AUTH-OWNER-LOGIN-GATE-001_DONE |
+| Normal User Restriction Gate  | PASS    | المستخدم العادي بدون صلاحية ممنوع؛ مع صلاحية مسموح (اختبارات + كود) | AUTH-OWNER-LOGIN-GATE-001_DONE |
+| Sidebar Visibility Gate | EXISTING_SCOPE | الـ Sidebar لا يخفي أي عناصر حسب الصلاحية (سلوك قائم). جميع العناصر مرئية للجميع. | OUT_OF_SCOPE |
+| Runtime Verification Gate | PASS      | تحقق curl: login ناجح، /api/auth/me ناجح، جميع الصلاحيات موجودة | AUTH-OWNER-LOGIN-GATE-001_DONE |
 
 ## 2. Task Gate Matrix
 
@@ -32,6 +37,7 @@
 | OWNER-PERM-FIX-001   | DONE   | PASS          | مالك النظام يتجاوز الصلاحيات مركزياً والمستخدم العادي يبقى مقيداً |
 | PM10-DATA-001        | DONE   | PASS          | Project model منفذ ومربوط بالشركة مع migration                    |
 | PM10-DATA-002        | DONE   | PASS          | ProjectTask model + migration + tests                             |
+| AUTH-OWNER-LOGIN-GATE-001 | DONE | PASS        | إصلاح login لمالك النظام: schema sync + seed + error logging + 9 اختبارات جديدة |
 | PM10-DATA-003        | TODO   | BLOCKS        | Assignment model غير منفذ                                         |
 | PM10-DATA-004        | TODO   | BLOCKS        | WorkLog model غير منفذ                                            |
 | PM10-API-001         | TODO   | BLOCKS        | Projects API غير منفذ                                             |
