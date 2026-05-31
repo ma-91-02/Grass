@@ -1942,7 +1942,7 @@
 - `npm run build`
 - `npm test -- --run`
 
-**Commit Hash:** `PLACEHOLDER`
+**Commit Hash:** `1041839`
 **Date:** 2026-05-31
 
 ---
@@ -2205,7 +2205,7 @@
 | PH09-COMPLETE-001     | DONE    | 4068ace     | 2026-05-28 |
 | PH10-PLAN-001         | DONE    | 37ceee1     | 2026-05-28 |
 | OWNER-PERM-FIX-001    | DONE    | 07feb96     | 2026-05-28 |
-| AUTH-OWNER-LOGIN-GATE-001 | DONE | PLACEHOLDER | 2026-05-31 |
+| AUTH-OWNER-LOGIN-GATE-001 | DONE | 1041839 | 2026-05-31 |
 | PM10-DATA-001         | DONE    | 07feb96     | 2026-05-28 |
 | PM10-DATA-002         | DONE    | 607de91     | 2026-05-31 |
 
