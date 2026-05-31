@@ -1948,13 +1948,20 @@
 #### Task PM10-DATA-002
 
 **Title:** Create Internal Project Task Data Model
-**Status:** `TODO`
+**Status:** `DONE`
 **Priority:** HIGH
 **Scope:** إضافة ProjectTask model مع status/priority/dueDate وعلاقة project.
 **Forbidden:** أي أثر ledger/stock/payroll.
+**Result:**
+- ProjectTask model مع companyId، projectId، code، title، description، status، priority، startDate، dueDate، completedAt، parentTaskId.
+- ProjectTaskStatus enum: TODO, IN_PROGRESS, REVIEW, BLOCKED, DONE, CANCELLED.
+- ProjectTaskPriority enum: LOW, MEDIUM, HIGH, URGENT.
+- Unique: `@@unique([projectId, code])`.
+- Indexes: companyId، projectId، status، dueDate، parentTaskId.
+- Migration: `20260528210000_add_project_task_model`.
+- اختبارات model محدثة.
+- لا TaskAssignment، لا WorkLog، لا API، لا UI.
 **Commit Hash:**
-
----
 
 #### Task PM10-DATA-003
 
@@ -2161,6 +2168,7 @@
 | PH10-PLAN-001         | DONE    | 37ceee1     | 2026-05-28 |
 | OWNER-PERM-FIX-001    | DONE    | 07feb96     | 2026-05-28 |
 | PM10-DATA-001         | DONE    | 07feb96     | 2026-05-28 |
+| PM10-DATA-002         | DONE    | (pending)   | 2026-05-31 |
 
 ---
 

@@ -1,7 +1,8 @@
 # بوابة تخطيط المرحلة العاشرة — PH-10: Internal Project Management
 
 - **تاريخ التحقق:** 2026-05-28
-- **Task:** PH10-PLAN-001 + OWNER-PERM-FIX-001 + PM10-DATA-001
+- **آخر تحديث:** 2026-05-31 (PM10-DATA-002)
+- **Task:** PH10-PLAN-001 + OWNER-PERM-FIX-001 + PM10-DATA-001 + PM10-DATA-002
 - **نوع التحقق:** Planning Gate فقط، وليس Gate اعتماد تنفيذ.
 - **القرار:** PH-10 NOT APPROVED FOR PH-11 حتى تنفيذ المهام واجتياز `PH10-GATE-VERIFY-001`.
 
@@ -12,8 +13,9 @@
 | Scope Gate             | PASS           | `PH10_REPORT_AR.md` يحدد النطاق                        | PLAN_APPROVED               |
 | No Payroll Gate        | PASS           | الحضور والرواتب خارج النطاق صراحة                      | APPROVED                    |
 | Architecture Gate      | PASS_PLANNED   | فصل API/UI/Data/Security موثق                          | IMPLEMENTATION_REQUIRED     |
-| Data Model Gate        | NOT_STARTED    | لا توجد models بعد                                     | BLOCKS_PHASE_COMPLETION     |
+| Data Model Gate        | PARTIAL        | ProjectTask model منفذ، TaskAssignment و WorkLog باقيان | BLOCKS_PHASE_COMPLETION     |
 | Project Model Gate     | PASS           | `Project` model + migration                            | PM10-DATA-001_DONE          |
+| ProjectTask Model Gate | PASS           | `ProjectTask` model + migration + tests                | PM10-DATA-002_DONE          |
 | Backend/API Gate       | NOT_STARTED    | endpoints مخططة فقط                                    | BLOCKS_PHASE_COMPLETION     |
 | UI Gate                | NOT_STARTED    | الصفحات مخططة فقط                                      | BLOCKS_PHASE_COMPLETION     |
 | Navigation Gate        | NOT_STARTED    | Sidebar link مخطط فقط                                  | BLOCKS_PHASE_COMPLETION     |
@@ -29,7 +31,7 @@
 | PH10-PLAN-001        | DONE   | PASS          | تم توثيق النطاق والمهام والحدود                                   |
 | OWNER-PERM-FIX-001   | DONE   | PASS          | مالك النظام يتجاوز الصلاحيات مركزياً والمستخدم العادي يبقى مقيداً |
 | PM10-DATA-001        | DONE   | PASS          | Project model منفذ ومربوط بالشركة مع migration                    |
-| PM10-DATA-002        | TODO   | BLOCKS        | ProjectTask model غير منفذ                                        |
+| PM10-DATA-002        | DONE   | PASS          | ProjectTask model + migration + tests                             |
 | PM10-DATA-003        | TODO   | BLOCKS        | Assignment model غير منفذ                                         |
 | PM10-DATA-004        | TODO   | BLOCKS        | WorkLog model غير منفذ                                            |
 | PM10-API-001         | TODO   | BLOCKS        | Projects API غير منفذ                                             |
@@ -91,6 +93,23 @@
 | APIs/UI          | PASS_SCOPE | لم تُنفذ عمداً لأنها خارج PM10-DATA-001                     |
 | Demo data        | PASS_SCOPE | لم تُنشأ بيانات تجريبية؛ مؤجلة إلى `PM10-SEED-001`          |
 
+## 4.3 تحقق PM10-DATA-002
+
+| البند                   | النتيجة    | الدليل                                                       |
+| ----------------------- | ---------- | ------------------------------------------------------------ |
+| ProjectTask model       | PASS       | `prisma/schema.prisma` يحتوي `model ProjectTask`             |
+| Company isolation       | PASS       | `companyId` إلزامي + `@@index([companyId])`                  |
+| Project scope           | PASS       | `projectId` إلزامي + `@@unique([projectId, code])`           |
+| Task status/priority    | PASS       | `ProjectTaskStatus` + `ProjectTaskPriority` enums            |
+| Parent-child tasks      | PASS       | `parentTaskId` + self-relation `TaskHierarchy`               |
+| Migration               | PASS       | `20260528210000_add_project_task_model`                      |
+| Forbidden models        | PASS       | لم يتم إنشاء `TaskAssignment` أو `WorkLog`                   |
+| APIs/UI                 | PASS_SCOPE | لم تُنفذ عمداً — خارج PM10-DATA-002                          |
+| Permission keys         | PASS_SCOPE | لم تُضف — ستُضاف مع API                                      |
+| Demo data               | PASS_SCOPE | لم تُنشأ — مؤجلة إلى `PM10-SEED-001`                         |
+| System Owner regression | PASS       | سلوك مالك النظام لم يتغير — التجاوز باقٍ في `auth.ts`        |
+| Tests                   | PASS       | اختبارات `internal-project-model.test.ts` محدثة               |
+
 ## 5. القرار النهائي
 
 **PH10-PLAN-001 APPROVED**
@@ -99,9 +118,9 @@
 
 **PM10-DATA-001 DONE**
 
-**PH-10 NOT APPROVED FOR PH-11**
+**PM10-DATA-002 DONE**
 
-المرحلة أصبحت جاهزة للتنفيذ التدريجي، لكنها ليست مكتملة ولا يجوز الانتقال إلى PH-11 بناءً على التخطيط فقط.
+**PH-10 NOT APPROVED FOR PH-11**
 
 ## 6. نتائج الفحوصات
 

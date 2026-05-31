@@ -46,6 +46,8 @@ model User {
   managedProjects         Project[]            @relation("ProjectManager")
   createdProjects         Project[]            @relation("ProjectCreatedBy")
   updatedProjects         Project[]            @relation("ProjectUpdatedBy")
+  createdTasks            ProjectTask[]        @relation("TaskCreatedBy")
+  updatedTasks            ProjectTask[]        @relation("TaskUpdatedBy")
 
   @@index([companyId])
 }
@@ -126,6 +128,22 @@ enum ProjectStatus {
 }
 
 enum ProjectPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ProjectTaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  BLOCKED
+  DONE
+  CANCELLED
+}
+
+enum ProjectTaskPriority {
   LOW
   MEDIUM
   HIGH
@@ -851,6 +869,7 @@ model Company {
   stockAdjustments    StockAdjustment[]
   employees           Employee[]
   projects            Project[]
+  projectTasks        ProjectTask[]
 
   @@index([code])
 }
@@ -917,10 +936,44 @@ model Project {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
+  tasks           ProjectTask[]
+
   @@unique([companyId, code])
   @@index([companyId])
   @@index([companyId, status])
   @@index([managerUserId])
+}
+
+model ProjectTask {
+  id            String              @id @default(cuid())
+  companyId     String
+  company       Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  projectId     String
+  project       Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  code          String
+  title         String
+  description   String?
+  status        ProjectTaskStatus   @default(TODO)
+  priority      ProjectTaskPriority @default(MEDIUM)
+  startDate     DateTime?
+  dueDate       DateTime?
+  completedAt   DateTime?
+  parentTaskId  String?
+  parentTask    ProjectTask?        @relation("TaskHierarchy", fields: [parentTaskId], references: [id])
+  childTasks    ProjectTask[]       @relation("TaskHierarchy")
+  createdById   String?
+  createdBy     User?               @relation("TaskCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById   String?
+  updatedBy     User?               @relation("TaskUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@unique([projectId, code])
+  @@index([companyId])
+  @@index([projectId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([parentTaskId])
 }
 
 model FiscalPeriod {
