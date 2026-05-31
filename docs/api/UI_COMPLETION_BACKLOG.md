@@ -1961,7 +1961,7 @@
 - Migration: `20260528210000_add_project_task_model`.
 - اختبارات model محدثة.
 - لا TaskAssignment، لا WorkLog، لا API، لا UI.
-**Commit Hash:**
+**Commit Hash:** `607de91`
 
 #### Task PM10-DATA-003
 
@@ -2168,7 +2168,7 @@
 | PH10-PLAN-001         | DONE    | 37ceee1     | 2026-05-28 |
 | OWNER-PERM-FIX-001    | DONE    | 07feb96     | 2026-05-28 |
 | PM10-DATA-001         | DONE    | 07feb96     | 2026-05-28 |
-| PM10-DATA-002         | DONE    | (pending)   | 2026-05-31 |
+| PM10-DATA-002         | DONE    | 607de91     | 2026-05-31 |
 
 ---
 
