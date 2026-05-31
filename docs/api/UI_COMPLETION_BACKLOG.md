@@ -2008,7 +2008,7 @@
 **Priority:** MEDIUM
 **Scope:** ربط المهام بالموظفين باستخدام Employee foundation.
 **Forbidden:** اعتبار الإسناد حضوراً أو راتباً.
-**Commit Hash:** pending_commit
+**Commit Hash:** 63a7ac0
 
 ---
 
@@ -2019,7 +2019,7 @@
 **Priority:** MEDIUM
 **Scope:** تسجيل وقت عمل على مهمة فقط.
 **Forbidden:** Attendance, overtime, payroll posting.
-**Commit Hash:** pending_commit
+**Commit Hash:** 63a7ac0
 
 ---
 
@@ -2030,7 +2030,7 @@
 **Priority:** HIGH
 **Scope:** 5 endpoints: GET/POST /internal-projects + GET/PATCH/DELETE /[id] مع Zod وpermissions وcompany isolation وaudit.
 **Forbidden:** UI أو models إضافية خارج النطاق.
-**Commit Hash:** pending_commit
+**Commit Hash:** 63a7ac0
 
 ---
 
@@ -2041,7 +2041,7 @@
 **Priority:** HIGH
 **Scope:** 6 endpoints: tasks list/create + task CRUD + status change مع state validation.
 **Forbidden:** Payroll/Attendance/ledger writes.
-**Commit Hash:** pending_commit
+**Commit Hash:** 63a7ac0
 
 ---
 
@@ -2052,7 +2052,7 @@
 **Priority:** MEDIUM
 **Scope:** POST assignments + DELETE task-assignments/[id] — إسناد وإلغاء إسناد المهام للموظفين.
 **Forbidden:** تعديل Employee payroll أو attendance.
-**Commit Hash:** pending_commit
+**Commit Hash:** 63a7ac0
 
 ---
 
@@ -2063,7 +2063,7 @@
 **Priority:** MEDIUM
 **Scope:** POST/PATCH/DELETE — إضافة/تعديل/حذف سجلات وقت عمل على مهمة.
 **Forbidden:** تحويل الوقت إلى راتب أو حضور.
-**Commit Hash:** pending_commit
+**Commit Hash:** 63a7ac0
 
 ---
 
@@ -2074,7 +2074,7 @@
 **Priority:** HIGH
 **Scope:** `/dashboard/internal-projects` مع Arabic RTL وloading/error/empty states + CreateProjectDialog.
 **Forbidden:** تعديل UI مراحل أخرى.
-**Commit Hash:** pending_commit
+**Commit Hash:** 63a7ac0
 
 ---
 
@@ -2085,7 +2085,7 @@
 **Priority:** HIGH
 **Scope:** تفاصيل المشروع والمهام والتعيينات وسجلات العمل.
 **Forbidden:** Payroll/attendance widgets.
-**Commit Hash:** pending_commit
+**Commit Hash:** 63a7ac0
 
 ---
 
@@ -2096,7 +2096,7 @@
 **Priority:** MEDIUM
 **Scope:** CreateTaskDialog + TaskStatusDropdown + AssignmentSection + WorkLogSection.
 **Forbidden:** أي زر ميت أو silent failure.
-**Commit Hash:** pending_commit
+**Commit Hash:** 63a7ac0
 
 ---
 
@@ -2107,7 +2107,7 @@
 **Priority:** MEDIUM
 **Scope:** `/dashboard/internal-projects/my-tasks` مع fltering حسب الحالة.
 **Forbidden:** اعتبارها attendance.
-**Commit Hash:** pending_commit
+**Commit Hash:** 63a7ac0
 
 ---
 
@@ -2118,7 +2118,7 @@
 **Priority:** MEDIUM
 **Scope:** 17 permission keys + seed data آمنة.
 **Forbidden:** بيانات حقيقية أو secrets.
-**Commit Hash:** pending_commit
+**Commit Hash:** 63a7ac0
 
 ---
 
@@ -2129,7 +2129,7 @@
 **Priority:** HIGH
 **Scope:** 17 permissions + audit لكل write + company isolation.
 **Forbidden:** bypass permissions أو silent failures.
-**Commit Hash:** pending_commit
+**Commit Hash:** 63a7ac0
 
 ---
 
@@ -2140,7 +2140,7 @@
 **Priority:** HIGH
 **Scope:** model tests لـ TaskAssignment و WorkLog ضمن internal-project-model.test.ts — 605 tests total.
 **Forbidden:** fake tests أو اختبارات لا تتحقق من السلوك.
-**Commit Hash:** pending_commit
+**Commit Hash:** 63a7ac0
 
 ---
 
@@ -2151,7 +2151,7 @@
 **Priority:** CRITICAL
 **Scope:** اعتماد PH-10 بعد التنفيذ — build ناجح، 605 tests، lint/typecheck pre-existing ACCEPTED_RISK.
 **Forbidden:** اعتماد المرحلة قبل اكتمال API/UI/tests/docs.
-**Commit Hash:** pending_commit
+**Commit Hash:** 63a7ac0
 
 | الأولوية     | العدد  |
 | ------------ | ------ |
@@ -2208,20 +2208,20 @@
 | AUTH-OWNER-LOGIN-GATE-001 | DONE | 1041839 | 2026-05-31 |
 | PM10-DATA-001         | DONE    | 07feb96     | 2026-05-28 |
 | PM10-DATA-002         | DONE    | 607de91     | 2026-05-31 |
-| PM10-DATA-003         | DONE    | pending_commit | 2026-05-31 |
-| PM10-DATA-004         | DONE    | pending_commit | 2026-05-31 |
-| PM10-API-001          | DONE    | pending_commit | 2026-05-31 |
-| PM10-API-002          | DONE    | pending_commit | 2026-05-31 |
-| PM10-API-003          | DONE    | pending_commit | 2026-05-31 |
-| PM10-API-004          | DONE    | pending_commit | 2026-05-31 |
-| PM10-UI-001           | DONE    | pending_commit | 2026-05-31 |
-| PM10-UI-002           | DONE    | pending_commit | 2026-05-31 |
-| PM10-UI-003           | DONE    | pending_commit | 2026-05-31 |
-| PM10-UI-004           | DONE    | pending_commit | 2026-05-31 |
-| PM10-SEED-001         | DONE    | pending_commit | 2026-05-31 |
-| PM10-SEC-001          | DONE    | pending_commit | 2026-05-31 |
-| PM10-QA-001           | DONE    | pending_commit | 2026-05-31 |
-| PM10-GATE-VERIFY-001  | DONE    | pending_commit | 2026-05-31 |
+| PM10-DATA-003         | DONE    | 63a7ac0 | 2026-05-31 |
+| PM10-DATA-004         | DONE    | 63a7ac0 | 2026-05-31 |
+| PM10-API-001          | DONE    | 63a7ac0 | 2026-05-31 |
+| PM10-API-002          | DONE    | 63a7ac0 | 2026-05-31 |
+| PM10-API-003          | DONE    | 63a7ac0 | 2026-05-31 |
+| PM10-API-004          | DONE    | 63a7ac0 | 2026-05-31 |
+| PM10-UI-001           | DONE    | 63a7ac0 | 2026-05-31 |
+| PM10-UI-002           | DONE    | 63a7ac0 | 2026-05-31 |
+| PM10-UI-003           | DONE    | 63a7ac0 | 2026-05-31 |
+| PM10-UI-004           | DONE    | 63a7ac0 | 2026-05-31 |
+| PM10-SEED-001         | DONE    | 63a7ac0 | 2026-05-31 |
+| PM10-SEC-001          | DONE    | 63a7ac0 | 2026-05-31 |
+| PM10-QA-001           | DONE    | 63a7ac0 | 2026-05-31 |
+| PM10-GATE-VERIFY-001  | DONE    | 63a7ac0 | 2026-05-31 |
 
 ---
 
