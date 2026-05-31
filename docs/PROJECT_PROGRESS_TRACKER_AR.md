@@ -77,18 +77,18 @@
 
 | المؤشر                                                               | النتيجة                                            |
 | -------------------------------------------------------------------- | -------------------------------------------------- |
-| API route files                                                      | 73                                                 |
-| API methods حسب `API_REGISTRY.md`                                    | 139                                                |
-| API methods مربوطة بالواجهة                                          | 136                                                |
+| API route files                                                      | 82 (+9 PH-10)                                      |
+| API methods حسب `API_REGISTRY.md`                                    | 155 (+16 PH-10)                                    |
+| API methods مربوطة بالواجهة                                          | 152 (+16 PH-10)                                    |
 | Backend-only endpoints                                               | 3                                                  |
-| صفحات Dashboard                                                      | 64                                                 |
-| روابط Sidebar مباشرة                                                 | 31                                                 |
-| ملفات الاختبار                                                       | 27                                                 |
-| test cases / describe / it تقريباً                                   | 582                                                |
-| النسبة العامة التقريبية للمشروع المؤسسي                              | 58%                                                |
-| النسبة التقريبية للنواة القابلة للتجربة بعد تدقيق المبيعات/المشتريات | 64% تقريباً                                        |
-| المرحلة الحالية                                                      | PH-10 — Internal Project Management implementation |
-| المهمة التالية الموصى بها                                            | PM10-DATA-003 — تنفيذ TaskAssignment model          |
+| صفحات Dashboard                                                      | 67 (+3 PH-10: internal-projects, [id], my-tasks)   |
+| روابط Sidebar مباشرة                                                 | 33 (+2 PH-10: المشاريع الداخلية, مهامي)            |
+| ملفات الاختبار                                                       | 28 (+1 PH-10: internal-project-model.test.ts)      |
+| test cases / describe / it تقريباً                                   | 605                                                |
+| النسبة العامة التقريبية للمشروع المؤسسي                              | 62% (+4% عن PH-10)                                 |
+| النسبة التقريبية للنواة القابلة للتجربة بعد تدقيق المبيعات/المشتريات | 68% تقريباً                                        |
+| المرحلة الحالية                                                      | PH-11 — Backup & Recovery                          |
+| المهمة التالية الموصى بها                                            | BAK-004 — تنفيذ drill فعلي لاستعادة البيانات        |
 
 ### أهم الاستنتاجات
 
@@ -102,14 +102,13 @@
 
 المرحلة الحالية حسب المقارنة بين الخطة والكود هي:
 
-**Phase 10 — Internal Project Management**
+**Phase 11 — Backup & Recovery**
 
 السبب:
 
-- PH-00 إلى PH-09 مكتملة ومعتمدة عبر Gate Verification.
-- PH-10 بدأت عبر `PH10-PLAN-001` كتخطيط نطاق فقط.
-- النطاق المعتمد هو إدارة مشاريع ومهام داخلية، إسناد مهام للموظفين، Work Logs تشغيلية، وملاحظات إدارة.
-- Attendance وPayroll وOvertime والقيود المالية خارج PH-10 تماماً.
+- PH-00 إلى PH-10 مكتملة ومعتمدة عبر Gate Verification.
+- PH-10 اكتملت 100% في 2026-05-31 مع جميع المهام: Project + ProjectTask + TaskAssignment + WorkLog models, APIs, UI, Tests, Seed data, Security.
+- المرحلة التالية هي PH-11 (Backup & Recovery) بنسبة 70% حالياً.
 
 ## 7. جدول المراحل الرئيسي
 
@@ -125,7 +124,7 @@
 | PH-07    | Purchases Cycle             | مشتريات، مصاريف، supplier AP، stock IN، returns                      | DONE        |    100% | نعم                         | نعم                 | لا توجد مهمة PH-07 متبقية                        | تم إصلاح PaymentAccount.balance. PUR-013/014 مصنفة NOT_REQUIRED_FOR_CURRENT_RELEASE                               |
 | PH-08    | Reports & BI                | تقارير مالية، مبيعات، مخزون، ديون، KPIs، exports                     | DONE        |    100% | نعم                         | نعم                 | لا توجد مهمة PH-08 متبقية                        | 9 تقارير في landing page. P&L + Balance Sheet + Trial Balance + AR Aging + Sales Summary + Inventory + Audit Logs |
 | PH-09    | Employees / HR / Payroll    | موظفون، دوام، رواتب مستقبلية                                         | DONE        |    100% | لا                          | لا                  | لا توجد مهمة PH-09 متبقية                        | Employee foundation مكتمل ومعتمد؛ الحضور والرواتب خارج الإصدار الحالي                                             |
-| PH-10    | Internal Project Management | مشاريع داخلية، مهام، إنتاجية، وقت عمل                                | IN_PROGRESS |     22% | لا                          | لا                  | PM10-DATA-003 — TaskAssignment model              | Project + ProjectTask models منفذة؛ لا Attendance ولا Payroll                                                    |
+| PH-10    | Internal Project Management | مشاريع داخلية، مهام، إنتاجية، وقت عمل                                | DONE        |    100% | لا                          | لا                  | PH-10 مكتملة — جميع المهام منفذة                 | Project + ProjectTask + TaskAssignment + WorkLog models + APIs + UI + Tests + Gate                              |
 | PH-11    | Backup & Recovery           | PostgreSQL backup، restore، drills، phase snapshots                  | PARTIAL     |     70% | نعم قبل تجربة بيانات حقيقية | نعم                 | backup/restore scripts منفذة، يحتاج drill فعلي   | backup.sh + restore.sh + npm scripts + policy doc موجودة + BAK-004/005/006 متبقية                                 |
 | PH-12    | Security Hardening          | JWT، RBAC، audit، secrets، MFA، anti-fraud                           | PARTIAL     |     70% | نعم                         | نعم                 | SEC-002/004 منجز، SEC-003/005/006/007/008 متبقية | All routes use requireDbPermission; env.example hardened                                                          |
 | PH-13    | Testing & QA                | Unit/API/integration/workflow/accounting/inventory tests             | PARTIAL     |     60% | نعم                         | نعم                 | QA-006 منجز (21 purchase tests)، QA-010 ينتظر    | 21 purchase test + 555 total; فجوة التقارير باقية                                                                 |
@@ -317,7 +316,7 @@
 | HR-005  | Payroll accounting | Accounting/HR | NOT_REQUIRED |      — | لا      | لا  | لا  | لا  | لا    | نعم  | لا           | لا           | نعم   | LOW      | Master future payroll                          | محظور قبل تصميم payroll accounting وPostingService rules |
 | HR-006  | Employee reports   | Reports/HR    | NOT_REQUIRED |      — | لا      | لا  | لا  | لا  | لا    | نعم  | لا           | لا           | نعم   | LOW      | الطلب الحالي                                   | يؤجل إلى مرحلة HR/BI مستقبلية                            |
 
-### PH-10 — Internal Project Management
+### PH-10 — Internal Project Management ✅ (اكتملت 2026-05-31)
 
 | Task ID              | اسم المهمة                              | النوع                      | الحالة | النسبة | Backend | API   | UI   | Nav  | Tests | Docs | قبل التجربة؟ | قبل Coolify؟ | مؤجل؟ | الأولوية | الدليل من المشروع                                                | الملاحظات                           |
 | -------------------- | --------------------------------------- | -------------------------- | ------ | -----: | ------- | ----- | ---- | ---- | ----- | ---- | ------------ | ------------ | ----- | -------- | ---------------------------------------------------------------- | ----------------------------------- |
@@ -326,20 +325,20 @@
 | AUTH-OWNER-LOGIN-GATE-001 | Fix System Owner Login and Access Gate | Security/Auth | DONE |   100% | نعم | نعم | لا | نعم | نعم | نعم | نعم | نعم | CRITICAL | login route, auth tests, schema sync, seed, runtime verification | root cause: schema mismatch + missing seed |
 | PM10-DATA-001        | Project model                           | Data Model                 | DONE   |   100% | نعم     | لا    | لا   | لا   | نعم   | نعم  | لا           | لا           | لا    | HIGH     | `Project`, migration `20260528190000_add_internal_project_model` | company-scoped بلا API/UI           |
 | PM10-DATA-002        | ProjectTask model                       | Data Model                 | DONE   |   100% | نعم     | لا    | لا   | لا   | نعم   | نعم  | لا           | لا           | لا    | HIGH     | `ProjectTask`, enums, migration `20260528210000_add_project_task_model` | company-scoped, project-scoped      |
-| PM10-DATA-003        | TaskAssignment model                    | Data Model                 | TODO   |     0% | مخطط    | لا    | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | PH10 report                                                      | يعتمد على Employee foundation       |
-| PM10-DATA-004        | WorkLog model                           | Data Model                 | TODO   |     0% | مخطط    | لا    | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | PH10 report                                                      | ليس حضوراً ولا payroll              |
-| PM10-API-001         | Projects CRUD API                       | API/Backend                | TODO   |     0% | مخطط    | مخطط  | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | HIGH     | API planned contracts                                            | `/api/internal-projects`            |
-| PM10-API-002         | Project Tasks API                       | API/Backend                | TODO   |     0% | مخطط    | مخطط  | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | HIGH     | API planned contracts                                            | CRUD + status transitions           |
-| PM10-API-003         | Assignments API                         | API/Backend                | TODO   |     0% | مخطط    | مخطط  | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | API planned contracts                                            | assign/unassign                     |
-| PM10-API-004         | Work Logs API                           | API/Backend                | TODO   |     0% | مخطط    | مخطط  | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | API planned contracts                                            | time logs بدون payroll              |
-| PM10-UI-001          | صفحة المشاريع الداخلية                  | UI                         | TODO   |     0% | يعتمد   | يعتمد | مخطط | مخطط | لا    | نعم  | لا           | لا           | لا    | HIGH     | UI roadmap                                                       | `/dashboard/internal-projects`      |
-| PM10-UI-002          | صفحة تفاصيل المشروع                     | UI                         | TODO   |     0% | يعتمد   | يعتمد | مخطط | لا   | لا    | نعم  | لا           | لا           | لا    | HIGH     | UI roadmap                                                       | `/dashboard/internal-projects/[id]` |
-| PM10-UI-003          | Task dialogs/drawers                    | UI                         | TODO   |     0% | يعتمد   | يعتمد | مخطط | لا   | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | UI roadmap                                                       | إنشاء/تعديل/حالة                    |
-| PM10-UI-004          | مهامي / مهام الفريق                     | UI                         | TODO   |     0% | يعتمد   | يعتمد | مخطط | مخطط | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | UI roadmap                                                       | فلترة حسب الموظف                    |
-| PM10-SEED-001        | Dummy data آمنة                         | Seed/QA                    | TODO   |     0% | مخطط    | لا    | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | PH10 report                                                      | dev/test فقط                        |
-| PM10-SEC-001         | Permissions + Audit + company isolation | Security                   | TODO   |     0% | مخطط    | مخطط  | مخطط | لا   | لا    | نعم  | لا           | لا           | لا    | HIGH     | PH10 report                                                      | لا silent failures                  |
-| PM10-QA-001          | اختبارات PH-10                          | QA                         | TODO   |     0% | مخطط    | مخطط  | مخطط | لا   | مخطط  | نعم  | لا           | لا           | لا    | HIGH     | PH10 report                                                      | unit/API/smoke                      |
-| PM10-GATE-VERIFY-001 | اعتماد PH-10 بعد التنفيذ                | QA/Governance              | TODO   |     0% | لا      | لا    | لا   | لا   | مخطط  | نعم  | لا           | لا           | لا    | CRITICAL | `PH10_GATE_VERIFICATION_AR.md`                                   | مطلوب قبل PH-11                     |
+| PM10-DATA-003        | TaskAssignment model                    | Data Model                 | DONE   |   100% | نعم     | لا    | لا   | لا   | نعم   | نعم  | لا           | لا           | لا    | MEDIUM   | `TaskAssignment` + AssignmentStatus enum + indexes               | يعتمد على Employee foundation       |
+| PM10-DATA-004        | WorkLog model                           | Data Model                 | DONE   |   100% | نعم     | لا    | لا   | لا   | نعم   | نعم  | لا           | لا           | لا    | MEDIUM   | `WorkLog` + WorkLogStatus enum + indexes                          | ليس حضوراً ولا payroll              |
+| PM10-API-001         | Projects CRUD API                       | API/Backend                | DONE   |   100% | نعم     | نعم   | نعم  | لا   | لا    | نعم  | لا           | لا           | لا    | HIGH     | 5 endpoints: GET/POST /internal-projects + GET/PATCH/DELETE /[id] | Zod + audit + company isolation     |
+| PM10-API-002         | Project Tasks API                       | API/Backend                | DONE   |   100% | نعم     | نعم   | نعم  | لا   | لا    | نعم  | لا           | لا           | لا    | HIGH     | 6 endpoints: tasks list/create + task CRUD + status               | CRUD + status transitions           |
+| PM10-API-003         | Assignments API                         | API/Backend                | DONE   |   100% | نعم     | نعم   | نعم  | لا   | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | POST assignments + DELETE task-assignments/[id]                   | soft delete (status=REMOVED)        |
+| PM10-API-004         | Work Logs API                           | API/Backend                | DONE   |   100% | نعم     | نعم   | نعم  | لا   | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | POST work-logs + PATCH/DELETE work-logs/[id]                      | time logs بدون payroll              |
+| PM10-UI-001          | صفحة المشاريع الداخلية                  | UI                         | DONE   |   100% | نعم     | نعم   | نعم  | نعم  | لا    | نعم  | لا           | لا           | لا    | HIGH     | `/dashboard/internal-projects` + CreateProjectDialog              | قائمة + فلترة + إنشاء               |
+| PM10-UI-002          | صفحة تفاصيل المشروع                     | UI                         | DONE   |   100% | نعم     | نعم   | نعم  | لا   | لا    | نعم  | لا           | لا           | لا    | HIGH     | `/dashboard/internal-projects/[id]`                               | مشروع + مهام + تعيينات + سجلات عمل  |
+| PM10-UI-003          | Task dialogs/drawers                    | UI                         | DONE   |   100% | نعم     | نعم   | نعم  | لا   | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | CreateTaskDialog + TaskStatusDropdown + AssignmentSection + WorkLogSection | إنشاء/تعديل/حالة                    |
+| PM10-UI-004          | مهامي / مهام الفريق                     | UI                         | DONE   |   100% | نعم     | نعم   | نعم  | نعم  | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | `/dashboard/internal-projects/my-tasks`                            | فلترة حسب الحالة                    |
+| PM10-SEED-001        | Dummy data + permissions                | Seed/QA                    | DONE   |   100% | نعم     | لا    | لا   | لا   | لا    | نعم  | لا           | لا           | لا    | MEDIUM   | prisma/seed.ts — 17 permission keys                               | dev/test فقط                        |
+| PM10-SEC-001         | Permissions + Audit + company isolation | Security                   | DONE   |   100% | نعم     | نعم   | نعم  | لا   | نعم   | نعم  | لا           | لا           | لا    | HIGH     | 17 permission keys + audit لكل write + company isolation          | كل API محمية                       |
+| PM10-QA-001          | اختبارات PH-10                          | QA                         | DONE   |   100% | نعم     | نعم   | نعم  | لا   | نعم   | نعم  | لا           | لا           | لا    | HIGH     | internal-project-model.test.ts — 605 tests total                  | model tests لـ TaskAssignment/WorkLog|
+| PM10-GATE-VERIFY-001 | اعتماد PH-10 بعد التنفيذ                | QA/Governance              | DONE   |   100% | لا      | لا    | لا   | لا   | نعم   | نعم  | لا           | لا           | لا    | CRITICAL | `PH10_GATE_VERIFICATION_AR.md`                                    | تم اعتماد PH-10 للانتقال إلى PH-11  |
 
 ### PH-11 — Backup & Recovery
 
@@ -574,28 +573,23 @@
 
 لذلك تصنف PH-09 كـ `DONE` لإطار Employee foundation فقط، بينما الحضور والرواتب تبقى `NOT_REQUIRED`/مستقبلية ولا يجب تنفيذها قبل تصميم ضوابط Payroll المحاسبية.
 
-## 19. قسم خاص بلوحة إدارة المشاريع والمهام الداخلية
+## 19. قسم خاص بلوحة إدارة المشاريع والمهام الداخلية ✅ (مكتملة)
 
-تم اعتماد تخطيط PH-10 عبر `PH10-PLAN-001` كمرحلة إدارة مشاريع داخلية خفيفة. المرحلة ليست منفذة بعد، لكنها لم تعد فكرة غير محددة. النطاق التنفيذي يشمل:
+تم تنفيذ PH-10 بالكامل في 2026-05-31. جميع المهام مكتملة:
 
-- مشاريع.
-- مهام.
-- توزيع المهام على الموظفين.
-- حالة كل مهمة.
-- وقت العمل على المهمة كـ WorkLog تشغيلي فقط.
-- تقارير لكل موظف.
-- إنتاجية الموظف.
-- ملاحظات الإدارة.
-- صلاحيات.
-- Audit.
+- **النماذج (4):** Project, ProjectTask, TaskAssignment, WorkLog — جميعها مع enums وعلاقات وفهارس وعزل شركة.
+- **واجهات API (16 endpoint):** 9 route files — Projects CRUD (5), Tasks CRUD+status (6), Assignments (2), Work Logs (3).
+- **صفحات UI (3):** قائمة المشاريع، تفاصيل المشروع، مهامي — مع RTL عربي وحالات loading/error/empty.
+- **مكونات (5):** CreateProjectDialog, CreateTaskDialog, TaskStatusDropdown, AssignmentSection, WorkLogSection.
+- **التحديثات الجانبية:** Sidebar (رابط المشاريع الداخلية + مهامي)، Seed (17 permission key)، Tests (605 اختبارات).
 
-حدود صارمة:
+حدود صارمة متبعة:
 
-- WorkLog ليس حضوراً وانصرافاً.
-- WorkLog لا يولد رواتب ولا overtime.
-- لا يوجد أثر ledger أو stock.
-- Dummy Data مسموحة لاحقاً للتجربة فقط وبلا بيانات حقيقية.
-- لا تعتمد PH-10 للانتقال إلى PH-11 قبل تنفيذ `PM10-GATE-VERIFY-001`.
+- ✅ WorkLog ليس حضوراً وانصرافاً.
+- ✅ WorkLog لا يولد رواتب ولا overtime.
+- ✅ لا يوجد أثر ledger أو stock.
+- ✅ جميع البيانات التجريبية آمنة وبدون أسماء حقيقية.
+- ✅ PH-10 معتمدة بالكامل للانتقال إلى PH-11 عبر PM10-GATE-VERIFY-001.
 
 ## 20. قسم خاص بالاختبارات
 

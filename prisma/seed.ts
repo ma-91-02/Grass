@@ -242,6 +242,66 @@ const PERMISSIONS = [
     name: "إدارة المشاريع الداخلية",
     module: "internalProjects",
   },
+  {
+    key: "internalProjects.tasks.view",
+    name: "عرض مهام المشاريع",
+    module: "internalProjects",
+  },
+  {
+    key: "internalProjects.tasks.create",
+    name: "إنشاء مهمة",
+    module: "internalProjects",
+  },
+  {
+    key: "internalProjects.tasks.edit",
+    name: "تعديل مهمة",
+    module: "internalProjects",
+  },
+  {
+    key: "internalProjects.tasks.delete",
+    name: "حذف مهمة",
+    module: "internalProjects",
+  },
+  {
+    key: "internalProjects.tasks.status",
+    name: "تغيير حالة مهمة",
+    module: "internalProjects",
+  },
+  {
+    key: "internalProjects.assignments.view",
+    name: "عرض التعيينات",
+    module: "internalProjects",
+  },
+  {
+    key: "internalProjects.assignments.create",
+    name: "إنشاء تعيين",
+    module: "internalProjects",
+  },
+  {
+    key: "internalProjects.assignments.delete",
+    name: "حذف تعيين",
+    module: "internalProjects",
+  },
+  {
+    key: "internalProjects.workLogs.view",
+    name: "عرض سجلات العمل",
+    module: "internalProjects",
+  },
+  {
+    key: "internalProjects.workLogs.create",
+    name: "إنشاء سجل عمل",
+    module: "internalProjects",
+  },
+  {
+    key: "internalProjects.workLogs.edit",
+    name: "تعديل سجل عمل",
+    module: "internalProjects",
+  },
+  {
+    key: "internalProjects.workLogs.delete",
+    name: "حذف سجل عمل",
+    module: "internalProjects",
+  },
   { key: "accounts.view", name: "عرض الحسابات", module: "accounts" },
   { key: "accounts.manage", name: "إدارة الحسابات", module: "accounts" },
   { key: "purchases.view", name: "عرض المشتريات", module: "purchases" },

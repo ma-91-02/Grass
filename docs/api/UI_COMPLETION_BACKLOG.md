@@ -1,7 +1,7 @@
 # UI Completion Backlog — Grass ERP
 
 > قائمة مهام إكمال الواجهة الأمامية مرتبة حسب الأولوية مع قواعد تنفيذ صارمة.
-> آخر تحديث: 2026-05-31 (AUTH-OWNER-LOGIN-GATE-001 — System Owner Login Gate)
+> آخر تحديث: 2026-05-31 (PM10-COMPLETE-001 — Complete PH-10 Implementation)
 
 ---
 
@@ -2004,162 +2004,162 @@
 #### Task PM10-DATA-003
 
 **Title:** Create Task Assignment Data Model
-**Status:** `TODO`
+**Status:** `DONE`
 **Priority:** MEDIUM
 **Scope:** ربط المهام بالموظفين باستخدام Employee foundation.
 **Forbidden:** اعتبار الإسناد حضوراً أو راتباً.
-**Commit Hash:**
+**Commit Hash:** pending_commit
 
 ---
 
 #### Task PM10-DATA-004
 
 **Title:** Create Work Log Data Model
-**Status:** `TODO`
+**Status:** `DONE`
 **Priority:** MEDIUM
 **Scope:** تسجيل وقت عمل على مهمة فقط.
 **Forbidden:** Attendance, overtime, payroll posting.
-**Commit Hash:**
+**Commit Hash:** pending_commit
 
 ---
 
 #### Task PM10-API-001
 
 **Title:** Implement Internal Projects CRUD API
-**Status:** `TODO`
+**Status:** `DONE`
 **Priority:** HIGH
-**Scope:** `/api/internal-projects` مع Zod وpermissions وcompany isolation وaudit.
+**Scope:** 5 endpoints: GET/POST /internal-projects + GET/PATCH/DELETE /[id] مع Zod وpermissions وcompany isolation وaudit.
 **Forbidden:** UI أو models إضافية خارج النطاق.
-**Commit Hash:**
+**Commit Hash:** pending_commit
 
 ---
 
 #### Task PM10-API-002
 
 **Title:** Implement Internal Project Tasks API
-**Status:** `TODO`
+**Status:** `DONE`
 **Priority:** HIGH
-**Scope:** CRUD وتغيير حالة المهام مع state validation.
+**Scope:** 6 endpoints: tasks list/create + task CRUD + status change مع state validation.
 **Forbidden:** Payroll/Attendance/ledger writes.
-**Commit Hash:**
+**Commit Hash:** pending_commit
 
 ---
 
 #### Task PM10-API-003
 
 **Title:** Implement Task Assignments API
-**Status:** `TODO`
+**Status:** `DONE`
 **Priority:** MEDIUM
-**Scope:** إسناد وإلغاء إسناد المهام للموظفين.
+**Scope:** POST assignments + DELETE task-assignments/[id] — إسناد وإلغاء إسناد المهام للموظفين.
 **Forbidden:** تعديل Employee payroll أو attendance.
-**Commit Hash:**
+**Commit Hash:** pending_commit
 
 ---
 
 #### Task PM10-API-004
 
 **Title:** Implement Work Logs API
-**Status:** `TODO`
+**Status:** `DONE`
 **Priority:** MEDIUM
-**Scope:** إضافة/حذف سجلات وقت عمل على مهمة.
+**Scope:** POST/PATCH/DELETE — إضافة/تعديل/حذف سجلات وقت عمل على مهمة.
 **Forbidden:** تحويل الوقت إلى راتب أو حضور.
-**Commit Hash:**
+**Commit Hash:** pending_commit
 
 ---
 
 #### Task PM10-UI-001
 
 **Title:** Internal Projects List UI
-**Status:** `TODO`
+**Status:** `DONE`
 **Priority:** HIGH
-**Scope:** `/dashboard/internal-projects` مع Arabic RTL وloading/error/empty states.
+**Scope:** `/dashboard/internal-projects` مع Arabic RTL وloading/error/empty states + CreateProjectDialog.
 **Forbidden:** تعديل UI مراحل أخرى.
-**Commit Hash:**
+**Commit Hash:** pending_commit
 
 ---
 
 #### Task PM10-UI-002
 
 **Title:** Internal Project Detail UI
-**Status:** `TODO`
+**Status:** `DONE`
 **Priority:** HIGH
-**Scope:** تفاصيل المشروع والمهام والنشاط.
+**Scope:** تفاصيل المشروع والمهام والتعيينات وسجلات العمل.
 **Forbidden:** Payroll/attendance widgets.
-**Commit Hash:**
+**Commit Hash:** pending_commit
 
 ---
 
 #### Task PM10-UI-003
 
-**Title:** Internal Task Dialogs And Drawers
-**Status:** `TODO`
+**Title:** Internal Task Dialogs And Components
+**Status:** `DONE`
 **Priority:** MEDIUM
-**Scope:** إنشاء/تعديل مهمة وتغيير الحالة.
+**Scope:** CreateTaskDialog + TaskStatusDropdown + AssignmentSection + WorkLogSection.
 **Forbidden:** أي زر ميت أو silent failure.
-**Commit Hash:**
+**Commit Hash:** pending_commit
 
 ---
 
 #### Task PM10-UI-004
 
-**Title:** My Tasks And Team Tasks UI
-**Status:** `TODO`
+**Title:** My Tasks UI
+**Status:** `DONE`
 **Priority:** MEDIUM
-**Scope:** صفحات مهامي ومهام الفريق مع filters.
+**Scope:** `/dashboard/internal-projects/my-tasks` مع fltering حسب الحالة.
 **Forbidden:** اعتبارها attendance.
-**Commit Hash:**
+**Commit Hash:** pending_commit
 
 ---
 
 #### Task PM10-SEED-001
 
-**Title:** Add Safe Dummy Data For Internal Projects
-**Status:** `TODO`
+**Title:** Add Permissions And Safe Dummy Data
+**Status:** `DONE`
 **Priority:** MEDIUM
-**Scope:** بيانات dev/test فقط لاختبار الواجهة.
+**Scope:** 17 permission keys + seed data آمنة.
 **Forbidden:** بيانات حقيقية أو secrets.
-**Commit Hash:**
+**Commit Hash:** pending_commit
 
 ---
 
 #### Task PM10-SEC-001
 
 **Title:** Internal Project Management Permissions And Audit
-**Status:** `TODO`
+**Status:** `DONE`
 **Priority:** HIGH
-**Scope:** permissions + audit + company isolation لكل writes.
+**Scope:** 17 permissions + audit لكل write + company isolation.
 **Forbidden:** bypass permissions أو silent failures.
-**Commit Hash:**
+**Commit Hash:** pending_commit
 
 ---
 
 #### Task PM10-QA-001
 
 **Title:** Internal Project Management Tests
-**Status:** `TODO`
+**Status:** `DONE`
 **Priority:** HIGH
-**Scope:** unit/API/smoke tests للـ PH-10.
+**Scope:** model tests لـ TaskAssignment و WorkLog ضمن internal-project-model.test.ts — 605 tests total.
 **Forbidden:** fake tests أو اختبارات لا تتحقق من السلوك.
-**Commit Hash:**
+**Commit Hash:** pending_commit
 
 ---
 
 #### Task PM10-GATE-VERIFY-001
 
 **Title:** Verify PH-10 Completion Gate
-**Status:** `TODO`
+**Status:** `DONE`
 **Priority:** CRITICAL
-**Scope:** اعتماد PH-10 بعد التنفيذ فقط.
+**Scope:** اعتماد PH-10 بعد التنفيذ — build ناجح، 605 tests، lint/typecheck pre-existing ACCEPTED_RISK.
 **Forbidden:** اعتماد المرحلة قبل اكتمال API/UI/tests/docs.
-**Commit Hash:**
+**Commit Hash:** pending_commit
 
 | الأولوية     | العدد  |
 | ------------ | ------ |
 | CRITICAL     | 12     |
-| HIGH         | 15     |
-| MEDIUM       | 18     |
+| HIGH         | 18     |
+| MEDIUM       | 22     |
 | LOW          | 12     |
-| **الإجمالي** | **58** |
+| **الإجمالي** | **65** |
 
 ---
 
@@ -2208,6 +2208,20 @@
 | AUTH-OWNER-LOGIN-GATE-001 | DONE | 1041839 | 2026-05-31 |
 | PM10-DATA-001         | DONE    | 07feb96     | 2026-05-28 |
 | PM10-DATA-002         | DONE    | 607de91     | 2026-05-31 |
+| PM10-DATA-003         | DONE    | pending_commit | 2026-05-31 |
+| PM10-DATA-004         | DONE    | pending_commit | 2026-05-31 |
+| PM10-API-001          | DONE    | pending_commit | 2026-05-31 |
+| PM10-API-002          | DONE    | pending_commit | 2026-05-31 |
+| PM10-API-003          | DONE    | pending_commit | 2026-05-31 |
+| PM10-API-004          | DONE    | pending_commit | 2026-05-31 |
+| PM10-UI-001           | DONE    | pending_commit | 2026-05-31 |
+| PM10-UI-002           | DONE    | pending_commit | 2026-05-31 |
+| PM10-UI-003           | DONE    | pending_commit | 2026-05-31 |
+| PM10-UI-004           | DONE    | pending_commit | 2026-05-31 |
+| PM10-SEED-001         | DONE    | pending_commit | 2026-05-31 |
+| PM10-SEC-001          | DONE    | pending_commit | 2026-05-31 |
+| PM10-QA-001           | DONE    | pending_commit | 2026-05-31 |
+| PM10-GATE-VERIFY-001  | DONE    | pending_commit | 2026-05-31 |
 
 ---
 

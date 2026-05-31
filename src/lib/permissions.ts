@@ -127,6 +127,18 @@ export const PERMISSIONS = {
   PROJECTS_EDIT: "internalProjects.edit",
   PROJECTS_DELETE: "internalProjects.delete",
   PROJECTS_MANAGE: "internalProjects.manage",
+  TASKS_VIEW: "internalProjects.tasks.view",
+  TASKS_CREATE: "internalProjects.tasks.create",
+  TASKS_EDIT: "internalProjects.tasks.edit",
+  TASKS_DELETE: "internalProjects.tasks.delete",
+  TASKS_STATUS: "internalProjects.tasks.status",
+  ASSIGNMENTS_VIEW: "internalProjects.assignments.view",
+  ASSIGNMENTS_CREATE: "internalProjects.assignments.create",
+  ASSIGNMENTS_DELETE: "internalProjects.assignments.delete",
+  WORKLOGS_VIEW: "internalProjects.workLogs.view",
+  WORKLOGS_CREATE: "internalProjects.workLogs.create",
+  WORKLOGS_EDIT: "internalProjects.workLogs.edit",
+  WORKLOGS_DELETE: "internalProjects.workLogs.delete",
 } as const;
 
 export const ALL_PERMISSION_KEYS = Object.values(PERMISSIONS);

@@ -99,9 +99,16 @@ describe("PH-10 ProjectTask model (PM10-DATA-002)", () => {
     expect(schema).toContain("childTasks    ProjectTask[]       @relation(\"TaskHierarchy\")");
   });
 
-  it("does not define TaskAssignment or WorkLog yet", () => {
-    expect(schema).not.toContain("model TaskAssignment");
-    expect(schema).not.toContain("model WorkLog");
+  it("defines TaskAssignment model", () => {
+    expect(schema).toContain("model TaskAssignment");
+    expect(schema).toContain("assigneeUserId");
+    expect(schema).toContain("AssignmentStatus");
+  });
+
+  it("defines WorkLog model", () => {
+    expect(schema).toContain("model WorkLog");
+    expect(schema).toContain("minutes");
+    expect(schema).toContain("billable");
   });
 
   it("has a migration file for the ProjectTask model", () => {

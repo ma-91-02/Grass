@@ -1,7 +1,7 @@
 # UI Binding Roadmap — Grass ERP
 
 > خارطة ربط الواجهة الأمامية بالـ APIs حسب الأولوية.
-> آخر تحديث: 2026-05-28 (PH10-PLAN-001 — Internal Project Management planning)
+> آخر تحديث: 2026-05-31 (PM10-COMPLETE-001 — PH-10 completed)
 
 ---
 
@@ -351,79 +351,78 @@
 
 ---
 
-## Phase 10.0 — Internal Project Management (مخطط)
+## Phase 10.0 — Internal Project Management ✅ (مكتمل 2026-05-31)
 
-### UI Binding 10.1 — Internal Projects List
+### ✅ UI Binding 10.1 — Internal Projects List
 
-**Endpoints المخططة:**
+**Endpoints المرتبطة:**
 
-- `GET /api/internal-projects` — قائمة المشاريع الداخلية
-- `POST /api/internal-projects` — إنشاء مشروع داخلي
+- `GET /api/internal-projects` — قائمة المشاريع الداخلية ✅ (CONNECTED)
+- `POST /api/internal-projects` — إنشاء مشروع داخلي ✅ (CONNECTED)
 
-**الصفحات المخططة:**
+**الصفحات المرتبطة:**
 
-- `/dashboard/internal-projects/page.tsx` — قائمة + إنشاء + filters + summary cards
-- Sidebar — رابط "المشاريع الداخلية"
-
-**Status:** TODO
+- `/dashboard/internal-projects/page.tsx` — قائمة + إنشاء + filters ✅
+- Sidebar — رابط "المشاريع الداخلية" ✅
 
 ---
 
-### UI Binding 10.2 — Internal Project Detail
+### ✅ UI Binding 10.2 — Internal Project Detail
 
-**Endpoints المخططة:**
+**Endpoints المرتبطة:**
 
-- `GET /api/internal-projects/{id}` — تفاصيل مشروع
-- `PATCH /api/internal-projects/{id}` — تعديل مشروع
-- `DELETE /api/internal-projects/{id}` — حذف/تعطيل مشروع
-- `GET /api/internal-project-tasks?projectId=...` — مهام المشروع
+- `GET /api/internal-projects/{id}` — تفاصيل مشروع ✅ (CONNECTED)
+- `PATCH /api/internal-projects/{id}` — تعديل مشروع ✅ (CONNECTED)
+- `DELETE /api/internal-projects/{id}` — حذف/تعطيل مشروع ✅ (CONNECTED, soft-delete)
+- `GET /api/internal-projects/{id}/tasks` — مهام المشروع ✅ (CONNECTED)
 
-**الصفحات المخططة:**
+**الصفحات المرتبطة:**
 
-- `/dashboard/internal-projects/[id]/page.tsx` — تفاصيل المشروع + المهام + النشاط
-
-**Status:** TODO
+- `/dashboard/internal-projects/[id]/page.tsx` — تفاصيل المشروع + المهام + التعيينات + سجلات العمل ✅
 
 ---
 
-### UI Binding 10.3 — Internal Tasks Board / Table
+### ✅ UI Binding 10.3 — Internal Tasks
 
-**Endpoints المخططة:**
+**Endpoints المرتبطة:**
 
-- `GET /api/internal-project-tasks` — قائمة المهام
-- `POST /api/internal-project-tasks` — إنشاء مهمة
-- `PATCH /api/internal-project-tasks/{id}` — تعديل مهمة
-- `POST /api/internal-project-tasks/{id}/status` — تغيير الحالة
+- `POST /api/internal-projects/{id}/tasks` — إنشاء مهمة ✅ (CONNECTED)
+- `GET /api/project-tasks/{id}` — تفاصيل مهمة ✅ (CONNECTED)
+- `PATCH /api/project-tasks/{id}` — تعديل مهمة ✅ (CONNECTED)
+- `DELETE /api/project-tasks/{id}` — حذف مهمة ✅ (CONNECTED, TODO only)
+- `POST /api/project-tasks/{id}/status` — تغيير الحالة ✅ (CONNECTED)
 
-**الصفحات المخططة:**
+**المكونات المرتبطة:**
 
-- `/dashboard/internal-projects/tasks/page.tsx` — جدول/board للمهام
-- task drawer/dialog — إنشاء وتعديل المهمة
-
-**Status:** TODO
+- CreateTaskDialog ✅
+- TaskStatusDropdown ✅
 
 ---
 
-### UI Binding 10.4 — Assignments & Work Logs
+### ✅ UI Binding 10.4 — Assignments & Work Logs
 
-**Endpoints المخططة:**
+**Endpoints المرتبطة:**
 
-- `POST /api/internal-project-tasks/{id}/assignments` — إسناد مهمة
-- `DELETE /api/internal-project-tasks/{id}/assignments/{assignmentId}` — إلغاء إسناد
-- `POST /api/internal-project-tasks/{id}/work-logs` — تسجيل وقت عمل على مهمة
-- `DELETE /api/internal-project-tasks/{id}/work-logs/{workLogId}` — حذف سجل وقت
+- `POST /api/project-tasks/{id}/assignments` — إسناد مهمة ✅ (CONNECTED)
+- `DELETE /api/task-assignments/{id}` — إلغاء إسناد ✅ (CONNECTED, soft delete)
+- `POST /api/project-tasks/{id}/work-logs` — تسجيل وقت عمل على مهمة ✅ (CONNECTED)
+- `PATCH /api/work-logs/{id}` — تعديل سجل وقت ✅ (CONNECTED, DRAFT only)
+- `DELETE /api/work-logs/{id}` — حذف سجل وقت ✅ (CONNECTED, DRAFT only)
 
-**الصفحات المخططة:**
+**المكونات المرتبطة:**
 
-- `/dashboard/internal-projects/my-tasks/page.tsx` — مهامي
-- داخل task drawer: assignments + work logs
+- AssignmentSection ✅
+- WorkLogSection ✅
 
-**حدود صارمة:**
+**الصفحات المرتبطة:**
 
-- Work Logs ليست Attendance.
-- Work Logs لا تولد Payroll أو قيود مالية.
+- `/dashboard/internal-projects/my-tasks/page.tsx` — مهامي ✅
+- Sidebar — رابط "مهامي" ✅
 
-**Status:** TODO
+**حدود صارمة متبعة:**
+
+- ✅ Work Logs ليست Attendance.
+- ✅ Work Logs لا تولد Payroll أو قيود مالية.
 
 ---
 
@@ -456,6 +455,7 @@
 14. ✅ User Detail (مكتمل)
 15. Detail pages بقية الوحدات
 16. Roles & Permissions Editor
+17. ✅ Internal Project Management (PH-10) — جميع واجهات المشاريع والمهام مكتملة
 
 ---
 

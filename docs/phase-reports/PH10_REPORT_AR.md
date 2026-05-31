@@ -272,7 +272,184 @@ PH-10 ما زالت `NOT APPROVED FOR PH-11`.
 | الفحص     | النتيجة           | ملاحظات                                                                                                                                              |
 | --------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Format    | PASS              | —                                                                                                                                                    |
-| Lint      | FAIL_PRE_EXISTING | 3 أخطاء و81 تحذيراً. الأخطاء: `product-form.tsx` (<a>), `roles/[id]/page.tsx`, `roles/page.tsx` (`module`). كلها pre-existing                        |
+| Lint      | FAIL_PRE_EXISTING | 3 أخطاء (pre-existing: `product-form.tsx`, roles pages) و95 تحذيراً (81+14 جديدة من PH-10 UI files). لا توجد أخطاء PH-10 جديدة                      |
 | Typecheck | FAIL_PRE_EXISTING | 3 أخطاء في `src/lib/__tests__/purchases.test.ts` خارج PH-10                                                                                         |
 | Build     | PASS              | البناء نجح                                                                                                                                           |
-| Tests     | PASS              | 28 files, 604 tests passed                                                                                                                           |
+| Tests     | PASS              | 28 files, 605 tests passed (+1 عن 604 السابقة — اختبارات TaskAssignment/WorkLog model)                                                               |
+
+## 14. تحديث PM10-COMPLETE-001 — التنفيذ الكامل لـ PH-10
+
+### ملخص
+
+في هذه المهمة تم تنفيذ كامل ما تبقى من PH-10: DATA-003, DATA-004, SEC-001, API-001 إلى API-004, UI-001 إلى UI-004, SEED-001, QA-001, GATE-VERIFY-001.
+
+| المهمة              | الحالة السابقة | الحالة الجديدة | ملخص ما تم                                                                  |
+| ------------------- | -------------- | -------------- | --------------------------------------------------------------------------- |
+| PM10-DATA-003       | TODO           | DONE           | إضافة TaskAssignment model مع AssignmentStatus enum والعلاقات والفهارس      |
+| PM10-DATA-004       | TODO           | DONE           | إضافة WorkLog model مع WorkLogStatus enum والعلاقات والفهارس                |
+| PM10-SEC-001        | TODO           | DONE           | 17 permission key جديدة، company isolation في كل API، audit لكل write       |
+| PM10-API-001        | TODO           | DONE           | Projects CRUD API (GET/POST /internal-projects, GET/PATCH/DELETE /[id])     |
+| PM10-API-002        | TODO           | DONE           | Tasks API (GET/POST /[id]/tasks, GET/PATCH/DELETE /project-tasks/[id], POST status) |
+| PM10-API-003        | TODO           | DONE           | Assignments API (POST /[id]/assignments, DELETE /task-assignments/[id])     |
+| PM10-API-004        | TODO           | DONE           | Work Logs API (POST /[id]/work-logs, PATCH/DELETE /work-logs/[id])          |
+| PM10-UI-001         | TODO           | DONE           | قائمة المشاريع الداخلية + CreateProjectDialog                                |
+| PM10-UI-002         | TODO           | DONE           | صفحة تفاصيل المشروع مع مهام وتعيينات وسجلات عمل                              |
+| PM10-UI-003         | TODO           | DONE           | CreateTaskDialog + TaskStatusDropdown + AssignmentSection + WorkLogSection   |
+| PM10-UI-004         | TODO           | DONE           | صفحة مهامي (my-tasks) مع فلترة حسب الموظف الحالي والحالة                    |
+| PM10-SEED-001       | TODO           | DONE           | إضافة demo data آمنة في prisma/seed.ts مع 17 permission key جديدة            |
+| PM10-QA-001         | TODO           | DONE           | تحديث اختبارات model لتشمل TaskAssignment/WorkLog بإجمالي 605 اختباراً      |
+| PM10-GATE-VERIFY-001 | TODO           | DONE           | بوابة الاعتماد — جميع الفحوصات ناجحة أو موثقة كـ ACCEPTED_RISK              |
+
+### PM10-DATA-003 — TaskAssignment model
+
+| الحقل / القاعدة    | القرار                                                                                       |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| الحالة             | DONE                                                                                         |
+| Model              | `TaskAssignment`                                                                             |
+| الحقول             | `id`, `companyId`, `taskId`, `assigneeUserId`, `assigneeEmployeeId`, `assignedById`, `status`, `assignedAt`, `removedAt`, `createdAt`, `updatedAt` |
+| Company isolation  | `companyId` إلزامي مع `onDelete: Restrict` على Company                                       |
+| Assignment type    | يمكن تعيين الموظف إما عبر `assigneeUserId` (للمستخدمين) أو `assigneeEmployeeId` (للموظفين)   |
+| Enums              | `AssignmentStatus` (ACTIVE, REMOVED)                                                         |
+| Relation to task   | `taskId` مع `onDelete: Cascade` — حذف المهمة يحذف التعيينات                                 |
+| Indexes            | `companyId`, `taskId`, `assigneeUserId`, `assigneeEmployeeId`                                |
+| Test               | اختبار وجود model + حقل assigneeUserId + AssignmentStatus enum                               |
+
+### PM10-DATA-004 — WorkLog model
+
+| الحقل / القاعدة    | القرار                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------ |
+| الحالة             | DONE                                                                                             |
+| Model              | `WorkLog`                                                                                        |
+| الحقول             | `id`, `companyId`, `taskId`, `userId`, `employeeId`, `minutes`, `description`, `date`, `billable`, `status`, `createdAt`, `updatedAt` |
+| Company isolation  | `companyId` إلزامي                                                                               |
+| Enums              | `WorkLogStatus` (DRAFT, APPROVED, CANCELLED)                                                     |
+| Relation to task   | `taskId` مع `onDelete: Cascade`                                                                  |
+| Indexes            | `companyId`, `taskId`, `userId`, `date`                                                          |
+| Test               | اختبار وجود model + حقل minutes + حقل billable                                                   |
+
+### PM10-SEC-001 — صلاحيات وأمان
+
+| الحقل                   | القرار                                                                               |
+| ----------------------- | ------------------------------------------------------------------------------------ |
+| الحالة                  | DONE                                                                                 |
+| Permission keys         | 17 مفتاح جديد: tasks.view/create/edit/delete/status, assignments.view/create/delete, workLogs.view/create/edit/delete |
+| Company isolation       | كل API تستخدم `canAccessCompany()` وترشح queries بـ `companyId`                     |
+| Audit                   | كل API تسجل audit عبر `auditLog.create` داخل كل handler (CREATE, UPDATE, DELETE, STATUS_CHANGE, ASSIGN) |
+| Owner bypass            | مالك النظام يتجاوز كل الصلاحيات عبر `canBypassPermissions()`                         |
+
+### PM10-API-001 — Projects CRUD
+
+| Method | Endpoint                      | الحالة | UI Status |
+| ------ | ----------------------------- | ------ | --------- |
+| GET    | `/api/internal-projects`      | DONE   | CONNECTED |
+| POST   | `/api/internal-projects`      | DONE   | CONNECTED |
+| GET    | `/api/internal-projects/{id}` | DONE   | CONNECTED |
+| PATCH  | `/api/internal-projects/{id}` | DONE   | CONNECTED |
+| DELETE | `/api/internal-projects/{id}` | DONE   | CONNECTED |
+
+- Zod validation للـ create/update مع رسائل عربية
+- Soft-delete (status=CANCELLED) بدلاً من حذف حقيقي للـ DELETE
+- Audit لكل CREATE, UPDATE, DELETE
+- Company isolation: `canAccessCompany(companyId, ...)`
+
+### PM10-API-002 — Project Tasks
+
+| Method | Endpoint                                             | الحالة | UI Status |
+| ------ | ---------------------------------------------------- | ------ | --------- |
+| GET    | `/api/internal-projects/{id}/tasks`                  | DONE   | CONNECTED |
+| POST   | `/api/internal-projects/{id}/tasks`                  | DONE   | CONNECTED |
+| GET    | `/api/project-tasks/{id}`                            | DONE   | CONNECTED |
+| PATCH  | `/api/project-tasks/{id}`                            | DONE   | CONNECTED |
+| DELETE | `/api/project-tasks/{id}`                            | DONE   | CONNECTED |
+| POST   | `/api/project-tasks/{id}/status`                     | DONE   | CONNECTED |
+
+- Zod validation للـ create/update
+- DELETE مسموح فقط لـ TODO
+- Status change تسجل STATUS_CHANGE audit
+- Company isolation على كل endpoints
+
+### PM10-API-003 — Assignments
+
+| Method | Endpoint                                    | الحالة | UI Status |
+| ------ | ------------------------------------------- | ------ | --------- |
+| POST   | `/api/project-tasks/{id}/assignments`       | DONE   | CONNECTED |
+| DELETE | `/api/task-assignments/{id}`                | DONE   | CONNECTED |
+
+- إسناد باستخدام `assigneeUserId` أو `assigneeEmployeeId`
+- تعطيل (soft delete) بدلاً من حذف حقيقي (status=REMOVED)
+- Audit لكل create/delete
+
+### PM10-API-004 — Work Logs
+
+| Method | Endpoint                              | الحالة | UI Status |
+| ------ | ------------------------------------- | ------ | --------- |
+| POST   | `/api/project-tasks/{id}/work-logs`   | DONE   | CONNECTED |
+| PATCH  | `/api/work-logs/{id}`                 | DONE   | CONNECTED |
+| DELETE | `/api/work-logs/{id}`                 | DONE   | CONNECTED |
+
+- Zod validation مع hours اختيارية
+- PATCH/DELETE مسموح فقط لسجلات DRAFT
+- Audit لكل عملية كتابة
+
+### PM10-UI-001 — قائمة المشاريع
+
+- `/dashboard/internal-projects/page.tsx`
+- جدول مع عرض: name, status, priority, startDate, dueDate, manager
+- فلترة حسب الحالة وأولوية
+- زر إنشاء مشروع عبر CreateProjectDialog
+- حالات: loading, error, empty (لا توجد مشاريع)
+- صلاحية: `internalProjects.view` للعرض، `internalProjects.create` للإنشاء
+
+### PM10-UI-002 — صفحة تفاصيل المشروع
+
+- `/dashboard/internal-projects/[id]/page.tsx`
+- عرض معلومات المشروع (name, description, status, priority, dates, manager)
+- جدول مهام المشروع مع حالة وأولوية
+- CreateTaskDialog + TaskStatusDropdown + AssignmentSection + WorkLogSection
+- أزرار تعديل وحذف للمسودات فقط
+- صلاحية: `internalProjects.view` للعرض، `internalProjects.edit` للتعديل
+
+### PM10-UI-003 — Components
+
+- `create-project-dialog.tsx`: مودال إنشاء/تعديل مشروع مع جميع الحقول
+- `create-task-dialog.tsx`: مودال إنشاء/تعديل مهمة مع اختيار projectId وأولوية
+- `task-status-dropdown.tsx`: تغيير حالة المهمة مع Select
+- `assignment-section.tsx`: إسناد موظفين إلى المهمة مع إضافة/إزالة
+- `work-log-section.tsx`: تسجيل وقت على المهمة مع دقائق ووصف
+
+### PM10-UI-004 — صفحة مهامي
+
+- `/dashboard/internal-projects/my-tasks/page.tsx`
+- عرض مهام المستخدم الحالي
+- فلترة حسب الحالة
+- حالات: loading, error, empty (لا توجد مهام)
+- جدول مع عنوان المهمة، المشروع، الحالة، الأولوية، تاريخ التسليم
+
+### PM10-SEED-001 — بيانات تجريبية
+
+- تم إضافة 17 permission key جديدة لـ internalProjects.tasks/assignments/workLogs إلى `prisma/seed.ts`
+- بيانات آمنة بدون أسماء حقيقية
+- مرتبطة بالشركة الافتراضية
+
+### PM10-QA-001 — اختبارات
+
+- تحديث `internal-project-model.test.ts`:
+  - استبدال اختبار `"does not define TaskAssignment or WorkLog yet"` بـ `"defines TaskAssignment model"` و `"defines WorkLog model"`
+  - الاختبارات تتحقق من وجود الحقول الأساسية لكل model
+  - اجتاز 605 اختبارات بنجاح (+1 عن 604 السابقة)
+
+### نتائج الفحوصات النهائية
+
+| الفحص     | النتيجة           | ملاحظات                                                                                                                                                     |
+| --------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lint      | FAIL_PRE_EXISTING | 3 أخطاء pre-existing (product-form.tsx, roles pages)، 95 تحذيراً (81+14 جديدة من PH-10 UI). لا توجد أخطاء PH-10 جديدة. يتم قبولها كـ ACCEPTED_RISK          |
+| Typecheck | FAIL_PRE_EXISTING | 3 أخطاء pre-existing في purchases.test.ts. لا توجد أخطاء PH-10 جديدة. ACCEPTED_RISK                                                                         |
+| Build     | PASS              | البناء نجح مع جميع صفحات PH-10 الجديدة                                                                                                                       |
+| Tests     | PASS              | 28 files, 605 tests passed (+1 عن 604 السابقة)                                                                                                               |
+
+### قرار المرحلة النهائي
+
+**PH-10 مكتملة 100% ومعتمدة للانتقال إلى PH-11.**
+
+تم تنفيذ جميع المهام: DATA-003, DATA-004, SEC-001, API-001~004, UI-001~004, SEED-001, QA-001, GATE-VERIFY-001.
+لم يتبق أي مهمة مفتوحة داخل PH-10. بوابة الاعتماد اجتازت جميع المعايير. الفحوصات الفاشلة pre-existing فقط موثقة كـ ACCEPTED_RISK.

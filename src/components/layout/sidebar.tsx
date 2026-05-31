@@ -193,6 +193,16 @@ const menuItems = [
     href: "/dashboard/employees",
     icon: UserCheck,
   },
+  {
+    title: "المشاريع الداخلية",
+    href: "/dashboard/internal-projects",
+    icon: FileText,
+  },
+  {
+    title: "مهامي",
+    href: "/dashboard/internal-projects/my-tasks",
+    icon: FileText,
+  },
 ];
 
 export function Sidebar({

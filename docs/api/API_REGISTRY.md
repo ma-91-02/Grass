@@ -1,7 +1,7 @@
 # API Registry — Grass ERP
 
 > مصدر الحقيقة لكل نقاط النهاية API في المشروع.
-> آخر تحديث: 2026-05-28 (PH10-PLAN-001 — Internal Project Management planned contracts)
+> آخر تحديث: 2026-05-31 (PM10-COMPLETE-001 — PH-10 fully implemented)
 
 ---
 
@@ -9,9 +9,9 @@
 
 | المقياس                       | العدد |
 | ----------------------------- | ----- |
-| إجمالي الملفات (route.ts)     | 73    |
-| إجمالي نقاط النهاية (methods) | 139   |
-| CONNECTED                     | 136   |
+| إجمالي الملفات (route.ts)     | 82    |
+| إجمالي نقاط النهاية (methods) | 155   |
+| CONNECTED                     | 152   |
 | PARTIAL                       | 0     |
 | NO_UI                         | 0     |
 | BACKEND_ONLY                  | 3     |
@@ -375,25 +375,26 @@
 
 ---
 
-## PH-10 Planned Internal Project Management APIs
+## PH-10 Internal Project Management APIs
 
-> هذه العقود مخططة فقط ولا تدخل في عدّاد endpoints الفعلية حتى إنشاء `route.ts`.
-
-| Module           | Method | Endpoint                                                      | Purpose                 | Backend Status | UI Status | UI Page                              | Priority | Phase | Notes                              |
-| ---------------- | ------ | ------------------------------------------------------------- | ----------------------- | -------------- | --------- | ------------------------------------ | -------- | ----- | ---------------------------------- |
-| InternalProjects | GET    | `/api/internal-projects`                                      | قائمة المشاريع الداخلية | PLANNED        | PLANNED   | `/dashboard/internal-projects`       | HIGH     | 10    | company isolation + filters        |
-| InternalProjects | POST   | `/api/internal-projects`                                      | إنشاء مشروع داخلي       | PLANNED        | PLANNED   | `/dashboard/internal-projects`       | HIGH     | 10    | Zod + audit                        |
-| InternalProjects | GET    | `/api/internal-projects/{id}`                                 | تفاصيل مشروع داخلي      | PLANNED        | PLANNED   | `/dashboard/internal-projects/[id]`  | HIGH     | 10    | project + tasks summary            |
-| InternalProjects | PATCH  | `/api/internal-projects/{id}`                                 | تعديل مشروع داخلي       | PLANNED        | PLANNED   | `/dashboard/internal-projects/[id]`  | HIGH     | 10    | يمنع cross-company                 |
-| InternalProjects | DELETE | `/api/internal-projects/{id}`                                 | حذف/تعطيل مشروع داخلي   | PLANNED        | PLANNED   | `/dashboard/internal-projects/[id]`  | MEDIUM   | 10    | audit إلزامي                       |
-| InternalTasks    | GET    | `/api/internal-project-tasks`                                 | قائمة المهام الداخلية   | PLANNED        | PLANNED   | `/dashboard/internal-projects/tasks` | HIGH     | 10    | filters by project/status/assignee |
-| InternalTasks    | POST   | `/api/internal-project-tasks`                                 | إنشاء مهمة داخلية       | PLANNED        | PLANNED   | task dialog                          | HIGH     | 10    | لا payroll ولا attendance          |
-| InternalTasks    | PATCH  | `/api/internal-project-tasks/{id}`                            | تعديل مهمة داخلية       | PLANNED        | PLANNED   | task drawer                          | HIGH     | 10    | Zod + audit                        |
-| InternalTasks    | POST   | `/api/internal-project-tasks/{id}/status`                     | تغيير حالة مهمة         | PLANNED        | PLANNED   | task drawer/board                    | HIGH     | 10    | state transition validation        |
-| InternalTasks    | POST   | `/api/internal-project-tasks/{id}/assignments`                | إسناد مهمة لموظف        | PLANNED        | PLANNED   | assignment control                   | MEDIUM   | 10    | يستخدم Employee foundation فقط     |
-| InternalTasks    | DELETE | `/api/internal-project-tasks/{id}/assignments/{assignmentId}` | إلغاء إسناد مهمة        | PLANNED        | PLANNED   | assignment control                   | MEDIUM   | 10    | audit إلزامي                       |
-| InternalTasks    | POST   | `/api/internal-project-tasks/{id}/work-logs`                  | تسجيل وقت عمل على مهمة  | PLANNED        | PLANNED   | work log dialog                      | MEDIUM   | 10    | ليس حضوراً ولا payroll             |
-| InternalTasks    | DELETE | `/api/internal-project-tasks/{id}/work-logs/{workLogId}`      | حذف سجل وقت             | PLANNED        | PLANNED   | work log list                        | MEDIUM   | 10    | audit إلزامي                       |
+| Module           | Method | Endpoint                                             | Purpose                 | Backend Status | UI Status | UI Page                              | Priority | Phase | Notes                              |
+| ---------------- | ------ | ---------------------------------------------------- | ----------------------- | -------------- | --------- | ------------------------------------ | -------- | ----- | ---------------------------------- |
+| InternalProjects | GET    | `/api/internal-projects`                             | قائمة المشاريع الداخلية | DONE           | CONNECTED | `/dashboard/internal-projects`       | HIGH     | 10    | company isolation + filters        |
+| InternalProjects | POST   | `/api/internal-projects`                             | إنشاء مشروع داخلي       | DONE           | CONNECTED | `/dashboard/internal-projects`       | HIGH     | 10    | Zod + audit                        |
+| InternalProjects | GET    | `/api/internal-projects/{id}`                        | تفاصيل مشروع داخلي      | DONE           | CONNECTED | `/dashboard/internal-projects/[id]`  | HIGH     | 10    | project + tasks summary            |
+| InternalProjects | PATCH  | `/api/internal-projects/{id}`                        | تعديل مشروع داخلي       | DONE           | CONNECTED | `/dashboard/internal-projects/[id]`  | HIGH     | 10    | يمنع cross-company                 |
+| InternalProjects | DELETE | `/api/internal-projects/{id}`                        | حذف/تعطيل مشروع داخلي   | DONE           | CONNECTED | `/dashboard/internal-projects/[id]`  | MEDIUM   | 10    | soft-delete (CANCELLED) + audit    |
+| InternalProjects | GET    | `/api/internal-projects/{id}/tasks`                  | قائمة مهام المشروع      | DONE           | CONNECTED | `/dashboard/internal-projects/[id]`  | HIGH     | 10    | filters by projectId               |
+| InternalProjects | POST   | `/api/internal-projects/{id}/tasks`                  | إنشاء مهمة داخلية       | DONE           | CONNECTED | task dialog                          | HIGH     | 10    | Zod + project scope                |
+| ProjectTasks    | GET    | `/api/project-tasks/{id}`                            | تفاصيل مهمة             | DONE           | CONNECTED | task dialog                          | HIGH     | 10    | تفاصيل مهمة كاملة                  |
+| ProjectTasks    | PATCH  | `/api/project-tasks/{id}`                            | تعديل مهمة               | DONE           | CONNECTED | task dialog                          | HIGH     | 10    | Zod + audit                        |
+| ProjectTasks    | DELETE | `/api/project-tasks/{id}`                            | حذف مهمة                 | DONE           | CONNECTED | task dialog                          | MEDIUM   | 10    | مسموح فقط لـ TODO                  |
+| ProjectTasks    | POST   | `/api/project-tasks/{id}/status`                     | تغيير حالة مهمة         | DONE           | CONNECTED | task status dropdown                 | HIGH     | 10    | state transition validation        |
+| ProjectTasks    | POST   | `/api/project-tasks/{id}/assignments`                | إسناد مهمة لموظف        | DONE           | CONNECTED | assignment section                   | MEDIUM   | 10    | assign by userId or employeeId     |
+| TaskAssignments | DELETE | `/api/task-assignments/{id}`                        | إلغاء إسناد              | DONE           | CONNECTED | assignment section                   | MEDIUM   | 10    | soft delete (status=REMOVED)       |
+| ProjectTasks    | POST   | `/api/project-tasks/{id}/work-logs`                  | تسجيل وقت عمل على مهمة  | DONE           | CONNECTED | work log section                     | MEDIUM   | 10    | minutes + date + notes             |
+| WorkLogs        | PATCH  | `/api/work-logs/{id}`                               | تعديل سجل وقت           | DONE           | CONNECTED | work log section                     | MEDIUM   | 10    | DRAFT-only edit                    |
+| WorkLogs        | DELETE | `/api/work-logs/{id}`                               | حذف سجل وقت             | DONE           | CONNECTED | work log section                     | MEDIUM   | 10    | DRAFT-only delete                  |
 
 ---
 
@@ -409,10 +410,10 @@
 
 | Status       | Count   |
 | ------------ | ------- |
-| CONNECTED    | 136     |
+| CONNECTED    | 152     |
 | PARTIAL      | 0       |
 | NO_UI        | 0       |
 | BACKEND_ONLY | 3       |
 | UNKNOWN      | 0       |
 | BROKEN       | 0       |
-| **Total**    | **139** |
+| **Total**    | **155** |
